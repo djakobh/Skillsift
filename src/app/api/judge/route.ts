@@ -8,6 +8,7 @@ import {
   parseTestOutput,
   type TestCase,
 } from "~/lib/testHarness";
+import { auth } from "~/server/auth";
 
 // points to our docker code-runner container
 const CODE_RUNNER_URL = process.env.CODE_RUNNER_URL || "http://localhost:2358";
@@ -56,6 +57,11 @@ function buildHarness(
 
 // receives code from frontend, forwards to docker container, returns result
 export async function POST(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { source_code, language, questionId, stdin = "" } = body as ExecutionRequest;
