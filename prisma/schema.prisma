@@ -237,6 +237,21 @@ model VideoAnalysisMark {
   @@index([category])
 }
 
+model VideoAnalysisSegment {
+  id            String   @id
+  videoUploadId String
+  category      String
+  startSec      Float
+  endSec        Float
+  isGood        Boolean
+  scoreAvg      Float?
+  note          String?
+  createdAt     DateTime @default(now())
+
+  @@index([category])
+  @@index([videoUploadId])
+}
+
 model StoredBehavioralSession {
 	id			String		 @id @default(cuid())
 	sessionId   String

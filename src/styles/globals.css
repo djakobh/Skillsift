@@ -2,6 +2,17 @@
 @import "./site-styling.css";
 @import "./reusable-components.css";
 
+/* Class-based dark mode for Tailwind v4 — adds dark: variant when html has .dark */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Base dark mode styles — applied at the CSS level so all pages get a dark background */
+@layer base {
+  html.dark body {
+    background-color: #111827; /* gray-900 */
+    color: #f9fafb; /* gray-50 */
+  }
+}
+
 @theme {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";

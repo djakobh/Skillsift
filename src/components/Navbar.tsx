@@ -7,12 +7,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut, Moon, Sun } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useTheme } from "~/components/ThemeProvider";
 
 export default function Navbar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { isDark, toggle } = useTheme();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -51,7 +53,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="bg-white shadow-md mb-12">
+    <nav className="bg-white dark:bg-gray-900 shadow-md dark:shadow-gray-800 mb-12">
       <div className="mx-auto max-w-7xl px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Left Side - Logo and Nav Links */}
@@ -73,7 +75,7 @@ export default function Navbar() {
                   className={`rounded px-3 py-2 transition-colors ${
                     pathname === link.href
                       ? "bg-orange-500 text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                   }`}
                 >
                   {link.label}
@@ -82,32 +84,41 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Right Side - Auth Links */}
-          <div className="flex items-center space-x-4">
+          {/* Right Side - Dark Mode Toggle + Auth Links */}
+          <div className="flex items-center space-x-3">
+            {/* Dark mode toggle */}
+            <button
+              onClick={toggle}
+              className="flex items-center justify-center rounded-full p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Toggle dark mode"
+            >
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+
             {session?.user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center justify-center rounded-full border-2 border-orange-500 p-2 text-orange-500 transition-colors hover:bg-orange-50"
+                  className="flex items-center justify-center rounded-full border-2 border-orange-500 p-2 text-orange-500 transition-colors hover:bg-orange-50 dark:hover:bg-orange-950"
                   aria-label="Account Menu"
                 >
                   <User className="h-5 w-5" />
                 </button>
 
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+                  <div className="absolute right-0 mt-2 w-48 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 dark:ring-gray-700">
                     <div className="py-1">
                       <Link
                         href="/account"
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         <Settings className="mr-3 h-4 w-4" />
                         Account Settings
                       </Link>
                       <button
                         onClick={handleLogout}
-                        className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                        className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         <LogOut className="mr-3 h-4 w-4" />
                         Logout
@@ -126,7 +137,7 @@ export default function Navbar() {
                       ? "bg-orange-500 text-white"
                       : link.label === "Sign Up"
                         ? "bg-orange-500 text-white hover:bg-orange-600"
-                        : "text-gray-700 hover:bg-gray-100"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                   }`}
                 >
                   {link.label}

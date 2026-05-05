@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTheme } from "~/components/ThemeProvider";
 
 const sidebarItems = [
   { label: "Account Details", href: "/account/details" },
@@ -11,31 +11,14 @@ const sidebarItems = [
 ];
 
 export default function AccountShell({
-  initialDarkMode,
   children,
 }: {
-  initialDarkMode: boolean;
   children: React.ReactNode;
 }) {
-  const [isDark, setIsDark] = useState(initialDarkMode);
+  const { isDark, toggle } = useTheme();
   const pathname = usePathname();
 
   const pageBg = isDark ? "bg-neutral-900 text-white" : "bg-white text-gray-900";
-
-  async function handleToggle() {
-  const next = !isDark;
-  setIsDark(next);
-
-  try {
-    await fetch("/api/account/settings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prefersDarkMode: next }),
-    });
-  } catch (e) {
-    console.error("Failed to save dark mode", e);
-  }
-}
 
 
   return (
@@ -78,7 +61,7 @@ export default function AccountShell({
             })}
           </aside>
 
-          <DarkModeToggle isDark={isDark} onToggle={handleToggle} />
+          <DarkModeToggle isDark={isDark} onToggle={toggle} />
         </div>
 
         {/* CARD */}

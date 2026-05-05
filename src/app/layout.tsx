@@ -13,6 +13,7 @@ import { TRPCReactProvider } from "~/trpc/react";
 import Navbar from "~/components/Navbar";
 import SessionProvider from "~/components/SessionProvider";
 import ChatWidget from "~/components/ChatWidget";
+import { ThemeProvider } from "~/components/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -30,6 +31,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${geist.variable}`}>
+      <head>
+        {/* Prevent flash of unstyled content: apply saved dark mode before React hydrates */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('skillsift-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}` }} />
+      </head>
       {/* suppressHydrationWarning: Grammarly and similar extensions inject
           attributes (data-gr-ext-installed, data-new-gr-c-s-check-loaded)
           onto <body> before React hydrates, which otherwise triggers a
@@ -37,9 +42,11 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <TRPCReactProvider>
           <SessionProvider>
-            <Navbar />
-            {children}
-            <ChatWidget />
+            <ThemeProvider>
+              <Navbar />
+              {children}
+              <ChatWidget />
+            </ThemeProvider>
           </SessionProvider>
         </TRPCReactProvider>
       </body>

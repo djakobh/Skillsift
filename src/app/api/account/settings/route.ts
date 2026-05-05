@@ -23,9 +23,14 @@ export async function POST(request: Request) {
 
   const { prefersDarkMode, languagePref } = await request.json();
 
-  const updated = await db.userSettings.update({
+  const updated = await db.userSettings.upsert({
     where: { userId: session.user.id },
-    data: {
+    create: {
+      userId: session.user.id,
+      ...(typeof prefersDarkMode === "boolean" && { prefersDarkMode }),
+      ...(typeof languagePref === "string" && { languagePref }),
+    },
+    update: {
       ...(typeof prefersDarkMode === "boolean" && { prefersDarkMode }),
       ...(typeof languagePref === "string" && { languagePref }),
     },
