@@ -1,0 +1,326 @@
+// Dylan Hartley
+// 12/12/2025
+// Alexander Tu
+
+// Brandon Christian
+// Date: 2/19/2026
+// Added BehavioralPrompt
+// Date: 3/17/2026
+// Added StoredBehavioralSession
+
+// Alexander Tu
+// Date: 3/7/2026
+// Added VideoUpload
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// NextAuth Tables (Required for Authentication)
+// ============================================
+
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  access_token             String?
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
+  refresh_token_expires_in Int?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id                String             @id @default(cuid())
+  name              String?
+  email             String?            @unique
+  emailVerified     DateTime?
+  image             String?
+  password          String?
+  accounts          Account[]
+  interviewSessions InterviewSession[]
+  resumeAnalyses    ResumeAnalysis[]
+  sessions          Session[]
+  profile           UserProfile?
+  settings          UserSettings?
+  videoUploads      VideoUpload[]
+  jobApplications   JobApplication[]
+  dismissedJobs     DismissedJob[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================
+// User Profile (Optional Extended Info)
+// ============================================
+
+model UserProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  firstName    String?
+  lastName     String?
+  phoneNumber  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  emailAddress String?
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserSettings {
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  prefersDarkMode Boolean @default(false)
+  languagePref    String? @default("JavaScript")
+  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ============================================
+// Resume Scanner Feature
+// ============================================
+
+model ResumeAnalysis {
+  id             String   @id @default(cuid())
+  userId         String
+  resumeName     String
+  jobDescription String?
+  atsScore       Int?
+  matchScore     Float?
+  feedback       Json
+  analyzedAt     DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ============================================
+// Interview Features (Behavioral & Technical)
+// ============================================
+
+model InterviewSession {
+  id           String              @id @default(cuid())
+  userId       String
+  type         InterviewType
+  status       SessionStatus       @default(IN_PROGRESS)
+  startedAt    DateTime            @default(now())
+  completedAt  DateTime?
+  overallScore Float?
+  feedback     Json?
+  responses    InterviewResponse[]
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  savedData		  StoredBehavioralSession[]
+  prompt		    String?
+
+  question1Id   String?                // reference TechnicalQuestion.id
+  question2Id   String?                // reference TechnicalQuestion.id
+  resumedAt     DateTime?              // Session timer; when was last resumed
+  pausedAt      DateTime?              // null = running
+  totalPausedMs Int                  @default(0)
+
+  @@index([userId])
+}
+
+model InterviewResponse {
+  id         String           @id @default(cuid())
+  sessionId  String
+  question   String
+  answer     String
+  score      Float?
+  feedback   String?
+  answeredAt DateTime         @default(now())
+  session    InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+model TechnicalQuestion {
+  id           String     @id
+  difficulty   String
+  category     String
+  createdAt    DateTime   @default(now())
+  description  String
+  functionName String
+  outputType   String
+  params       Json
+  slug         String     @unique
+  starterCode  Json
+  title        String
+  testCases    TestCase[]
+}
+
+model TestCase {
+  id             String            @id @default(cuid())
+  input          Json
+  expectedOutput String
+  isHidden       Boolean           @default(false)
+  problemId      String
+  problem        TechnicalQuestion @relation(fields: [problemId], references: [id], onDelete: Cascade)
+}
+
+model InterviewReport {
+  id         String   @id @default(cuid())
+  userId     String
+  sessionId  String
+  summary    String
+  isFavorite Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([sessionId])
+}
+
+model BehavioralPrompt {
+  id     String @id @default(cuid())
+  prompt String
+}
+
+model VideoUpload {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  storageKey   String @unique
+
+  createdAt DateTime @default(now())
+  analysis  Json?
+  marks     VideoAnalysisMark[]
+}
+
+model VideoAnalysisMark {
+  id            String   @id @default(cuid())
+  videoUploadId String
+  videoUpload   VideoUpload @relation(fields: [videoUploadId], references: [id], onDelete: Cascade)
+
+  category      String   // "posture" | "eye_contact" | "facial_expression"
+  timestampSec  Float
+  score         Float?
+  isGood        Boolean?
+  note          String?
+
+  createdAt     DateTime @default(now())
+
+  @@index([videoUploadId])
+  @@index([category])
+}
+
+model StoredBehavioralSession {
+	id			String		 @id @default(cuid())
+	sessionId   String
+	session     InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+	transcript	String?
+	videoURL	String?
+	feedback	Json?
+}
+
+
+// Job Tracker
+
+
+model JobApplication {
+  id             String            @id @default(cuid())
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company        String
+  position       String
+  jobDescription String?           @db.Text
+  jobUrl         String?
+  salaryMin      Int?
+  salaryMax      Int?
+  location       String?
+  status         ApplicationStatus @default(SAVED)
+  notes          String?           @db.Text
+  appliedAt      DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  statusHistory  StatusHistory[]
+
+  @@index([userId])
+}
+
+model StatusHistory {
+  id               String         @id @default(cuid())
+  jobApplicationId String
+  jobApplication   JobApplication @relation(fields: [jobApplicationId], references: [id], onDelete: Cascade)
+  fromStatus       String
+  toStatus         String
+  note             String?
+  changedAt        DateTime       @default(now())
+
+  @@index([jobApplicationId])
+}
+
+// Tracks Adzuna job IDs a user has dismissed from the suggestions feed
+// so they do not reappear in future /api/jobs/suggest responses.
+model DismissedJob {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  adzunaJobId String
+  dismissedAt DateTime @default(now())
+
+  @@unique([userId, adzunaJobId])
+  @@index([userId])
+}
+
+// ============================================
+// Enums
+// ============================================
+
+enum ApplicationStatus {
+  SAVED
+  APPLIED
+  PHONE_SCREEN
+  TECHNICAL
+  ONSITE
+  OFFER
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+  GHOSTED
+}
+
+
+enum InterviewType {
+  BEHAVIORAL
+  TECHNICAL
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}

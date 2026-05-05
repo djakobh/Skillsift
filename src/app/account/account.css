@@ -1,0 +1,145 @@
+/* NOT IMPLEMENTED YET */
+
+@reference "../styles/globals.css";
+
+/* ---------- Page / Layout ---------- */
+
+.account-page {
+  @apply min-h-screen w-full flex items-center justify-center transition-colors bg-white text-gray-900;
+}
+
+.account-page--dark {
+  @apply bg-neutral-900 text-white;
+}
+
+.account-layout {
+  @apply flex items-start gap-8;
+}
+
+.account-sidebarColumn {
+  @apply flex flex-col items-center gap-4;
+}
+
+.account-spacer {
+  @apply w-64;
+}
+
+/* ---------- Sidebar ---------- */
+
+.account-sidebarPanel {
+  @apply w-64 rounded-xl shadow-md p-4 space-y-4 bg-gray-100;
+}
+
+.account-page--dark .account-sidebarPanel {
+  @apply bg-neutral-800;
+}
+
+.account-sidebarTitle {
+  @apply text-sm font-semibold mb-2;
+}
+
+.account-sidebarItem {
+  @apply flex w-full items-center gap-3 px-4 py-3 rounded-md text-left text-sm font-medium border bg-gray-200 border-gray-300 hover:bg-gray-300;
+}
+
+.account-sidebarItem--active {
+  @apply bg-white border-gray-400 shadow-sm;
+}
+
+.account-page--dark .account-sidebarItem {
+  @apply bg-neutral-700 border-neutral-600 hover:bg-neutral-600;
+}
+
+.account-sidebarBullet {
+  @apply w-5 h-5 rounded-full border border-gray-400;
+}
+
+/* ---------- Dark Mode Toggle ---------- */
+
+.account-darkToggle {
+  @apply flex items-center gap-2 px-3 py-1 rounded-full border shadow-sm text-xs font-medium bg-white border-gray-300;
+}
+
+.account-page--dark .account-darkToggle {
+  @apply bg-neutral-700 border-neutral-500;
+}
+
+.account-darkToggleTrack {
+  @apply relative w-12 h-6 rounded-full transition-colors bg-gray-300;
+}
+
+.account-page--dark .account-darkToggleTrack {
+  @apply bg-orange-400;
+}
+
+.account-darkToggleThumb {
+  @apply absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform;
+}
+
+/* ---------- Account Card ---------- */
+
+.account-card {
+  @apply w-full max-w-xl border border-black rounded-xl p-10 shadow-lg bg-white;
+}
+
+.account-page--dark .account-card {
+  @apply bg-neutral-800;
+}
+
+.account-cardTitle {
+  @apply text-3xl font-bold text-center mb-6;
+}
+
+/* ---------- Profile Section ---------- */
+
+.account-profile {
+  @apply flex flex-col items-center mb-8;
+}
+
+.account-profileAvatar {
+  @apply w-28 h-28 rounded-full border flex items-center justify-center border-gray-500 text-gray-700;
+}
+
+.account-page--dark .account-profileAvatar {
+  @apply border-gray-300 text-gray-100;
+}
+
+.account-changePictureButton {
+  @apply mt-4 px-4 py-1 bg-orange-400 text-white text-sm font-medium rounded-full hover:bg-orange-500;
+}
+
+/* ---------- Form ---------- */
+
+.account-form {
+  @apply space-y-6;
+}
+
+.account-formRow {
+  @apply grid grid-cols-2 gap-4;
+}
+
+.account-field {
+  @apply flex flex-col;
+}
+
+.account-fieldLabel {
+  @apply text-sm font-medium mb-1;
+}
+
+.account-fieldInput {
+  @apply border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400;
+}
+
+/* ---------- Buttons ---------- */
+
+.account-actions {
+  @apply flex justify-center gap-4 mt-6;
+}
+
+.account-primaryButton {
+  @apply px-6 py-2 bg-orange-400 text-white rounded-md hover:bg-orange-500;
+}
+
+.account-secondaryButton {
+  @apply px-6 py-2 text-sm text-gray-600 hover:underline;
+}

@@ -1,0 +1,27 @@
+﻿.centered_row {
+    @apply flex flex-row items-center;
+    gap: 50px;
+}
+
+.centered_row2 {
+    @apply flex flex-row items-center;
+    gap: 10px;
+}
+
+.centered_column {
+    @apply flex flex-col items-center;
+    gap: 20px;
+}
+
+.circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%; /* This makes the square a circle */
+
+    display: flex;
+    justify-content: center;  /* horizontal center */
+    align-items: center;      /* vertical center */
+    font-size: 32px;
+}
+
+

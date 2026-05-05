@@ -1,0 +1,1363 @@
+[
+  {
+    "id": "3sum",
+    "slug": "3sum",
+    "title": "9. 3Sum",
+    "description": "Given an integer array `nums`, return all the triplets `[nums[i], nums[j], nums[k]]` such that `i != j`, `i != k` and `j != k` and `nums[i] + nums[j] + nums[k] == 0`.\n",
+    "difficulty": "Medium",
+    "category": "array",
+    "starterCode": {
+      "java": "class Solution {\n    public int[][] threeSum(int[] nums) {\n        \n    }\n}",
+      "python": "from typing import List\nclass Solution:\n    def threeSum(self, nums: List[int]) -> List[List[int]]:\n        ",
+      "cpp": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<vector<int>> threeSum(vector<int>& nums) {\n        return {};\n    }\n};",
+      "csharp": "public class Solution \n{\n    public int[][] ThreeSum(int[] nums) \n    {\n        \n    }\n}"
+    },
+    "functionName": "threeSum",
+    "params": [
+      {
+        "name": "nums",
+        "type": "int_array"
+      }
+    ],
+    "outputType": "int_array_2d",
+    "testCases": [
+      {
+        "input": {
+          "nums": [
+            -1,
+            0,
+            1,
+            2,
+            -1,
+            -4
+          ]
+        },
+        "expectedOutput": "[[-1,0,1],[-1,-1,2]]",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "nums": [
+            0,
+            1,
+            1
+          ]
+        },
+        "expectedOutput": "[]",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "nums": [
+            0,
+            0,
+            0
+          ]
+        },
+        "expectedOutput": "[[0,0,0]]",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "alien-dictionary",
+    "slug": "alien-dictionary",
+    "title": "32. Alien Dictionary",
+    "description": "Given a list of words sorted lexicographically in an alien language, derive a valid order of characters.\n",
+    "difficulty": "Hard",
+    "category": "graph",
+    "starterCode": {
+      "java": "import java.util.*;\nclass Solution {\n    public String alienOrder(String[] words) {\n        \n    }\n}",
+      "python": "from typing import List\nclass Solution:\n    def alienOrder(self, words: List[str]) -> str:\n        pass\n",
+      "cpp": "#include <vector>\n#include <string>\nusing namespace std;\nclass Solution {\npublic:\n    string alienOrder(vector<string>& words) {\n        return \"\";\n    }\n};",
+      "csharp": "public class Solution \n{\n    public string AlienOrder(string[] words) \n    {\n        \n    }\n}"
+    },
+    "functionName": "alienOrder",
+    "params": [
+      {
+        "name": "words",
+        "type": "string_array"
+      }
+    ],
+    "outputType": "string",
+    "testCases": [
+      {
+        "input": {
+          "words": [
+            "wrt",
+            "wrf",
+            "er",
+            "ett",
+            "rftt"
+          ]
+        },
+        "expectedOutput": "wertf",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "words": [
+            "z",
+            "x"
+          ]
+        },
+        "expectedOutput": "zx",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "best-time-to-buy-and-sell-stock",
+    "slug": "best-time-to-buy-and-sell-stock",
+    "title": "2. Best Time to Buy and Sell Stock",
+    "description": "You are given an array `prices` where prices[i] is the price of a given stock on the i-th day. Find the maximum profit you can achieve. You may complete at most one transaction (i.e., buy one and sell one share of the stock). Return the maximum profit you can achieve from this transaction. If you cannot achieve any profit, return 0.\n",
+    "difficulty": "Easy",
+    "category": "array",
+    "starterCode": {
+      "java": "class Solution {\n    public int maxProfit(int[] prices) {\n        \n    }\n}",
+      "python": "from typing import List\nclass Solution:\n    def maxProfit(self, prices: List[int]) -> int:\n        ",
+      "cpp": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int maxProfit(vector<int>& prices) {\n        return 0;\n    }\n};",
+      "csharp": "public class Solution \n{\n    public int MaxProfit(int[] prices) \n    {\n        \n    }\n}"
+    },
+    "functionName": "maxProfit",
+    "params": [
+      {
+        "name": "prices",
+        "type": "int_array"
+      }
+    ],
+    "outputType": "int",
+    "testCases": [
+      {
+        "input": {
+          "prices": [
+            7,
+            1,
+            5,
+            3,
+            6,
+            4
+          ]
+        },
+        "expectedOutput": 5,
+        "isHidden": false
+      },
+      {
+        "input": {
+          "prices": [
+            7,
+            6,
+            4,
+            3,
+            1
+          ]
+        },
+        "expectedOutput": 0,
+        "isHidden": false
+      },
+      {
+        "input": {
+          "prices": [
+            1,
+            2
+          ]
+        },
+        "expectedOutput": 1,
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "binary-tree-level-order-traversal",
+    "slug": "binary-tree-level-order-traversal",
+    "title": "64. Binary Tree Level Order Traversal",
+    "description": "Given the root of a binary tree, return the level order traversal of its nodes' values (i.e., from left to right, level by level).\n",
+    "difficulty": "Medium",
+    "category": "tree",
+    "starterCode": {
+      "java": "/*\nDefinition for a binary tree node.\nclass TreeNode {\n    int val;\n    TreeNode left;\n    TreeNode right;\n    TreeNode() {}\n    TreeNode(int val) { this.val = val; }\n    TreeNode(int val, TreeNode left, TreeNode right) { this.val = val; this.left = left; this.right = right; }\n}\n*/\nimport java.util.*;\nclass Solution {\n    public List<List<Integer>> levelOrder(TreeNode root) {\n        \n    }\n}",
+      "python": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nfrom typing import List\nclass Solution:\n    def levelOrder(self, root) -> List[List[int]]:\n        # TODO: return level order traversal values\n        pass\n",
+      "cpp": "/*\nDefinition for a binary tree node.\nstruct TreeNode {\n    int val;\n    TreeNode *left;\n    TreeNode *right;\n    TreeNode(): val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x): val(x), left(nullptr), right(nullptr) {}\n    TreeNode(int x, TreeNode* left, TreeNode* right): val(x), left(left), right(right) {}\n};\n*/\n#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n    vector<vector<int>> levelOrder(TreeNode* root) {\n        \n    }\n};\n",
+      "csharp": "/*\nDefinition for a binary tree node.\npublic class TreeNode {\n    public int val;\n    public TreeNode left;\n    public TreeNode right;\n    public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n        this.val = val;\n        this.left = left;\n        this.right = right;\n    }\n}\n*/\npublic class Solution \n{\n    public IList<IList<int>> LevelOrder(TreeNode root) \n    {\n        \n    }\n}"
+    },
+    "functionName": "levelOrder",
+    "params": [
+      {
+        "name": "root",
+        "type": "tree_node",
+        "visualizeType": "tree_node"
+      }
+    ],
+    "outputType": "int_list_2d",
+    "testCases": [
+      {
+        "input": {
+          "root": [
+            3,
+            9,
+            20,
+            null,
+            null,
+            15,
+            7
+          ]
+        },
+        "expectedOutput": "[[3],[9,20],[15,7]]",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "root": [
+            1
+          ]
+        },
+        "expectedOutput": "[[1]]",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "root": []
+        },
+        "expectedOutput": "[]",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "binary-tree-maximum-path-sum",
+    "slug": "binary-tree-maximum-path-sum",
+    "title": "63. Binary Tree Maximum Path Sum",
+    "description": "Given the root of a binary tree, return the maximum path sum of any non-empty path. The path sum of a path is the sum of the node's values in the path.\n",
+    "difficulty": "Hard",
+    "category": "tree",
+    "starterCode": {
+      "java": "/*\nDefinition for a binary tree node.\nclass TreeNode {\n    int val;\n    TreeNode left;\n    TreeNode right;\n    TreeNode() {}\n    TreeNode(int val) { this.val = val; }\n    TreeNode(int val, TreeNode left, TreeNode right) { this.val = val; this.left = left; this.right = right; }\n}\n*/\nclass Solution {\n    public int maxPathSum(TreeNode root) {\n        \n    }\n}",
+      "python": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\n\nclass Solution:\n    def maxPathSum(self, root) -> int:\n        # TODO: return the maximum path sum\n        pass\n",
+      "cpp": "/*\nDefinition for a binary tree node.\nstruct TreeNode {\n    int val;\n    TreeNode *left;\n    TreeNode *right;\n    TreeNode(): val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x): val(x), left(nullptr), right(nullptr) {}\n    TreeNode(int x, TreeNode* left, TreeNode* right): val(x), left(left), right(right) {}\n};\n*/\nclass Solution {\npublic:\n    int maxPathSum(TreeNode* root) {\n        \n    }\n};\n",
+      "csharp": "/*\nDefinition for a binary tree node.\npublic class TreeNode {\n    public int val;\n    public TreeNode left;\n    public TreeNode right;\n    public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n        this.val = val;\n        this.left = left;\n        this.right = right;\n    }\n}\n*/\npublic class Solution \n{\n    public int MaxPathSum(TreeNode root) \n    {\n        \n    }\n}"
+    },
+    "functionName": "maxPathSum",
+    "params": [
+      {
+        "name": "root",
+        "type": "tree_node",
+        "visualizeType": "tree_node"
+      }
+    ],
+    "outputType": "int",
+    "testCases": [
+      {
+        "input": {
+          "root": [
+            1,
+            2,
+            3
+          ]
+        },
+        "expectedOutput": "6",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "root": [
+            -10,
+            9,
+            20,
+            null,
+            null,
+            15,
+            7
+          ]
+        },
+        "expectedOutput": "42",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "root": [
+            2,
+            -1
+          ]
+        },
+        "expectedOutput": "2",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "climbing-stairs",
+    "slug": "climbing-stairs",
+    "title": "16. Climbing Stairs",
+    "description": "You are climbing a staircase. It takes n steps to reach the top. Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?\n",
+    "difficulty": "Easy",
+    "category": "dp",
+    "starterCode": {
+      "java": "class Solution {\n    public int climbStairs(int n) {\n        \n    }\n}",
+      "python": "class Solution:\n    def climbStairs(self, n: int) -> int:\n        pass\n",
+      "cpp": "class Solution {\npublic:\n    int climbStairs(int n) {\n        return 0;\n    }\n};",
+      "csharp": "public class Solution \n{\n    public int ClimbStairs(int n) \n    {\n        \n    }\n}"
+    },
+    "functionName": "climbStairs",
+    "params": [
+      {
+        "name": "n",
+        "type": "int"
+      }
+    ],
+    "outputType": "int",
+    "testCases": [
+      {
+        "input": {
+          "n": 2
+        },
+        "expectedOutput": "2",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "n": 3
+        },
+        "expectedOutput": "3",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "coin-change",
+    "slug": "coin-change",
+    "title": "17. Coin Change",
+    "description": "Given an integer array of coins representing coins of different denominations and an integer amount representing a total amount of money, return the fewest number of coins that you need to make up that amount. If that amount of money cannot be made up by any combination of the coins, return -1.\n",
+    "difficulty": "Medium",
+    "category": "dp",
+    "starterCode": {
+      "java": "class Solution {\n    public int coinChange(int[] coins, int amount) {\n        \n    }\n}",
+      "python": "from typing import List\nclass Solution:\n    def coinChange(self, coins: List[int], amount: int) -> int:\n        pass\n",
+      "cpp": "#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n    int coinChange(vector<int>& coins, int amount) {\n        return -1;\n    }\n};",
+      "csharp": "public class Solution \n{\n    public int CoinChange(int[] coins, int amount) \n    {\n        \n    }\n}"
+    },
+    "functionName": "coinChange",
+    "params": [
+      {
+        "name": "coins",
+        "type": "int_array"
+      },
+      {
+        "name": "amount",
+        "type": "int"
+      }
+    ],
+    "outputType": "int",
+    "testCases": [
+      {
+        "input": {
+          "coins": [
+            1,
+            2,
+            5
+          ],
+          "amount": 11
+        },
+        "expectedOutput": "3",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "coins": [
+            2
+          ],
+          "amount": 3
+        },
+        "expectedOutput": "-1",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "combination-sum-iv",
+    "slug": "combination-sum-iv",
+    "title": "21. Combination Sum IV",
+    "description": "Given an array of distinct integers nums and a target integer target, return the number of possible combinations that add up to target. Different sequences are counted as different combinations.\n",
+    "difficulty": "Medium",
+    "category": "dp",
+    "starterCode": {
+      "java": "class Solution {\n    public int combinationSum4(int[] nums, int target) {\n        \n    }\n}",
+      "python": "from typing import List\nclass Solution:\n    def combinationSum4(self, nums: List[int], target: int) -> int:\n        pass\n",
+      "cpp": "#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n    int combinationSum4(vector<int>& nums, int target) {\n        return 0;\n    }\n};",
+      "csharp": "public class Solution \n{\n    public int CombinationSum4(int[] nums, int target) \n    {\n        \n    }\n}"
+    },
+    "functionName": "combinationSum4",
+    "params": [
+      {
+        "name": "nums",
+        "type": "int_array"
+      },
+      {
+        "name": "target",
+        "type": "int"
+      }
+    ],
+    "outputType": "int",
+    "testCases": [
+      {
+        "input": {
+          "nums": [
+            1,
+            2,
+            3
+          ],
+          "target": 4
+        },
+        "expectedOutput": "7",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "construct-binary-tree-from-preorder-and-inorder-traversal",
+    "slug": "construct-binary-tree-from-preorder-and-inorder-traversal",
+    "title": "67. Construct Binary Tree from Preorder and Inorder Traversal",
+    "description": "Given two integer arrays preorder and inorder where preorder is the preorder traversal of a binary tree and inorder is the inorder traversal of the same tree, construct and return the binary tree.\n",
+    "difficulty": "Medium",
+    "category": "tree",
+    "starterCode": {
+      "java": "/*\nDefinition for a binary tree node.\nclass TreeNode {\n    int val;\n    TreeNode left;\n    TreeNode right;\n    TreeNode() {}\n    TreeNode(int val) { this.val = val; }\n    TreeNode(int val, TreeNode left, TreeNode right) { this.val = val; this.left = left; this.right = right; }\n}\n*/\nclass Solution {\n    public TreeNode buildTree(int[] preorder, int[] inorder) {\n        \n    }\n}",
+      "python": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\nfrom typing import List\nclass Solution:\n    def buildTree(self, preorder: List[int], inorder: List[int]):\n        # TODO: reconstruct and return the tree root\n        pass\n",
+      "cpp": "/*\nDefinition for a binary tree node.\nstruct TreeNode {\n    int val;\n    TreeNode *left;\n    TreeNode *right;\n    TreeNode(): val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x): val(x), left(nullptr), right(nullptr) {}\n    TreeNode(int x, TreeNode* left, TreeNode* right): val(x), left(left), right(right) {}\n};\n*/\n#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {\n        \n    }\n};\n",
+      "csharp": "/*\nDefinition for a binary tree node.\npublic class TreeNode {\n    public int val;\n    public TreeNode left;\n    public TreeNode right;\n    public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n        this.val = val;\n        this.left = left;\n        this.right = right;\n    }\n}\n*/\npublic class Solution \n{\n    public TreeNode BuildTree(int[] preorder, int[] inorder) \n    {\n        \n    }\n}"
+    },
+    "functionName": "buildTree",
+    "params": [
+      {
+        "name": "preorder",
+        "type": "int_array"
+      },
+      {
+        "name": "inorder",
+        "type": "int_array"
+      }
+    ],
+    "outputType": "tree_node",
+    "testCases": [
+      {
+        "input": {
+          "preorder": [
+            3,
+            9,
+            20,
+            15,
+            7
+          ],
+          "inorder": [
+            9,
+            3,
+            15,
+            20,
+            7
+          ]
+        },
+        "expectedOutput": "[3,9,20,null,null,15,7]",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "preorder": [
+            -1
+          ],
+          "inorder": [
+            -1
+          ]
+        },
+        "expectedOutput": "[-1]",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "container-with-most-water",
+    "slug": "container-with-most-water",
+    "title": "10. Container With Most Water",
+    "description": "Given an integer array `height` where `height[i]` is the height of a line at position `i`, find two lines that together with the x-axis form a container such that the container contains the most water. Return that maximum amount.\n",
+    "difficulty": "Medium",
+    "category": "array",
+    "starterCode": {
+      "java": "class Solution {\n    public int maxArea(int[] height) {\n        \n    }\n}",
+      "python": "from typing import List\nclass Solution:\n    def maxArea(self, height: List[int]) -> int:\n        ",
+      "cpp": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int maxArea(vector<int>& height) {\n        return 0;\n    }\n};",
+      "csharp": "public class Solution \n{\n    public int MaxArea(int[] height) \n    {\n        \n    }\n}"
+    },
+    "functionName": "maxArea",
+    "params": [
+      {
+        "name": "height",
+        "type": "int_array"
+      }
+    ],
+    "outputType": "int",
+    "testCases": [
+      {
+        "input": {
+          "height": [
+            1,
+            8,
+            6,
+            2,
+            5,
+            4,
+            8,
+            3,
+            7
+          ]
+        },
+        "expectedOutput": "49",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "height": [
+            1,
+            1
+          ]
+        },
+        "expectedOutput": "1",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "contains-duplicate",
+    "slug": "contains-duplicate",
+    "title": "3. Contains Duplicate",
+    "description": "Given an integer array `nums`, return true if any value appears at least twice in the array, and return false if every element is distinct.\n",
+    "difficulty": "Easy",
+    "category": "array",
+    "starterCode": {
+      "java": "class Solution {\n    public boolean containsDuplicate(int[] nums) {\n        \n    }\n}",
+      "python": "from typing import List\nclass Solution:\n    def containsDuplicate(self, nums: List[int]) -> bool:\n        ",
+      "cpp": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    bool containsDuplicate(vector<int>& nums) {\n        return false;\n    }\n};",
+      "csharp": "public class Solution \n{\n    public bool ContainsDuplicate(int[] nums) \n    {\n        \n    }\n}"
+    },
+    "functionName": "containsDuplicate",
+    "params": [
+      {
+        "name": "nums",
+        "type": "int_array"
+      }
+    ],
+    "outputType": "boolean",
+    "testCases": [
+      {
+        "input": {
+          "nums": [
+            1,
+            2,
+            3,
+            1
+          ]
+        },
+        "expectedOutput": true,
+        "isHidden": false
+      },
+      {
+        "input": {
+          "nums": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        "expectedOutput": false,
+        "isHidden": false
+      },
+      {
+        "input": {
+          "nums": [
+            1,
+            1,
+            1,
+            3,
+            3,
+            4,
+            3,
+            2,
+            4,
+            2
+          ]
+        },
+        "expectedOutput": true,
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "counting-bits",
+    "slug": "counting-bits",
+    "title": "13. Counting Bits",
+    "description": "Given an integer `n`, return an array `ans` of length `n + 1` such that for each `i` (0 <= i <= n), `ans[i]` is the number of 1's in the binary representation of `i`.\n",
+    "difficulty": "Easy",
+    "category": "binary",
+    "starterCode": {
+      "java": "class Solution {\n    public int[] countBits(int n) {\n        \n    }\n}",
+      "python": "class Solution:\n    def countBits(self, n: int) -> list[int]:\n        pass\n",
+      "cpp": "#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n    vector<int> countBits(int n) {\n        return {};\n    }\n};",
+      "csharp": "public class Solution \n{\n    public int[] CountBits(int n) \n    {\n        \n    }\n}"
+    },
+    "functionName": "countBits",
+    "params": [
+      {
+        "name": "n",
+        "type": "int"
+      }
+    ],
+    "outputType": "int_array",
+    "testCases": [
+      {
+        "input": {
+          "n": 2
+        },
+        "expectedOutput": "[0, 1, 1]",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "n": 5
+        },
+        "expectedOutput": "[0, 1, 1, 2, 1, 2]",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "course-schedule",
+    "slug": "course-schedule",
+    "title": "28. Course Schedule",
+    "description": "Given numCourses and a list of prerequisite pairs prerequisites[i] = [ai, bi], return true if you can finish all courses (i.e., the directed graph has no cycle).\n",
+    "difficulty": "Medium",
+    "category": "graph",
+    "starterCode": {
+      "java": "import java.util.*;\nclass Solution {\n    public boolean canFinish(int numCourses, int[][] prerequisites) {\n        \n    }\n}",
+      "python": "from typing import List\nclass Solution:\n    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:\n        pass\n",
+      "cpp": "#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {\n        return false;\n    }\n};",
+      "csharp": "public class Solution \n{\n    public bool CanFinish(int numCourses, int[][] prerequisites) \n    {\n        \n    }\n}"
+    },
+    "functionName": "canFinish",
+    "params": [
+      {
+        "name": "numCourses",
+        "type": "int"
+      },
+      {
+        "name": "prerequisites",
+        "type": "int_array_2d"
+      }
+    ],
+    "outputType": "boolean",
+    "testCases": [
+      {
+        "input": {
+          "numCourses": 2,
+          "prerequisites": [
+            [
+              1,
+              0
+            ]
+          ]
+        },
+        "expectedOutput": "true",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "numCourses": 2,
+          "prerequisites": [
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        },
+        "expectedOutput": "false",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "decode-ways",
+    "slug": "decode-ways",
+    "title": "24. Decode Ways",
+    "description": "A message containing letters from A-Z can be encoded into numbers using the following mapping: 'A' -> \"1\", 'B' -> \"2\", ... 'Z' -> \"26\". Given a string s containing only digits, return the number of ways to decode it.\n",
+    "difficulty": "Medium",
+    "category": "dp",
+    "starterCode": {
+      "java": "class Solution {\n    public int numDecodings(String s) {\n        \n    }\n}",
+      "python": "class Solution:\n    def numDecodings(self, s: str) -> int:\n        pass\n",
+      "cpp": "#include <string>\nusing namespace std;\nclass Solution {\npublic:\n    int numDecodings(string s) {\n        return 0;\n    }\n};",
+      "csharp": "public class Solution \n{\n    public int NumDecodings(string s) \n    {\n        \n    }\n}"
+    },
+    "functionName": "numDecodings",
+    "params": [
+      {
+        "name": "s",
+        "type": "string"
+      }
+    ],
+    "outputType": "int",
+    "testCases": [
+      {
+        "input": {
+          "s": "12"
+        },
+        "expectedOutput": "2",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "s": "226"
+        },
+        "expectedOutput": "3",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "find-minimum-in-rotated-sorted-array",
+    "slug": "find-minimum-in-rotated-sorted-array",
+    "title": "7. Find Minimum in Rotated Sorted Array",
+    "description": "Given the sorted rotated array `nums` of unique elements, return the minimum element of this array.\n",
+    "difficulty": "Medium",
+    "category": "array",
+    "starterCode": {
+      "java": "class Solution {\n    public int findMin(int[] nums) {\n        \n    }\n}",
+      "python": "from typing import List\nclass Solution:\n    def findMin(self, nums: List[int]) -> int:\n        ",
+      "cpp": "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int findMin(vector<int>& nums) {\n        return 0;\n    }\n};",
+      "csharp": "public class Solution \n{\n    public int FindMin(int[] nums) \n    {\n        \n    }\n}"
+    },
+    "functionName": "findMin",
+    "params": [
+      {
+        "name": "nums",
+        "type": "int_array"
+      }
+    ],
+    "outputType": "int",
+    "testCases": [
+      {
+        "input": {
+          "nums": [
+            3,
+            4,
+            5,
+            1,
+            2
+          ]
+        },
+        "expectedOutput": "1",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "nums": [
+            4,
+            5,
+            6,
+            7,
+            0,
+            1,
+            2
+          ]
+        },
+        "expectedOutput": "0",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "graph-valid-tree",
+    "slug": "graph-valid-tree",
+    "title": "33. Graph Valid Tree",
+    "description": "Given n nodes labeled 0..n-1 and a list of undirected edges, return true if they make up a valid tree.\n",
+    "difficulty": "Medium",
+    "category": "graph",
+    "starterCode": {
+      "java": "import java.util.*;\nclass Solution {\n    public boolean validTree(int n, int[][] edges) {\n        \n    }\n}",
+      "python": "from typing import List\nclass Solution:\n    def validTree(self, n: int, edges: List[List[int]]) -> bool:\n        pass\n",
+      "cpp": "#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n    bool validTree(int n, vector<vector<int>>& edges) {\n        return false;\n    }\n};",
+      "csharp": "public class Solution \n{\n    public bool ValidTree(int n, int[][] edges) \n    {\n        \n    }\n}"
+    },
+    "functionName": "validTree",
+    "params": [
+      {
+        "name": "n",
+        "type": "int"
+      },
+      {
+        "name": "edges",
+        "type": "int_array_2d",
+        "visualizeType": "undirected_edges",
+        "numNodesRef": "n"
+      }
+    ],
+    "outputType": "boolean",
+    "testCases": [
+      {
+        "input": {
+          "n": 5,
+          "edges": [
+            [
+              0,
+              1
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              3
+            ],
+            [
+              1,
+              4
+            ]
+          ]
+        },
+        "expectedOutput": "true",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "n": 5,
+          "edges": [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              1,
+              4
+            ]
+          ]
+        },
+        "expectedOutput": "false",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "invert-binary-tree",
+    "slug": "invert-binary-tree",
+    "title": "62. Invert/Flip Binary Tree",
+    "description": "Given the root of a binary tree, invert the tree, and return its root.\n",
+    "difficulty": "Easy",
+    "category": "tree",
+    "starterCode": {
+      "java": "/*\nDefinition for a binary tree node.\nclass TreeNode {\n    int val;\n    TreeNode left;\n    TreeNode right;\n    TreeNode() {}\n    TreeNode(int val) { this.val = val; }\n    TreeNode(int val, TreeNode left, TreeNode right) { this.val = val; this.left = left; this.right = right; }\n}\n*/\nclass Solution {\n    public TreeNode invertTree(TreeNode root) {\n        \n    }\n}",
+      "python": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\n\nclass Solution:\n    def invertTree(self, root):\n        # TODO: return the root of the inverted tree\n        pass\n",
+      "cpp": "/*\nDefinition for a binary tree node.\nstruct TreeNode {\n    int val;\n    TreeNode *left;\n    TreeNode *right;\n    TreeNode(): val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x): val(x), left(nullptr), right(nullptr) {}\n    TreeNode(int x, TreeNode* left, TreeNode* right): val(x), left(left), right(right) {}\n};\n*/\nclass Solution {\npublic:\n    TreeNode* invertTree(TreeNode* root) {\n        \n    }\n};\n",
+      "csharp": "/*\nDefinition for a binary tree node.\npublic class TreeNode {\n    public int val;\n    public TreeNode left;\n    public TreeNode right;\n    public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n        this.val = val;\n        this.left = left;\n        this.right = right;\n    }\n}\n*/\npublic class Solution \n{\n    public TreeNode InvertTree(TreeNode root) \n    {\n        \n    }\n}"
+    },
+    "functionName": "invertTree",
+    "params": [
+      {
+        "name": "root",
+        "type": "tree_node",
+        "visualizeType": "tree_node"
+      }
+    ],
+    "outputType": "tree_node",
+    "testCases": [
+      {
+        "input": {
+          "root": [
+            4,
+            2,
+            7,
+            1,
+            3,
+            6,
+            9
+          ]
+        },
+        "expectedOutput": "[4,7,2,9,6,3,1]",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "root": [
+            2,
+            1,
+            3
+          ]
+        },
+        "expectedOutput": "[2,3,1]",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "root": []
+        },
+        "expectedOutput": "[]",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "linked-list-cycle",
+    "slug": "linked-list-cycle",
+    "title": "41. Detect Cycle in a Linked List",
+    "description": "Given the head of a linked list, determine if the linked list has a cycle in it. Return true if there is a cycle in the linked list, otherwise return false.\n",
+    "difficulty": "Easy",
+    "category": "linked-list",
+    "starterCode": {
+      "java": "/*\nDefinition for singly-linked list. \nListNode {\n    int val;\n    ListNode next;\n    ListNode() {}\n    ListNode(int val) { this.val = val; }\n    ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n}\n*/\nclass Solution {\n    public boolean hasCycle(ListNode head) {\n        \n    }\n}",
+      "python": "# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n\nclass Solution:\n    def hasCycle(self, head) -> bool:\n        pass\n",
+      "cpp": "/*\nstruct ListNode {\n    int val;\n    ListNode *next;\n    ListNode(): val(0), next(nullptr) {}\n    ListNode(int x): val(x), next(nullptr) {}\n    ListNode(int x, ListNode* next): val(x), next(next) {}\n};\n*/\nclass Solution {\npublic:\n    bool hasCycle(ListNode* head) {\n        return false;\n    }\n};\n",
+      "csharp": "/*\nDefinition for singly-linked list.\npublic class ListNode {\n    public int val;\n    public ListNode next;\n    public ListNode(int val=0, ListNode next=null) {\n        this.val = val;\n        this.next = next;\n    }\n}\n*/\npublic class Solution \n{\n    public bool HasCycle(ListNode head) \n    {\n        \n    }\n}"
+    },
+    "functionName": "hasCycle",
+    "params": [
+      {
+        "name": "head",
+        "type": "list_node"
+      }
+    ],
+    "outputType": "boolean",
+    "testCases": [
+      {
+        "input": {
+          "head": [
+            3,
+            2,
+            0,
+            -4
+          ],
+          "pos": 1
+        },
+        "expectedOutput": "true",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "head": [
+            1,
+            2
+          ],
+          "pos": 0
+        },
+        "expectedOutput": "true",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "head": [
+            1
+          ],
+          "pos": -1
+        },
+        "expectedOutput": "false",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "maximum-depth-of-binary-tree",
+    "slug": "maximum-depth-of-binary-tree",
+    "title": "60. Maximum Depth of Binary Tree",
+    "description": "Given the root of a binary tree, return its maximum depth. A binary tree's maximum depth is the number of nodes along the longest path from the root node down to the farthest leaf node.\n",
+    "difficulty": "Easy",
+    "category": "tree",
+    "starterCode": {
+      "java": "/*\nDefinition for a binary tree node.\nclass TreeNode {\n    int val;\n    TreeNode left;\n    TreeNode right;\n    TreeNode() {}\n    TreeNode(int val) { this.val = val; }\n    TreeNode(int val, TreeNode left, TreeNode right) { this.val = val; this.left = left; this.right = right; }\n}\n*/\nclass Solution {\n    public int maxDepth(TreeNode root) {\n        \n    }\n}",
+      "python": "# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\n\nclass Solution:\n    def maxDepth(self, root):\n        # TODO: return the maximum depth of the binary tree\n        pass\n",
+      "cpp": "/*\nDefinition for a binary tree node.\nstruct TreeNode {\n    int val;\n    TreeNode *left;\n    TreeNode *right;\n    TreeNode(): val(0), left(nullptr), right(nullptr) {}\n    TreeNode(int x): val(x), left(nullptr), right(nullptr) {}\n    TreeNode(int x, TreeNode* left, TreeNode* right): val(x), left(left), right(right) {}\n};\n*/\nclass Solution {\npublic:\n    int maxDepth(TreeNode* root) {\n        \n    }\n};\n",
+      "csharp": "/*\nDefinition for a binary tree node.\npublic class TreeNode {\n    public int val;\n    public TreeNode left;\n    public TreeNode right;\n    public TreeNode(int val=0, TreeNode left=null, TreeNode right=null) {\n        this.val = val;\n        this.left = left;\n        this.right = right;\n    }\n}\n*/\npublic class Solution \n{\n    public int MaxDepth(TreeNode root) \n    {\n        \n    }\n}"
+    },
+    "functionName": "maxDepth",
+    "params": [
+      {
+        "name": "root",
+        "type": "tree_node",
+        "visualizeType": "tree_node"
+      }
+    ],
+    "outputType": "int",
+    "testCases": [
+      {
+        "input": {
+          "root": [
+            3,
+            9,
+            20,
+            null,
+            null,
+            15,
+            7
+          ]
+        },
+        "expectedOutput": "3",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "root": [
+            1,
+            null,
+            2
+          ]
+        },
+        "expectedOutput": "2",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "root": []
+        },
+        "expectedOutput": "0",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "meeting-rooms",
+    "slug": "meeting-rooms",
+    "title": "38. Meeting Rooms",
+    "description": "Determine if a person could attend all meetings given start-end intervals.\n",
+    "difficulty": "Easy",
+    "category": "interval",
+    "starterCode": {
+      "java": "import java.util.*;\nclass Solution {\n    public boolean canAttendMeetings(int[][] intervals) {\n        \n    }\n}",
+      "python": "from typing import List\nclass Solution:\n    def canAttendMeetings(self, intervals: List[List[int]]) -> bool:\n        pass\n",
+      "cpp": "#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n    bool canAttendMeetings(vector<vector<int>>& intervals) {\n        return true;\n    }\n};",
+      "csharp": "public class Solution \n{\n    public bool CanAttendMeetings(int[][] intervals) \n    {\n        \n    }\n}"
+    },
+    "functionName": "canAttendMeetings",
+    "params": [
+      {
+        "name": "intervals",
+        "type": "int_array_2d"
+      }
+    ],
+    "outputType": "boolean",
+    "testCases": [
+      {
+        "input": {
+          "intervals": [
+            [
+              0,
+              30
+            ],
+            [
+              5,
+              10
+            ],
+            [
+              15,
+              20
+            ]
+          ]
+        },
+        "expectedOutput": "false",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "intervals": [
+            [
+              7,
+              10
+            ],
+            [
+              2,
+              4
+            ]
+          ]
+        },
+        "expectedOutput": "true",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "merge-k-sorted-lists",
+    "slug": "merge-k-sorted-lists",
+    "title": "43. Merge K Sorted Lists",
+    "description": "Merge k sorted linked lists and return it as one sorted list.\n",
+    "difficulty": "Hard",
+    "category": "linked-list",
+    "starterCode": {
+      "java": "/*\nDefinition for singly-linked list. \nListNode {\n    int val;\n    ListNode next;\n    ListNode() {}\n    ListNode(int val) { this.val = val; }\n    ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n}\n*/\nclass Solution {\n    public ListNode mergeKLists(ListNode[] lists) {\n        \n    }\n}",
+      "python": "# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n\nclass Solution:\n    def mergeKLists(self, lists):\n        pass\n",
+      "cpp": "/*\nstruct ListNode {\n    int val;\n    ListNode *next;\n    ListNode(): val(0), next(nullptr) {}\n    ListNode(int x): val(x), next(nullptr) {}\n    ListNode(int x, ListNode* next): val(x), next(next) {}\n};\n*/\n#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n    ListNode* mergeKLists(vector<ListNode*>& lists) {\n        return nullptr;\n    }\n};\n",
+      "csharp": "/*\nDefinition for singly-linked list.\npublic class ListNode {\n    public int val;\n    public ListNode next;\n    public ListNode(int val=0, ListNode next=null) {\n        this.val = val;\n        this.next = next;\n    }\n}\n*/\npublic class Solution \n{\n    public ListNode MergeKLists(ListNode[] lists) \n    {\n        \n    }\n}"
+    },
+    "functionName": "mergeKLists",
+    "params": [
+      {
+        "name": "lists",
+        "type": "list_node_array"
+      }
+    ],
+    "outputType": "list_node",
+    "testCases": [
+      {
+        "input": {
+          "lists": [
+            [
+              1,
+              4,
+              5
+            ],
+            [
+              1,
+              3,
+              4
+            ],
+            [
+              2,
+              6
+            ]
+          ]
+        },
+        "expectedOutput": "[1,1,2,3,4,4,5,6]",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "lists": []
+        },
+        "expectedOutput": "[]",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "lists": [
+            []
+          ]
+        },
+        "expectedOutput": "[]",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "merge-two-sorted-lists",
+    "slug": "merge-two-sorted-lists",
+    "title": "42. Merge Two Sorted Lists",
+    "description": "Merge two sorted singly linked lists and return it as a sorted list.\n",
+    "difficulty": "Easy",
+    "category": "linked-list",
+    "starterCode": {
+      "java": "/*\nDefinition for singly-linked list. \nListNode {\n    int val;\n    ListNode next;\n    ListNode() {}\n    ListNode(int val) { this.val = val; }\n    ListNode(int val, ListNode next) { this.val = val; this.next = next; }\n}\n*/\nclass Solution {\n    public ListNode mergeTwoLists(ListNode list1, ListNode list2) {\n        \n    }\n}",
+      "python": "# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n\nclass Solution:\n    def mergeTwoLists(self, list1, list2):\n        pass\n",
+      "cpp": "/*\nstruct ListNode {\n    int val;\n    ListNode *next;\n    ListNode(): val(0), next(nullptr) {}\n    ListNode(int x): val(x), next(nullptr) {}\n    ListNode(int x, ListNode* next): val(x), next(next) {}\n};\n*/\nclass Solution {\npublic:\n    ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {\n        return nullptr;\n    }\n};\n",
+      "csharp": "/*\nDefinition for singly-linked list.\npublic class ListNode {\n    public int val;\n    public ListNode next;\n    public ListNode(int val=0, ListNode next=null) {\n        this.val = val;\n        this.next = next;\n    }\n}\n*/\npublic class Solution \n{\n    public ListNode MergeTwoLists(ListNode list1, ListNode list2) \n    {\n        \n    }\n}"
+    },
+    "functionName": "mergeTwoLists",
+    "params": [
+      {
+        "name": "list1",
+        "type": "list_node"
+      },
+      {
+        "name": "list2",
+        "type": "list_node"
+      }
+    ],
+    "outputType": "list_node",
+    "testCases": [
+      {
+        "input": {
+          "list1": [
+            1,
+            2,
+            4
+          ],
+          "list2": [
+            1,
+            3,
+            4
+          ]
+        },
+        "expectedOutput": "[1,1,2,3,4,4]",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "list1": [],
+          "list2": []
+        },
+        "expectedOutput": "[]",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "list1": [],
+          "list2": [
+            0
+          ]
+        },
+        "expectedOutput": "[0]",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "minimum-window-substring",
+    "slug": "minimum-window-substring",
+    "title": "52. Minimum Window Substring",
+    "description": "Given two strings s and t, return the minimum window substring of s such that every character in t (including duplicates) is included in the window. If there is no such substring, return the empty string \"\".\n",
+    "difficulty": "Hard",
+    "category": "string",
+    "starterCode": {
+      "java": "class Solution {\n    public String minWindow(String s, String t) {\n        \n    }\n}",
+      "python": "class Solution:\n    def minWindow(self, s: str, t: str) -> str:\n        pass\n",
+      "cpp": "#include <string>\nusing namespace std;\nclass Solution {\npublic:\n    string minWindow(string s, string t) {\n        return \"\";\n    }\n};",
+      "csharp": "public class Solution \n{\n    public string MinWindow(string s, string t) \n    {\n        \n    }\n}"
+    },
+    "functionName": "minWindow",
+    "params": [
+      {
+        "name": "s",
+        "type": "string"
+      },
+      {
+        "name": "t",
+        "type": "string"
+      }
+    ],
+    "outputType": "string",
+    "testCases": [
+      {
+        "input": {
+          "s": "ADOBECODEBANC",
+          "t": "ABC"
+        },
+        "expectedOutput": "BANC",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "s": "a",
+          "t": "a"
+        },
+        "expectedOutput": "a",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "missing-number",
+    "slug": "missing-number",
+    "title": "14. Missing Number",
+    "description": "Given an array `nums` containing `n` distinct numbers in the range `[0, n]`, return the only number in the range that is missing from the array.\n",
+    "difficulty": "Easy",
+    "category": "binary",
+    "starterCode": {
+      "java": "class Solution {\n    public int missingNumber(int[] nums) {\n        \n    }\n}",
+      "python": "from typing import List\nclass Solution:\n    def missingNumber(self, nums: List[int]) -> int:\n        pass\n",
+      "cpp": "#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n    int missingNumber(vector<int>& nums) {\n        return 0;\n    }\n};",
+      "csharp": "public class Solution \n{\n    public int MissingNumber(int[] nums) \n    {\n        \n    }\n}"
+    },
+    "functionName": "missingNumber",
+    "params": [
+      {
+        "name": "nums",
+        "type": "int_array"
+      }
+    ],
+    "outputType": "int",
+    "testCases": [
+      {
+        "input": {
+          "nums": [
+            3,
+            0,
+            1
+          ]
+        },
+        "expectedOutput": "2",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "nums": [
+            0,
+            1
+          ]
+        },
+        "expectedOutput": "2",
+        "isHidden": false
+      },
+      {
+        "input": {
+          "nums": [
+            9,
+            6,
+            4,
+            2,
+            3,
+            5,
+            7,
+            0,
+            1
+          ]
+        },
+        "expectedOutput": "8",
+        "isHidden": false
+      }
+    ]
+  },
+  {
+    "id": "word-search-ii",
+    "slug": "word-search-ii",
+    "title": "73. Word Search II",
+    "description": "Given an m x n board of characters and a list of strings words, return all words on the board. Each word must be constructed from letters of sequentially adjacent cells (horizontally or vertically). The same letter cell may not be used more than once in a word.\n",
+    "difficulty": "Hard",
+    "category": "tree",
+    "starterCode": {
+      "java": "import java.util.*;\nclass Solution {\n    public List<String> findWords(char[][] board, String[] words) {\n        return new ArrayList<>();\n    }\n}",
+      "python": "from typing import List\nclass Solution:\n    def findWords(self, board: List[List[str]], words: List[str]) -> List[str]:\n        return []\n",
+      "cpp": "#include <vector>\n#include <string>\nusing namespace std;\nclass Solution {\npublic:\n    vector<string> findWords(vector<vector<char>>& board, vector<string>& words) {\n        return {};\n    }\n};",
+      "csharp": "public class Solution \n{\n    public IList<string> FindWords(char[][] board, string[] words) \n    {\n        \n    }\n}"
+    },
+    "functionName": "findWords",
+    "params": [
+      {
+        "name": "board",
+        "type": "char_array_2d",
+        "visualizeType": "matrix"
+      },
+      {
+        "name": "words",
+        "type": "string_array"
+      }
+    ],
+    "outputType": "string_list",
+    "testCases": [
+      {
+        "input": {
+          "board": "[[a,b,c,e],[s,f,c,s],[a,d,e,e]]",
+          "words": "[see,abcced,abcb]"
+        },
+        "expectedOutput": "[see,abcced]",
+        "isHidden": false
+      }
+    ]
+  }
+]

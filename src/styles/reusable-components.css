@@ -1,0 +1,11 @@
+﻿@import "tailwindcss";
+
+@layer components {
+    .orange_button {
+        @apply bg-orange-500 rounded p-3 text-white;
+    }
+
+    .rounded_box {
+        @apply rounded outline-2;
+    }
+}

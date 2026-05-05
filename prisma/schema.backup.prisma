@@ -1,0 +1,243 @@
+// Dylan Hartley
+// 12/12/2025
+// Alexander Tu
+
+// Brandon Christian
+// Date: 2/19/2026
+// Added BehavioralPrompt
+
+// Alexander Tu
+// Date: 3/7/2026
+// Added VideoUpload
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// NextAuth Tables (Required for Authentication)
+// ============================================
+
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  access_token             String?
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
+  refresh_token_expires_in Int?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id                String              @id @default(cuid())
+  name              String?
+  email             String?             @unique
+  emailVerified     DateTime?
+  image             String?
+  password          String?
+  accounts          Account[]
+  sessions          Session[]
+  profile           UserProfile?
+  resumeAnalyses    ResumeAnalysis[]
+  interviewSessions InterviewSession[]
+  settings      UserSettings?
+  videoUploads VideoUpload[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================
+// User Profile (Optional Extended Info)
+// ============================================
+
+model UserProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName       String?
+  lastName        String?
+  phoneNumber     String?
+  emailAddress    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model UserSettings {
+  id                    String      @id @default(cuid())
+  userId                String      @unique
+  prefersDarkMode       Boolean     @default(false)
+  languagePref          String?     @default("JavaScript")
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ============================================
+// Resume Scanner Feature
+// ============================================
+
+model ResumeAnalysis {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resumeName     String
+  jobDescription String?
+  atsScore       Int?
+  matchScore     Float?
+  feedback       Json
+  analyzedAt     DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ============================================
+// Interview Features (Behavioral & Technical)
+// ============================================
+
+model InterviewSession {
+  id            String              @id @default(cuid())
+  userId        String
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          InterviewType
+  status        SessionStatus       @default(IN_PROGRESS)
+  startedAt     DateTime            @default(now())
+  completedAt   DateTime?
+  overallScore  Float?
+  feedback      Json?
+  responses     InterviewResponse[]
+
+  @@index([userId])
+}
+
+model InterviewResponse {
+  id         String           @id @default(cuid())
+  sessionId  String
+  session    InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question   String
+  answer     String
+  score      Float?
+  feedback   String?
+  answeredAt DateTime         @default(now())
+
+  @@index([sessionId])
+}
+
+model TechnicalQuestion {
+  id           String   @id
+  slug         String   @unique // ex: problem name in url "3sum"
+  title        String           // ex: 9. 3Sum
+  description  String   @db.Text
+  difficulty   String
+  category     String
+  starterCode  Json
+  functionName String           //ex: string("twoSum")
+  params       Json
+  outputType   String
+  createdAt    DateTime @default(now())
+
+  testCases    TestCase[]
+}
+
+model TestCase {
+  id             String   @id @default(cuid())
+  input          Json     //Input params.. ex: {"nums": [2, 7, 11, 15]}
+  expectedOutput String
+  isHidden       Boolean  @default(false)
+
+  //Foreign Key
+  problemId      String
+  problem        TechnicalQuestion @relation(fields: [problemId], references: [id], onDelete: Cascade)
+}
+
+model InterviewReport {
+  id            String      @id @default(cuid())
+  userId        String
+  sessionId     String
+  summary       String
+  isFavorite    Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+
+  @@index([userId])
+  @@index([sessionId])
+}
+
+model BehavioralPrompt {
+  id            String      @id @default(cuid())
+  prompt		String
+}
+
+model VideoUpload {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+
+  // Where the file is stored (local path for now)
+  storageKey   String   @unique
+
+  createdAt    DateTime @default(now())
+
+  analysis     Json?
+}
+
+model VideoUpload {
+  id           String   @id <@&832399024442966026>efault(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  storageKey   String   @unique
+
+  createdAt    DateTime <@&832399024442966026>efault(now())
+  analysis     Json?
+}
+
+// ============================================
+// Enums
+// ============================================
+
+enum InterviewType {
+  BEHAVIORAL
+  TECHNICAL
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}

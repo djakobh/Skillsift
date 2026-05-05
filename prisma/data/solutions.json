@@ -1,0 +1,77 @@
+{
+  "3sum": {
+    "python": "from typing import List\n\nclass Solution:\n    def threeSum(self, nums: List[int]) -> List[List[int]]:\n        nums.sort()\n        result = []\n        for i in range(len(nums) - 2):\n            if i > 0 and nums[i] == nums[i - 1]:\n                continue\n            l, r = i + 1, len(nums) - 1\n            while l < r:\n                s = nums[i] + nums[l] + nums[r]\n                if s == 0:\n                    result.append([nums[i], nums[l], nums[r]])\n                    while l < r and nums[l] == nums[l + 1]:\n                        l += 1\n                    while l < r and nums[r] == nums[r - 1]:\n                        r -= 1\n                    l += 1\n                    r -= 1\n                elif s < 0:\n                    l += 1\n                else:\n                    r -= 1\n        return result"
+  },
+  "alien-dictionary": {
+    "python": "from typing import List\nfrom collections import defaultdict, deque\n\nclass Solution:\n    def alienOrder(self, words: List[str]) -> str:\n        adj = defaultdict(set)\n        indegree = {c: 0 for word in words for c in word}\n\n        for i in range(len(words) - 1):\n            w1, w2 = words[i], words[i + 1]\n            min_len = min(len(w1), len(w2))\n            if len(w1) > len(w2) and w1[:min_len] == w2[:min_len]:\n                return \"\"\n            for j in range(min_len):\n                if w1[j] != w2[j]:\n                    if w2[j] not in adj[w1[j]]:\n                        adj[w1[j]].add(w2[j])\n                        indegree[w2[j]] += 1\n                    break\n\n        queue = deque([c for c in indegree if indegree[c] == 0])\n        result = []\n        while queue:\n            c = queue.popleft()\n            result.append(c)\n            for neighbor in adj[c]:\n                indegree[neighbor] -= 1\n                if indegree[neighbor] == 0:\n                    queue.append(neighbor)\n\n        return \"\".join(result) if len(result) == len(indegree) else \"\""
+  },
+  "best-time-to-buy-and-sell-stock": {
+    "python": "from typing import List\n\nclass Solution:\n    def maxProfit(self, prices: List[int]) -> int:\n        min_price = float('inf')\n        max_profit = 0\n        for price in prices:\n            min_price = min(min_price, price)\n            max_profit = max(max_profit, price - min_price)\n        return max_profit"
+  },
+  "binary-tree-level-order-traversal": {
+    "python": "from typing import List, Optional\nfrom collections import deque\n\nclass TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def levelOrder(self, root: Optional[TreeNode]) -> List[List[int]]:\n        result = []\n        if not root:\n            return result\n        queue = deque([root])\n        while queue:\n            level = []\n            for _ in range(len(queue)):\n                node = queue.popleft()\n                level.append(node.val)\n                if node.left:\n                    queue.append(node.left)\n                if node.right:\n                    queue.append(node.right)\n            result.append(level)\n        return result"
+  },
+  "binary-tree-maximum-path-sum": {
+    "python": "from typing import Optional\n\nclass TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def maxPathSum(self, root: Optional[TreeNode]) -> int:\n        self.max_sum = float('-inf')\n\n        def dfs(node):\n            if not node:\n                return 0\n            left = max(dfs(node.left), 0)\n            right = max(dfs(node.right), 0)\n            self.max_sum = max(self.max_sum, node.val + left + right)\n            return node.val + max(left, right)\n\n        dfs(root)\n        return self.max_sum"
+  },
+  "climbing-stairs": {
+    "python": "class Solution:\n    def climbStairs(self, n: int) -> int:\n        if n <= 2:\n            return n\n        a, b = 1, 2\n        for _ in range(3, n + 1):\n            a, b = b, a + b\n        return b"
+  },
+  "coin-change": {
+    "python": "from typing import List\n\nclass Solution:\n    def coinChange(self, coins: List[int], amount: int) -> int:\n        dp = [float('inf')] * (amount + 1)\n        dp[0] = 0\n        for i in range(1, amount + 1):\n            for coin in coins:\n                if coin <= i:\n                    dp[i] = min(dp[i], dp[i - coin] + 1)\n        return dp[amount] if dp[amount] != float('inf') else -1"
+  },
+  "combination-sum-iv": {
+    "python": "from typing import List\n\nclass Solution:\n    def combinationSum4(self, nums: List[int], target: int) -> int:\n        dp = [0] * (target + 1)\n        dp[0] = 1\n        for i in range(1, target + 1):\n            for num in nums:\n                if num <= i:\n                    dp[i] += dp[i - num]\n        return dp[target]"
+  },
+  "construct-binary-tree-from-preorder-and-inorder-traversal": {
+    "python": "from typing import List, Optional\n\nclass TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def buildTree(self, preorder: List[int], inorder: List[int]) -> Optional[TreeNode]:\n        if not preorder or not inorder:\n            return None\n        root = TreeNode(preorder[0])\n        mid = inorder.index(preorder[0])\n        root.left = self.buildTree(preorder[1:mid + 1], inorder[:mid])\n        root.right = self.buildTree(preorder[mid + 1:], inorder[mid + 1:])\n        return root"
+  },
+  "container-with-most-water": {
+    "python": "from typing import List\n\nclass Solution:\n    def maxArea(self, height: List[int]) -> int:\n        l, r = 0, len(height) - 1\n        max_water = 0\n        while l < r:\n            water = min(height[l], height[r]) * (r - l)\n            max_water = max(max_water, water)\n            if height[l] < height[r]:\n                l += 1\n            else:\n                r -= 1\n        return max_water"
+  },
+  "contains-duplicate": {
+    "python": "from typing import List\n\nclass Solution:\n    def containsDuplicate(self, nums: List[int]) -> bool:\n        return len(nums) != len(set(nums))"
+  },
+  "counting-bits": {
+    "python": "from typing import List\n\nclass Solution:\n    def countBits(self, n: int) -> List[int]:\n        dp = [0] * (n + 1)\n        for i in range(1, n + 1):\n            dp[i] = dp[i >> 1] + (i & 1)\n        return dp"
+  },
+  "course-schedule": {
+    "python": "from typing import List\nfrom collections import defaultdict, deque\n\nclass Solution:\n    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:\n        graph = defaultdict(list)\n        indegree = [0] * numCourses\n        for course, prereq in prerequisites:\n            graph[prereq].append(course)\n            indegree[course] += 1\n\n        queue = deque([i for i in range(numCourses) if indegree[i] == 0])\n        completed = 0\n        while queue:\n            course = queue.popleft()\n            completed += 1\n            for next_course in graph[course]:\n                indegree[next_course] -= 1\n                if indegree[next_course] == 0:\n                    queue.append(next_course)\n\n        return completed == numCourses"
+  },
+  "decode-ways": {
+    "python": "class Solution:\n    def numDecodings(self, s: str) -> int:\n        if not s or s[0] == '0':\n            return 0\n        n = len(s)\n        dp = [0] * (n + 1)\n        dp[0] = 1\n        dp[1] = 1\n        for i in range(2, n + 1):\n            one = int(s[i - 1])\n            two = int(s[i - 2:i])\n            if one != 0:\n                dp[i] += dp[i - 1]\n            if 10 <= two <= 26:\n                dp[i] += dp[i - 2]\n        return dp[n]"
+  },
+  "find-minimum-in-rotated-sorted-array": {
+    "python": "from typing import List\n\nclass Solution:\n    def findMin(self, nums: List[int]) -> int:\n        l, r = 0, len(nums) - 1\n        while l < r:\n            mid = (l + r) // 2\n            if nums[mid] > nums[r]:\n                l = mid + 1\n            else:\n                r = mid\n        return nums[l]"
+  },
+  "graph-valid-tree": {
+    "python": "from typing import List\n\nclass Solution:\n    def validTree(self, n: int, edges: List[List[int]]) -> bool:\n        if len(edges) != n - 1:\n            return False\n        parent = list(range(n))\n\n        def find(x):\n            while parent[x] != x:\n                parent[x] = parent[parent[x]]\n                x = parent[x]\n            return x\n\n        def union(x, y):\n            px, py = find(x), find(y)\n            if px == py:\n                return False\n            parent[px] = py\n            return True\n\n        for u, v in edges:\n            if not union(u, v):\n                return False\n        return True"
+  },
+  "invert-binary-tree": {
+    "python": "from typing import Optional\n\nclass TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def invertTree(self, root: Optional[TreeNode]) -> Optional[TreeNode]:\n        if not root:\n            return None\n        root.left, root.right = self.invertTree(root.right), self.invertTree(root.left)\n        return root"
+  },
+  "linked-list-cycle": {
+    "python": "from typing import Optional\n\nclass ListNode:\n    def __init__(self, x):\n        self.val = x\n        self.next = None\n\nclass Solution:\n    def hasCycle(self, head: Optional[ListNode]) -> bool:\n        slow = fast = head\n        while fast and fast.next:\n            slow = slow.next\n            fast = fast.next.next\n            if slow is fast:\n                return True\n        return False"
+  },
+  "maximum-depth-of-binary-tree": {
+    "python": "from typing import Optional\n\nclass TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\nclass Solution:\n    def maxDepth(self, root: Optional[TreeNode]) -> int:\n        if not root:\n            return 0\n        return 1 + max(self.maxDepth(root.left), self.maxDepth(root.right))"
+  },
+  "meeting-rooms": {
+    "python": "from typing import List\n\nclass Solution:\n    def canAttendMeetings(self, intervals: List[List[int]]) -> bool:\n        intervals.sort(key=lambda x: x[0])\n        for i in range(1, len(intervals)):\n            if intervals[i][0] < intervals[i - 1][1]:\n                return False\n        return True"
+  },
+  "merge-k-sorted-lists": {
+    "python": "from typing import List, Optional\nimport heapq\n\nclass ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\nclass Solution:\n    def mergeKLists(self, lists: List[Optional[ListNode]]) -> Optional[ListNode]:\n        heap = []\n        for i, node in enumerate(lists):\n            if node:\n                heapq.heappush(heap, (node.val, i, node))\n\n        dummy = ListNode()\n        curr = dummy\n        while heap:\n            val, i, node = heapq.heappop(heap)\n            curr.next = node\n            curr = curr.next\n            if node.next:\n                heapq.heappush(heap, (node.next.val, i, node.next))\n        return dummy.next"
+  },
+  "merge-two-sorted-lists": {
+    "python": "from typing import Optional\n\nclass ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\nclass Solution:\n    def mergeTwoLists(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:\n        dummy = ListNode()\n        curr = dummy\n        while l1 and l2:\n            if l1.val <= l2.val:\n                curr.next = l1\n                l1 = l1.next\n            else:\n                curr.next = l2\n                l2 = l2.next\n            curr = curr.next\n        curr.next = l1 or l2\n        return dummy.next"
+  },
+  "minimum-window-substring": {
+    "python": "from collections import Counter\n\nclass Solution:\n    def minWindow(self, s: str, t: str) -> str:\n        if not t or not s:\n            return \"\"\n        need = Counter(t)\n        have, total = 0, len(need)\n        window = {}\n        result, result_len = [-1, -1], float('inf')\n        l = 0\n        for r, c in enumerate(s):\n            window[c] = window.get(c, 0) + 1\n            if c in need and window[c] == need[c]:\n                have += 1\n            while have == total:\n                if (r - l + 1) < result_len:\n                    result = [l, r]\n                    result_len = r - l + 1\n                window[s[l]] -= 1\n                if s[l] in need and window[s[l]] < need[s[l]]:\n                    have -= 1\n                l += 1\n        l, r = result\n        return s[l:r + 1] if result_len != float('inf') else \"\""
+  },
+  "missing-number": {
+    "python": "from typing import List\n\nclass Solution:\n    def missingNumber(self, nums: List[int]) -> int:\n        n = len(nums)\n        return n * (n + 1) // 2 - sum(nums)"
+  },
+  "word-search-ii": {
+    "python": "from typing import List\n\nclass TrieNode:\n    def __init__(self):\n        self.children = {}\n        self.word = None\n\nclass Solution:\n    def findWords(self, board: List[List[str]], words: List[str]) -> List[str]:\n        root = TrieNode()\n        for word in words:\n            node = root\n            for c in word:\n                if c not in node.children:\n                    node.children[c] = TrieNode()\n                node = node.children[c]\n            node.word = word\n\n        rows, cols = len(board), len(board[0])\n        result = set()\n\n        def dfs(r, c, node):\n            if node.word:\n                result.add(node.word)\n                node.word = None\n            if r < 0 or c < 0 or r >= rows or c >= cols or board[r][c] not in node.children:\n                return\n            char = board[r][c]\n            board[r][c] = '#'\n            for dr, dc in [(0, 1), (0, -1), (1, 0), (-1, 0)]:\n                dfs(r + dr, c + dc, node.children[char])\n            board[r][c] = char\n\n        for r in range(rows):\n            for c in range(cols):\n                dfs(r, c, root)\n        return list(result)"
+  }
+}
