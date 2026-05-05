@@ -91,12 +91,13 @@ export function extractRequiredYears(jobDescription: string): number {
   const text = jobDescription.toLowerCase();
 
   const patterns = [
-    // "5+ years", "3+ yrs"
-    /(\d{1,2})\+?\s*(?:years?|yrs?)(?:\s+of\s+(?:professional\s+)?experience)?/g,
+    // "5+ years of experience", "3+ years experience" — require experience context to avoid
+    // false matches on things like "established 30 years ago" or "30 years in business"
+    /(\d{1,2})\+?\s*(?:years?|yrs?)\s+of\s+(?:professional\s+|relevant\s+|industry\s+)?experience/g,
     // "minimum 3 years", "at least 5 years"
     /(?:minimum|at\s+least|min\.?)\s*(\d{1,2})\s*(?:years?|yrs?)/g,
-    // "3-5 years", "5 to 7 years"
-    /(\d{1,2})\s*[-–to]+\s*(\d{1,2})\s*(?:years?|yrs?)/g,
+    // "3-5 years", "5 to 7 years" experience ranges
+    /(\d{1,2})\s*[-–to]+\s*(\d{1,2})\s*(?:years?|yrs?)\s+(?:of\s+)?experience/g,
   ];
 
   let maxYears = 0;
@@ -106,7 +107,8 @@ export function extractRequiredYears(jobDescription: string): number {
     while ((match = pattern.exec(text)) !== null) {
       // For range patterns (3-5 years) use the lower bound
       const years = parseInt(match[1]!, 10);
-      if (!isNaN(years) && years > maxYears && years <= 30) {
+      // Cap at 15 — no legitimate tech job requires more than 15 years stated experience
+      if (!isNaN(years) && years > maxYears && years <= 15) {
         maxYears = years;
       }
     }

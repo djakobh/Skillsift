@@ -76,7 +76,11 @@ Rules:
 - replacementText must be a concrete, specific improvement — never use vague filler or generic placeholders
 - Only suggest changes where the improvement is clear and specific; if you cannot make a meaningful improvement to a line, skip it and pick a different line
 - Each originalText must be unique across all suggestions — never use the same resume line more than once
-- For experience bullet points, rewrite them using the X-Y-Z format: "Accomplished [X] as measured by [Y], by doing [Z]" — make the impact and method explicit`;
+- For experience bullet points, rewrite them using the X-Y-Z format: "Accomplished [X] as measured by [Y], by doing [Z]" — make the impact and method explicit
+- NEVER invent specific percentages, numbers, or metrics that are not already in the resume — use placeholders like "XX%" or "[N]x" instead
+- NEVER suggest adding a keyword or technology to a section unless that keyword is clearly relevant to the work described in that section — do not force missing keywords into unrelated projects or experience
+- NEVER suggest adding a degree, GPA, or education details if they are already present anywhere in the resume. Ensure you read through the entire resume before making any suggestions.
+`;
 }
 
 export async function POST(req: Request): Promise<NextResponse<OptimizeResponse | OptimizeErrorResponse>> {
