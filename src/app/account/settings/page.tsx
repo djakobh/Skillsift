@@ -73,7 +73,7 @@ export default function SettingsPage() {
             Preferred Language
           </label>
           <select
-            className="border border-gray-300 rounded-md p-2 text-sm w-full"
+            className="border border-gray-300 rounded-md p-2 text-sm w-full text-gray-900 bg-white"
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
             disabled={loading}

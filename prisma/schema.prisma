@@ -261,6 +261,7 @@ model JobApplication {
   salaryMin      Int?
   salaryMax      Int?
   location       String?
+  experienceLevel String?
   status         ApplicationStatus @default(SAVED)
   notes          String?           @db.Text
   appliedAt      DateTime?

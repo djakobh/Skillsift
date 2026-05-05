@@ -41,6 +41,7 @@ export default function TechnicalInterviewViewSwitcher({
 
   const [isRunning, setIsRunning] = useState(false);
   const [questionStatus, setQuestionStatus] = useState<boolean[]>([]);
+  const [showLeaveNotice, setShowLeaveNotice] = useState(false);
 
   const [solutions, setSolutions] = useState<SolutionsMap>({});
   const [rightTab, setRightTab] = useState<"results" | "solution" | "hint">("results");
@@ -194,6 +195,7 @@ export default function TechnicalInterviewViewSwitcher({
   // Go back to question list; timer keeps running
   function backToQuestions() {
     saveCurrentCode();
+    setShowLeaveNotice(true);
     setPageState(TIPageState.START);
   }
 
@@ -333,6 +335,13 @@ export default function TechnicalInterviewViewSwitcher({
             </div>
           </div>
 
+          {showLeaveNotice && (
+            <div className="max-w-4xl mx-auto mt-4 flex items-center justify-between bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg text-sm">
+              <span>Your session is still running — return to a question to continue.</span>
+              <button onClick={() => setShowLeaveNotice(false)} className="ml-4 text-yellow-600 hover:text-yellow-800 font-medium">Dismiss</button>
+            </div>
+          )}
+
           <div className="max-w-2xl mx-auto mt-10 border rounded-lg">
             <div className="bg-orange-500 text-white px-4 py-2 font-semibold">
               Technical Skill Testing
@@ -342,7 +351,7 @@ export default function TechnicalInterviewViewSwitcher({
               <div className="px-4 py-6 text-gray-500 text-sm">Loading questions...</div>
             )}
 
-            {questions.map((q, index) => (
+            {questions.slice(0, 2).map((q, index) => (
               <div
                 key={q.id}
                 className="flex items-center justify-between px-4 py-4 border-t"
@@ -373,13 +382,16 @@ export default function TechnicalInterviewViewSwitcher({
         <main className="h-screen flex flex-col overflow-hidden px-4">
           {/* Header */}
           <div className="flex items-center justify-between py-2 shrink-0">
-            <div className="flex items-center gap-4">
-              <button onClick={backToQuestions} className="text-sm text-blue-600 underline">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={backToQuestions}
+                className="px-3 py-1.5 text-sm rounded-md border border-gray-300 bg-white hover:bg-gray-50 font-medium"
+              >
                 ← Back
               </button>
               <button
                 onClick={() => void finishEarly()}
-                className="text-sm underline text-red-600"
+                className="px-3 py-1.5 text-sm rounded-md border border-red-300 bg-red-50 text-red-600 hover:bg-red-100 font-medium"
               >
                 Finish Early
               </button>
@@ -397,48 +409,56 @@ export default function TechnicalInterviewViewSwitcher({
             </div>
           )}
 
-          {/* Question */}
-          {currentQuestion && (
-            <div className="border rounded p-3 mt-2 overflow-y-auto max-h-[22vh] shrink-0">
-              <div className="flex items-center mb-1">
-                <h2 className="font-semibold text-base">{currentQuestion.title}</h2>
-                <DifficultyBadge difficulty={currentQuestion.difficulty} />
+          {/* Side-by-side body */}
+          <div className="flex flex-1 gap-3 mt-2 mb-2 min-h-0">
+
+            {/* Left panel: Problem description */}
+            <div className="w-2/5 border rounded p-4 overflow-y-auto flex flex-col shrink-0">
+              {currentQuestion && (
+                <>
+                  <div className="flex items-center mb-2">
+                    <h2 className="font-semibold text-base">{currentQuestion.title}</h2>
+                    <DifficultyBadge difficulty={currentQuestion.difficulty} />
+                  </div>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                    {currentQuestion.description}
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Right panel: Editor + Results stacked */}
+            <div className="flex-1 flex flex-col min-h-0 gap-2">
+
+              {/* Code editor */}
+              <div className="border rounded p-3 flex flex-col flex-1 min-h-0">
+                <div className="flex items-center justify-between mb-2 shrink-0">
+                  <h3 className="font-semibold text-sm">Code</h3>
+                  <button
+                    onClick={() => void runCode()}
+                    disabled={isRunning}
+                    className={`px-4 py-1 rounded text-white text-sm ${
+                      isRunning
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-orange-500 hover:bg-orange-600"
+                    }`}
+                  >
+                    {isRunning ? "Running..." : "Run Code"}
+                  </button>
+                </div>
+                <div className="flex-1 min-h-0">
+                  <CodeEditor
+                    language={language}
+                    value={code}
+                    onChange={setCode}
+                    onLanguageChange={handleLanguageChange}
+                    height="100%"
+                  />
+                </div>
               </div>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                {currentQuestion.description}
-              </p>
-            </div>
-          )}
 
-          {/* Code editor — takes remaining vertical space */}
-          <div className="border rounded p-3 mt-2 flex flex-col flex-1 min-h-0">
-            <div className="flex items-center justify-between mb-2 shrink-0">
-              <h3 className="font-semibold text-sm">Code</h3>
-              <button
-                onClick={() => void runCode()}
-                disabled={isRunning}
-                className={`px-4 py-1 rounded text-white text-sm ${
-                  isRunning
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-orange-500 hover:bg-orange-600"
-                }`}
-              >
-                {isRunning ? "Running..." : "Run Code"}
-              </button>
-            </div>
-            <div className="flex-1 min-h-0">
-              <CodeEditor
-                language={language}
-                value={code}
-                onChange={setCode}
-                onLanguageChange={handleLanguageChange}
-                height="100%"
-              />
-            </div>
-          </div>
-
-          {/* Bottom panel: Test Results / Solution tabs */}
-          <div className="border rounded mt-2 mb-2 flex flex-col shrink-0 h-[28vh]">
+              {/* Results / Solution / Hints tabs */}
+              <div className="border rounded flex flex-col shrink-0 h-[32%]">
             {/* Tab bar */}
             <div className="flex border-b shrink-0">
               <button
@@ -597,7 +617,9 @@ export default function TechnicalInterviewViewSwitcher({
               </div>
             )}
 
-          </div>
+            </div>{/* end results panel */}
+          </div>{/* end right panel */}
+          </div>{/* end side-by-side body */}
           <DraggableNotepad />
         </main>
       );

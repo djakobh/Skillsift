@@ -64,7 +64,7 @@ export async function PUT(
   }
 
   const body = await req.json();
-  const { company, position, jobDescription, jobUrl, salaryMin, salaryMax, location, status, notes, appliedAt } = body;
+  const { company, position, jobDescription, jobUrl, salaryMin, salaryMax, location, experienceLevel, status, notes, appliedAt } = body;
 
   if (!company || !position) {
     return NextResponse.json({ error: "Company and position are required" }, { status: 400 });
@@ -99,6 +99,7 @@ export async function PUT(
       salaryMin: salaryMin != null ? parseInt(salaryMin) : null,
       salaryMax: salaryMax != null ? parseInt(salaryMax) : null,
       location: location || null,
+      experienceLevel: experienceLevel || null,
       // Fall back to existing status if none provided
       status: status || existing.status,
       notes: notes || null,

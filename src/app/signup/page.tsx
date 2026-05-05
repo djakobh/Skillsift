@@ -1,4 +1,4 @@
-// Alvin Ngo 
+// Alvin Ngo
 // 12/12/2025
 
 "use client";
@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function SignupPage() {
       const res = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, username }),
       });
 
       const data = await res.json();
@@ -32,7 +33,6 @@ export default function SignupPage() {
       if (!res.ok) {
         setError(data.error || "Sign up failed.");
       } else {
-        // Account created, now auto-login
         const signInRes = await signIn("credentials", {
           email,
           password,
@@ -42,9 +42,7 @@ export default function SignupPage() {
         if (signInRes?.ok) {
           router.push("/");
         } else {
-          setError(
-            "Account created but login failed. Please try logging in manually."
-          );
+          setError("Account created but login failed. Please try logging in manually.");
         }
       }
     } catch (err) {
@@ -56,20 +54,33 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-white ">
-      {/* Title */}
-      <h1 className="text-3xl font-bold mb-6">Sign Up</h1>
-
-      {/* Signup Form */}
+    <main className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-orange-200 via-orange-300 to-orange-400">
       <form
         onSubmit={handleSignup}
         className="flex flex-col gap-4 w-full max-w-sm bg-white p-8 rounded shadow"
       >
+        <div className="flex flex-col items-center gap-3 mb-2">
+          <img
+            src="/images/landing/skill-skift-card.png"
+            alt="SkillSift Card"
+            className="h-16 w-auto mb-1"
+          />
+          <h1 className="text-2xl font-semibold">Sign Up</h1>
+        </div>
+
         {error && (
           <p className="text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>
         )}
 
-        {/* Email Input */}
+        <input
+          className="border rounded p-3 w-full"
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+        />
+
         <input
           className="border rounded p-3 w-full"
           type="email"
@@ -79,7 +90,6 @@ export default function SignupPage() {
           required
         />
 
-        {/* Password Input */}
         <input
           className="border rounded p-3 w-full"
           type="password"
@@ -90,7 +100,6 @@ export default function SignupPage() {
           required
         />
 
-        {/* Signup Button */}
         <button
           className="orange_button w-full disabled:opacity-60"
           type="submit"
