@@ -8,8 +8,6 @@ const sidebarItems = [
   { label: "Account Details", href: "/account/details" },
   { label: "Privacy", href: "/account/privacy" },
   { label: "Settings", href: "/account/settings" },
-  { label: "Overview", href: "/account/overview" },
-  { label: "Visualize", href: "/account/visualize" },
 ];
 
 export default function AccountShell({
