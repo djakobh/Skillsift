@@ -51,38 +51,48 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="bg-white dark:bg-gray-900 shadow-md dark:shadow-gray-800 mb-12">
+    <nav
+      style={{
+        background: 'rgba(255, 255, 255, 0.80)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        boxShadow: '0 8px 40px rgba(0, 0, 0, 0.18)',
+        position: pathname === '/' ? 'relative' : 'sticky',
+        top: pathname === '/' ? undefined : 0,
+        zIndex: 50,
+      }}
+    >
       <div className="mx-auto max-w-7xl px-4">
         <div className="flex h-16 items-center justify-between">
-          {/* Left Side - Logo and Nav Links */}
-          <div className="flex items-center space-x-6">
-            <Link href="/" className="flex items-center">
-              <Image
-                src="/images/landing/skill-skift-card.png"
-                alt="SkillSift Logo"
-                width={100}
-                height={40}
-                className="object-contain"
-              />
-            </Link>
-            <div className="hidden space-x-4 md:flex">
-              {leftNavLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`rounded px-3 py-2 transition-colors ${
-                    pathname === link.href
-                      ? "bg-orange-500 text-white"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
+          {/* Logo - left */}
+          <Link href="/" className="flex items-center shrink-0">
+            <Image
+              src="/images/landing/skillsift-split-circle.png"
+              alt="SkillSift"
+              width={36}
+              height={36}
+              className="object-contain"
+            />
+          </Link>
+
+          {/* Nav links - centered */}
+          <div className="hidden flex-1 items-center justify-center space-x-1 md:flex">
+            {leftNavLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`rounded px-3 py-2 transition-colors ${
+                  pathname === link.href
+                    ? "bg-orange-500 text-white"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
 
-          {/* Right Side - Auth Links */}
+          {/* Auth - right */}
           <div className="flex items-center space-x-3">
             {session?.user ? (
               <div className="relative" ref={dropdownRef}>
