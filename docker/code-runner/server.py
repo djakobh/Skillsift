@@ -122,6 +122,10 @@ def submit():
     return jsonify(result)
 
 
+@app.route("/", methods=["GET"])
+def root():
+    return jsonify({"status": "ok"})
+
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"})
