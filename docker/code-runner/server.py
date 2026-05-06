@@ -122,6 +122,10 @@ def submit():
     return jsonify(result)
 
 
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify({"status": "ok"})
+
 @app.route("/about", methods=["GET"])
 def about():
     # verifies container is running

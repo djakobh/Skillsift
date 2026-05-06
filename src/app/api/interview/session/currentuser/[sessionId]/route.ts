@@ -5,7 +5,7 @@ import { auth } from "~/server/auth";
 // pause, resume, complete a session
 export async function PATCH(
   req: Request,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
     const session = await auth();
@@ -14,7 +14,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" });
     }
 
-    const { sessionId } = params;
+    const { sessionId } = await params;
     const { action, responses } = await req.json();
 
     // Verify the session exists and belongs to this user
@@ -106,7 +106,7 @@ export async function PATCH(
 // fetch a session with its responses
 export async function GET(
   _req: Request,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
     const session = await auth();
@@ -115,7 +115,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" });
     }
 
-    const { sessionId } = params;
+    const { sessionId } = await params;
 
     const interviewSession = await db.interviewSession.findUnique({
       where: { id: sessionId },
