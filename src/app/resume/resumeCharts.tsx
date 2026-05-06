@@ -3,6 +3,7 @@
 
 "use client";
 import React from "react";
+import { CheckCircle, XCircle } from "lucide-react";
 import type { FeedbackItem } from "./feedbackItem";
 import { FeedbackCategory } from "./feedbackItem";
 
@@ -100,42 +101,62 @@ export function buildHighlightedSegments(text: string, keywords: FeedbackItem[])
     return segments;
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── Half-circle progress chart ──────────────────────────────────────────────
 
-export function DonutChart({ score }: { score: number }) {
-    const r = 44;
-    const cx = 60;
-    const cy = 60;
-    const circumference = 2 * Math.PI * r;
-    const offset = circumference * (1 - Math.min(score, 100) / 100);
-    const color = score >= 70 ? "#22c55e" : score >= 50 ? "#f97316" : "#ef4444";
+export function HalfCircleChart({ score }: { score: number }) {
+    const r = 80;
+    const cx = 100;
+    const cy = 100;
+    const arcLength = Math.PI * r; // semicircle = π × r
+    const clampedScore = Math.min(Math.max(score, 0), 100);
+    const offset = arcLength * (1 - clampedScore / 100);
+    const color = score >= 70 ? "#22c55e" : score >= 50 ? "#FF6900" : "#ef4444";
 
     return (
-        <svg width="130" height="130" viewBox="0 0 120 120">
-            <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e5e7eb" strokeWidth="12" />
-            <circle
-                cx={cx} cy={cy} r={r}
-                fill="none"
-                stroke={color}
-                strokeWidth="12"
-                strokeDasharray={circumference}
-                strokeDashoffset={offset}
-                strokeLinecap="round"
-                transform={`rotate(-90 ${cx} ${cy})`}
-                style={{ transition: "stroke-dashoffset 0.6s ease" }}
-            />
-            <text x={cx} y={cy - 7} textAnchor="middle" fill="#111827" fontSize="20" fontWeight="bold">{score}%</text>
-            <text x={cx} y={cy + 12} textAnchor="middle" fill="#6b7280" fontSize="9">Match Score</text>
-        </svg>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
+            <svg width="210" height="115" viewBox="0 0 200 108" aria-label={`Match score: ${score}%`}>
+                {/* Track */}
+                <path
+                    d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
+                    fill="none"
+                    stroke="#e5e7eb"
+                    strokeWidth="16"
+                    strokeLinecap="round"
+                />
+                {/* Progress */}
+                <path
+                    d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
+                    fill="none"
+                    stroke={color}
+                    strokeWidth="16"
+                    strokeLinecap="round"
+                    strokeDasharray={arcLength}
+                    strokeDashoffset={offset}
+                    style={{ transition: "stroke-dashoffset 0.8s cubic-bezier(0.22, 1, 0.36, 1)" }}
+                />
+                {/* Centered text inside the arc */}
+                <text x={cx} y={cy - 18} textAnchor="middle" style={{ fontSize: "26px", fontWeight: 700, fill: "#141212" }}>
+                    {clampedScore}%
+                </text>
+                <text x={cx} y={cy - 2} textAnchor="middle" style={{ fontSize: "11px", fill: "#898989", letterSpacing: "0.03em" }}>
+                    Match Score
+                </text>
+            </svg>
+        </div>
     );
 }
+
+// Keep DonutChart exported as an alias so any other import doesn't break
+export const DonutChart = HalfCircleChart;
+
+// ─── Category bar ─────────────────────────────────────────────────────────────
 
 export function CategoryBar({ label, items }: { label: string; items: FeedbackItem[] }) {
     const total = items.length;
     const passing = items.filter(i => i.status).length;
     const failing = total - passing;
     const pct = total === 0 ? 100 : Math.round((passing / total) * 100);
-    const barColor = pct === 100 ? "#22c55e" : pct >= 60 ? "#f97316" : "#ef4444";
+    const barColor = pct === 100 ? "#22c55e" : pct >= 60 ? "#FF6900" : "#ef4444";
 
     return (
         <div className="flex flex-col gap-1">
@@ -149,11 +170,16 @@ export function CategoryBar({ label, items }: { label: string; items: FeedbackIt
                 }
             </div>
             <div className="w-full bg-gray-200 rounded-full h-1.5">
-                <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, backgroundColor: barColor, transition: "width 0.5s ease" }} />
+                <div
+                    className="h-1.5 rounded-full"
+                    style={{ width: `${pct}%`, backgroundColor: barColor, transition: "width 0.5s ease" }}
+                />
             </div>
         </div>
     );
 }
+
+// ─── Report section ───────────────────────────────────────────────────────────
 
 export function ReportSection({ label, badge, badgeColor, description, items, placeholder }: {
     label: string;
@@ -167,7 +193,9 @@ export function ReportSection({ label, badge, badgeColor, description, items, pl
         <div className="border border-gray-200 rounded-lg overflow-hidden">
             <div className="flex items-center gap-3 px-5 py-4 bg-gray-50 border-b border-gray-200">
                 <h3 className="text-gray-900 m-0">{label}</h3>
-                <span className={`text-xs px-2 py-0.5 rounded font-semibold tracking-wide ${BADGE_STYLES[badgeColor]}`}>{badge}</span>
+                <span className={`text-xs px-2 py-0.5 rounded font-semibold tracking-wide ${BADGE_STYLES[badgeColor]}`}>
+                    {badge}
+                </span>
             </div>
             <p className="text-gray-500 text-sm px-5 py-3 border-b border-gray-200 m-0">{description}</p>
             {items.length === 0 ? (
@@ -175,9 +203,14 @@ export function ReportSection({ label, badge, badgeColor, description, items, pl
             ) : (
                 <div className="divide-y divide-gray-100">
                     {items.map((item, i) => (
-                        <div key={i} className="grid grid-cols-[minmax(120px,1fr)_36px_3fr] gap-3 px-5 py-3 items-start">
+                        <div key={i} className="grid grid-cols-[minmax(120px,1fr)_28px_3fr] gap-3 px-5 py-3 items-start">
                             <span className="text-gray-800 text-sm font-medium">{item.name}</span>
-                            <span className="text-center text-base leading-none pt-0.5">{item.status ? "✅" : "❌"}</span>
+                            <span className="flex items-center justify-center pt-0.5">
+                                {item.status
+                                    ? <CheckCircle size={15} className="text-green-500" />
+                                    : <XCircle size={15} className="text-red-500" />
+                                }
+                            </span>
                             <span className="text-gray-500 text-sm">{item.description}</span>
                         </div>
                     ))}
@@ -196,7 +229,7 @@ export function HighlightedResumeText({ text, highlights }: { text: string; high
     type Seg = { text: string; highlight: boolean };
     let segments: Seg[] = [{ text, highlight: false }];
 
-    const normalizeHL = (s: string) => s.replace(/^[\s\u0000-\u001F\u007F-\u00A0\uFFFD*•–—□◦◆▪]+/, "").trim();
+    const normalizeHL = (s: string) => s.replace(/^[\s\u0000-\u001F\u007F-\u00A0\uFFFD*\u2022\u2013\u2014\u25a1\u25e6\u25c6\u25aa]+/, "").trim();
 
     for (const hl of highlights) {
         if (!hl) continue;

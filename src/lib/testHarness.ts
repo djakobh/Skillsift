@@ -130,6 +130,9 @@ export function buildPythonHarness(
   // Embed the test cases from the JSON file directly into the Python script as a string
   const testCasesJson = JSON.stringify(testCases).replace(/"""/g, '\\"\\"\\"');
 
+  const hasTreeNodeParam = meta.params.some((p) => p.type === "tree_node");
+  const hasTreeNodeOutput = meta.outputType === "tree_node";
+
   // For 2D array problems, sort the output before comparing (same logic as normalizeExpected above)
   // For everything else, return the value as-is
   const normalizeFunction =
@@ -143,11 +146,74 @@ def normalize_output(val):
 def normalize_output(val):
     return val`;
 
+  // Inject TreeNode class + build/serialize helpers when the question uses tree nodes
+  const treeHelpers =
+    hasTreeNodeParam || hasTreeNodeOutput
+      ? `
+# TreeNode (injected — skipped if the user already defined it)
+try:
+    TreeNode  # noqa: F821
+except NameError:
+    class TreeNode:
+        def __init__(self, val=0, left=None, right=None):
+            self.val = val
+            self.left = left
+            self.right = right
+
+def _build_tree(nodes):
+    if not nodes:
+        return None
+    root = TreeNode(nodes[0])
+    queue = [root]
+    i = 1
+    while queue and i < len(nodes):
+        node = queue.pop(0)
+        if i < len(nodes) and nodes[i] is not None:
+            node.left = TreeNode(nodes[i])
+            queue.append(node.left)
+        i += 1
+        if i < len(nodes) and nodes[i] is not None:
+            node.right = TreeNode(nodes[i])
+            queue.append(node.right)
+        i += 1
+    return root
+
+def _serialize_tree(root):
+    if not root:
+        return []
+    result = []
+    queue = [root]
+    while queue:
+        node = queue.pop(0)
+        if node:
+            result.append(node.val)
+            queue.append(node.left)
+            queue.append(node.right)
+        else:
+            result.append(None)
+    while result and result[-1] is None:
+        result.pop()
+    return result
+`
+      : "";
+
+  // For each tree_node param, emit a line that converts the raw list to a TreeNode before calling
+  const inputConversions = meta.params
+    .filter((p) => p.type === "tree_node")
+    .map((p) => `        test_case["input"]["${p.name}"] = _build_tree(test_case["input"]["${p.name}"])`)
+    .join("\n");
+
+  // Serialize tree output back to a list so it can be compared to the expected JSON array
+  const outputLine = hasTreeNodeOutput
+    ? `        normalized_output = _serialize_tree(actual_output)`
+    : `        normalized_output = normalize_output(actual_output)`;
+
   // Build the final Python script: user's code + test runner appended at the bottom
   return `${userCode}
 
 # ---- Test Runner (injected, do not modify) ----
 import json as _json
+${treeHelpers}
 ${normalizeFunction}
 
 solution = Solution()
@@ -155,8 +221,8 @@ test_cases = _json.loads("""${testCasesJson}""")
 
 for test_case in test_cases:
     try:
-        actual_output = solution.${meta.functionName}(**test_case["input"])
-        normalized_output = normalize_output(actual_output)
+${inputConversions ? inputConversions + "\n" : ""}        actual_output = solution.${meta.functionName}(**test_case["input"])
+${outputLine}
         print("test_case_output:" + _json.dumps(normalized_output, separators=(',', ':')))
     except Exception as error:
         print("test_case_error:" + str(error))

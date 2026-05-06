@@ -565,3 +565,23 @@ h3 {
     bottom: 1.25rem;
   }
 }
+
+/* ============================================================
+   REUSABLE PAGE BLOB BACKGROUND
+   Apply .page-blob-bg to any page <main> for the hero-style
+   mesh gradient background without animated divs.
+   ============================================================ */
+.page-blob-bg {
+  background:
+    radial-gradient(ellipse 65% 55% at 92% 8%,  rgba(255, 105, 0, 0.18)   0%, transparent 65%),
+    radial-gradient(ellipse 55% 65% at 5%  92%,  rgba(255, 223, 218, 0.55) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 45% at 15% 22%,  rgba(255, 169, 148, 0.20) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 40% at 75% 72%,  rgba(195, 79, 0, 0.10)    0%, transparent 65%),
+    #FFFFFF;
+  min-height: 100vh;
+}
+
+/* Page-load fade+scale — same feel as hero, use with animationDelay inline */
+.page-animate {
+  animation: heroReveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}

@@ -19,7 +19,7 @@ export type InterviewSession = {
 type UseInterviewSessionReturn = {
   session: InterviewSession;
   timeLeft: number;
-  startSession: (question1Id: string, question2Id: string) => Promise<void>;
+  startSession: (question1Id: string, question2Id: string, question3Id?: string) => Promise<void>;
   pauseSession: () => Promise<void>;
   resumeSession: () => Promise<void>;
   endSession: (responses: SessionResponse[]) => Promise<void>;
@@ -166,12 +166,12 @@ export function useInterviewSession(
   }
 
   // Create the DB session record and start the timer
-  async function startSession(question1Id: string, question2Id: string) {
+  async function startSession(question1Id: string, question2Id: string, question3Id?: string) {
     try {
       const res = await fetch("/api/interview/session/currentuser", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question1Id, question2Id }),
+        body: JSON.stringify({ question1Id, question2Id, question3Id }),
       });
 
       if (!res.ok) {

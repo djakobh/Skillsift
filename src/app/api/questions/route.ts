@@ -36,10 +36,31 @@ function loadQuestions(): QuestionSummary[] {
   }));
 }
 
+function pickRandom<T>(arr: T[], n: number): T[] {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}
+
+function selectQuestions(questions: QuestionSummary[]): QuestionSummary[] {
+  const easy = questions.filter(q => q.difficulty === "Easy");
+  const medium = questions.filter(q => q.difficulty === "Medium");
+  const hard = questions.filter(q => q.difficulty === "Hard");
+
+  const combos: Array<() => QuestionSummary[]> = [
+    () => [...pickRandom(easy, 2), ...pickRandom(hard, 1)],         // 2 easy + 1 hard
+    () => [...pickRandom(easy, 1), ...pickRandom(medium, 1), ...pickRandom(hard, 1)], // 1 easy + 1 medium + 1 hard
+    () => [...pickRandom(easy, 1), ...pickRandom(medium, 2)],        // 1 easy + 2 medium
+  ];
+
+  const pick = combos[Math.floor(Math.random() * combos.length)]!;
+  return pick();
+}
+
 export async function GET() {
   try {
     const questions = loadQuestions();
-    return NextResponse.json(questions);
+    const selected = selectQuestions(questions);
+    return NextResponse.json(selected);
   } catch (error) {
     console.error("Failed to load questions:", error);
     return NextResponse.json({ error: "Failed to load questions" }, { status: 500 });
