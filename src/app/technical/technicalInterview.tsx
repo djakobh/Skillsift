@@ -183,7 +183,7 @@ export default function TechnicalInterviewViewSwitcher({
   async function finishEarly() {
     saveCurrentCode();
 
-    const responses: SessionResponse[] = questions.map((q, idx) => ({
+    const responses: SessionResponse[] = questions.slice(0, 2).map((q, idx) => ({
       question: q.title,
       answer: questionCode[idx] ?? "",
     }));
@@ -325,7 +325,7 @@ export default function TechnicalInterviewViewSwitcher({
           <div className="flex justify-between max-w-4xl mx-auto items-center">
             <div>
               <h1 className="text-3xl font-bold">Technical Interview</h1>
-              <p className="text-gray-500 mt-1">
+              <p className="text-gray-500 dark:text-gray-400 mt-1">
                 Time limit of 60 minutes to complete both questions
               </p>
             </div>
@@ -336,25 +336,25 @@ export default function TechnicalInterviewViewSwitcher({
           </div>
 
           {showLeaveNotice && (
-            <div className="max-w-4xl mx-auto mt-4 flex items-center justify-between bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg text-sm">
+            <div className="max-w-4xl mx-auto mt-4 flex items-center justify-between bg-yellow-50 dark:bg-yellow-950 border border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-300 px-4 py-3 rounded-lg text-sm">
               <span>Your session is still running — return to a question to continue.</span>
-              <button onClick={() => setShowLeaveNotice(false)} className="ml-4 text-yellow-600 hover:text-yellow-800 font-medium">Dismiss</button>
+              <button onClick={() => setShowLeaveNotice(false)} className="ml-4 text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-200 font-medium">Dismiss</button>
             </div>
           )}
 
-          <div className="max-w-2xl mx-auto mt-10 border rounded-lg">
+          <div className="max-w-2xl mx-auto mt-10 border dark:border-gray-700 rounded-lg">
             <div className="bg-orange-500 text-white px-4 py-2 font-semibold">
               Technical Skill Testing
             </div>
 
             {questions.length === 0 && (
-              <div className="px-4 py-6 text-gray-500 text-sm">Loading questions...</div>
+              <div className="px-4 py-6 text-gray-500 dark:text-gray-400 text-sm">Loading questions...</div>
             )}
 
             {questions.slice(0, 2).map((q, index) => (
               <div
                 key={q.id}
-                className="flex items-center justify-between px-4 py-4 border-t"
+                className="flex items-center justify-between px-4 py-4 border-t dark:border-gray-700"
               >
                 <span className="flex items-center">
                   Question #{index + 1}: {q.title}
@@ -385,7 +385,7 @@ export default function TechnicalInterviewViewSwitcher({
             <div className="flex items-center gap-3">
               <button
                 onClick={backToQuestions}
-                className="px-3 py-1.5 text-sm rounded-md border border-gray-300 bg-white hover:bg-gray-50 font-medium"
+                className="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium"
               >
                 ← Back
               </button>
@@ -404,7 +404,7 @@ export default function TechnicalInterviewViewSwitcher({
 
           {/* Pause banner */}
           {session.status === "paused" && (
-            <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-2 rounded text-sm text-center shrink-0">
+            <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-300 px-4 py-2 rounded text-sm text-center shrink-0">
               Timer paused — your session will resume when you return to this tab.
             </div>
           )}
@@ -413,14 +413,14 @@ export default function TechnicalInterviewViewSwitcher({
           <div className="flex flex-1 gap-3 mt-2 mb-2 min-h-0">
 
             {/* Left panel: Problem description */}
-            <div className="w-2/5 border rounded p-4 overflow-y-auto flex flex-col shrink-0">
+            <div className="w-2/5 border dark:border-gray-700 rounded p-4 overflow-y-auto flex flex-col shrink-0">
               {currentQuestion && (
                 <>
                   <div className="flex items-center mb-2">
                     <h2 className="font-semibold text-base">{currentQuestion.title}</h2>
                     <DifficultyBadge difficulty={currentQuestion.difficulty} />
                   </div>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                     {currentQuestion.description}
                   </p>
                 </>
@@ -431,7 +431,7 @@ export default function TechnicalInterviewViewSwitcher({
             <div className="flex-1 flex flex-col min-h-0 gap-2">
 
               {/* Code editor */}
-              <div className="border rounded p-3 flex flex-col flex-1 min-h-0">
+              <div className="border dark:border-gray-700 rounded p-3 flex flex-col flex-1 min-h-0">
                 <div className="flex items-center justify-between mb-2 shrink-0">
                   <h3 className="font-semibold text-sm">Code</h3>
                   <button
@@ -458,15 +458,15 @@ export default function TechnicalInterviewViewSwitcher({
               </div>
 
               {/* Results / Solution / Hints tabs */}
-              <div className="border rounded flex flex-col shrink-0 h-[32%]">
+              <div className="border dark:border-gray-700 rounded flex flex-col shrink-0 h-[32%]">
             {/* Tab bar */}
-            <div className="flex border-b shrink-0">
+            <div className="flex border-b dark:border-gray-700 shrink-0">
               <button
                 onClick={() => setRightTab("results")}
                 className={`px-4 py-2 text-sm font-medium ${
                   rightTab === "results"
                     ? "border-b-2 border-orange-500 text-orange-600"
-                    : "text-gray-500 hover:text-gray-700"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                 }`}
               >
                 Test Results
@@ -476,7 +476,7 @@ export default function TechnicalInterviewViewSwitcher({
                 className={`px-4 py-2 text-sm font-medium ${
                   rightTab === "solution"
                     ? "border-b-2 border-orange-500 text-orange-600"
-                    : "text-gray-500 hover:text-gray-700"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                 }`}
               >
                 Solution
@@ -487,7 +487,7 @@ export default function TechnicalInterviewViewSwitcher({
                 className={`px-4 py-2 text-sm font-medium ${
                   rightTab === "hint"
                     ? "border-b-2 border-orange-500 text-orange-600"
-                    : "text-gray-500 hover:text-gray-700"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                 }`}
               >
                 Hints {hints.length > 0 ? "(" + hints.length + "/3)" : ""}
@@ -508,14 +508,14 @@ export default function TechnicalInterviewViewSwitcher({
                   </pre>
                 )}
                 {testResults.length === 0 && !compileOutput && !stderr && (
-                  <p className="text-gray-400 text-sm">Run your code to see test results</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-sm">Run your code to see test results</p>
                 )}
                 <div className="flex flex-wrap gap-3">
                   {testResults.map((r) => (
                     <div
                       key={r.case}
                       className={`p-3 rounded border text-sm min-w-[180px] ${
-                        r.passed ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"
+                        r.passed ? "border-green-300 bg-green-50 dark:border-green-800 dark:bg-green-950" : "border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
@@ -530,12 +530,12 @@ export default function TechnicalInterviewViewSwitcher({
                         <p className="text-red-700 text-xs">{r.error}</p>
                       ) : (
                         <>
-                          <p className="text-gray-700 text-xs">
-                            Expected: <code className="bg-white px-1 rounded border">{r.expected}</code>
+                          <p className="text-gray-700 dark:text-gray-300 text-xs">
+                            Expected: <code className="bg-white dark:bg-gray-800 px-1 rounded border dark:border-gray-600">{r.expected}</code>
                           </p>
                           {!r.passed && (
-                            <p className="text-gray-700 text-xs mt-0.5">
-                              Got: <code className="bg-white px-1 rounded border">{r.actual}</code>
+                            <p className="text-gray-700 dark:text-gray-300 text-xs mt-0.5">
+                              Got: <code className="bg-white dark:bg-gray-800 px-1 rounded border dark:border-gray-600">{r.actual}</code>
                             </p>
                           )}
                         </>
@@ -562,7 +562,7 @@ export default function TechnicalInterviewViewSwitcher({
                     </pre>
                   </>
                 ) : (
-                  <p className="text-gray-400 text-sm">No solution available for this question.</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-sm">No solution available for this question.</p>
                 )}
               </div>
             )}
@@ -578,11 +578,11 @@ export default function TechnicalInterviewViewSwitcher({
                 {/* Show existing hints */}
                 <div className="space-y-3 mb-4">
                   {hints.map((hint, idx) => (
-                    <div key={idx} className="bg-orange-50 border border-orange-200 rounded p-3">
-                      <p className="text-xs font-semibold text-orange-600 mb-1">
+                    <div key={idx} className="bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded p-3">
+                      <p className="text-xs font-semibold text-orange-600 dark:text-orange-400 mb-1">
                         Hint {idx + 1} of 3
                       </p>
-                      <p className="text-sm text-gray-700">{hint}</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">{hint}</p>
                     </div>
                   ))}
                 </div>
@@ -610,7 +610,7 @@ export default function TechnicalInterviewViewSwitcher({
                 )}
 
                 {hints.length >= 3 && (
-                  <p className="text-xs text-gray-400 italic">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 italic">
                     Maximum hints reached for this question.
                   </p>
                 )}
@@ -631,7 +631,7 @@ export default function TechnicalInterviewViewSwitcher({
           <div className="flex flex-col items-center">
             <h1 className="text-3xl font-bold mb-6">Interview Complete</h1>
             <ul className="text-sm space-y-2">
-              {questions.map((q, idx) => (
+              {questions.slice(0, 2).map((q, idx) => (
                 <li key={q.id}>
                   {q.title}:{" "}
                   {questionStatus[idx] ? (

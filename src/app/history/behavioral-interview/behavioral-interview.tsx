@@ -265,16 +265,22 @@ function formatDate(date: Date) {
 
 //Author: Justin Do
 function formatDuration(startedAt: Date, completedAt: Date | null, pausedAt: Date | null, resumedAt: Date | null) {
-
-
-    const endTime = completedAt ? new Date(completedAt).getTime() : Date.now();
-    let pausedMs = 0;
-
-    if (pausedAt != null && resumedAt != null) {
-        pausedMs = new Date(resumedAt).getTime() - new Date(pausedAt).getTime();
+    // Session paused but never resumed — active time is start → pause
+    if (!completedAt && pausedAt && !resumedAt) {
+        const activeMs = new Date(pausedAt).getTime() - new Date(startedAt).getTime();
+        const totalSeconds = Math.floor(activeMs / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return minutes + "m " + seconds + "s";
     }
-    else if (pausedAt != null && resumedAt == null) {
-        pausedMs = endTime - new Date(pausedAt).getTime();
+
+    // No completion and no clean pause record — can't determine duration
+    if (!completedAt) return "—";
+
+    const endTime = new Date(completedAt).getTime();
+    let pausedMs = 0;
+    if (pausedAt && resumedAt) {
+        pausedMs = new Date(resumedAt).getTime() - new Date(pausedAt).getTime();
     }
 
     const activeMs = endTime - new Date(startedAt).getTime() - pausedMs;

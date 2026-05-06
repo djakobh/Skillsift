@@ -7,14 +7,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { User, Settings, LogOut, Moon, Sun } from "lucide-react";
+import { User, Settings, LogOut } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { useTheme } from "~/components/ThemeProvider";
 
 export default function Navbar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const { isDark, toggle } = useTheme();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -84,17 +82,8 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Right Side - Dark Mode Toggle + Auth Links */}
+          {/* Right Side - Auth Links */}
           <div className="flex items-center space-x-3">
-            {/* Dark mode toggle */}
-            <button
-              onClick={toggle}
-              className="flex items-center justify-center rounded-full p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label="Toggle dark mode"
-            >
-              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-
             {session?.user ? (
               <div className="relative" ref={dropdownRef}>
                 <button

@@ -16,7 +16,7 @@ export default async function TechnicalInterviewPage({
   const params = await searchParams;
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white dark:bg-gray-900">
       <TechnicalInterviewViewSwitcher resumeSessionId={params.sessionId} />
     </main>
   );

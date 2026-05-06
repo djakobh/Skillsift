@@ -12,6 +12,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Briefcase, Plus, Search, ChevronDown, Trash2, ExternalLink, ArrowUpDown, Sparkles } from "lucide-react";
 import JobSuggestions from "./_components/JobSuggestions";
+import { LocationInput } from "./_components/LocationInput";
 
 // TypeScript type matching the JobApplication Prisma model
 type JobApplication = {
@@ -38,101 +39,6 @@ const EXPERIENCE_LEVEL_OPTIONS = [
   "Senior Level",
   "Lead / Principal",
 ];
-
-// ─── Location Autocomplete Input ─────────────────────────────────────
-// Debounced search via Nominatim (OpenStreetMap). Shows city suggestions.
-
-function LocationInput({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (val: string) => void;
-}) {
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [open, setOpen] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    onChange(val);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    if (val.trim().length < 2) {
-      setSuggestions([]);
-      setOpen(false);
-      return;
-    }
-    timerRef.current = setTimeout(async () => {
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=5&addressdetails=1`,
-          { headers: { "Accept-Language": "en" } }
-        );
-        const data = await res.json() as Array<{
-          address?: { city?: string; town?: string; village?: string; state?: string; country?: string; country_code?: string };
-        }>;
-        const seen = new Set<string>();
-        const results: string[] = [];
-        for (const item of data) {
-          const a = item.address ?? {};
-          const city = a.city ?? a.town ?? a.village ?? "";
-          const state = a.state ?? "";
-          const country = (a.country_code ?? "").toUpperCase();
-          if (!city) continue;
-          const label = country === "US"
-            ? state ? `${city}, ${state}` : city
-            : state ? `${city}, ${state}, ${country}` : `${city}, ${country}`;
-          if (!seen.has(label)) { seen.add(label); results.push(label); }
-        }
-        setSuggestions(results);
-        setOpen(results.length > 0);
-      } catch {
-        // silently fail
-      }
-    }, 350);
-  };
-
-  return (
-    <div ref={containerRef} className="relative">
-      <input
-        type="text"
-        value={value}
-        onChange={handleChange}
-        onFocus={() => suggestions.length > 0 && setOpen(true)}
-        className="w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-        placeholder="e.g. Remote, San Francisco, CA"
-        autoComplete="off"
-      />
-      {open && (
-        <ul className="absolute left-0 top-full z-50 mt-1 w-full rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
-          {suggestions.map((s) => (
-            <li key={s}>
-              <button
-                type="button"
-                onMouseDown={(e) => { e.preventDefault(); onChange(s); setOpen(false); }}
-                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-              >
-                {s}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
 
 // All possible application statuses — matches the ApplicationStatus enum in Prisma
 const STATUS_OPTIONS = [
@@ -273,13 +179,13 @@ function JobFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="mx-4 w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl">
+      <div className="mx-4 w-full max-w-2xl rounded-lg bg-white dark:bg-gray-800 p-6 shadow-xl">
         <h2 className="mb-4 text-xl font-bold">
           {isEdit ? "Edit Job Application" : "Add Job Application"}
         </h2>
 
         {error && (
-          <p className="mb-4 rounded bg-red-50 p-2 text-sm text-red-600">{error}</p>
+          <p className="mb-4 rounded bg-red-50 dark:bg-red-950 p-2 text-sm text-red-600 dark:text-red-400">{error}</p>
         )}
 
         <form onSubmit={handleSubmit}>
@@ -291,7 +197,7 @@ function JobFormModal({
                 type="text"
                 value={company}
                 onChange={(e) => setCompany(e.target.value)}
-                className="rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
                 placeholder="e.g. Google"
               />
             </div>
@@ -303,7 +209,7 @@ function JobFormModal({
                 type="text"
                 value={position}
                 onChange={(e) => setPosition(e.target.value)}
-                className="rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
                 placeholder="e.g. Software Engineer"
               />
             </div>
@@ -314,7 +220,7 @@ function JobFormModal({
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               >
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s} value={s}>
@@ -330,7 +236,7 @@ function JobFormModal({
               <select
                 value={experienceLevel}
                 onChange={(e) => setExperienceLevel(e.target.value)}
-                className="rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               >
                 <option value="">Any</option>
                 {EXPERIENCE_LEVEL_OPTIONS.map((lvl) => (
@@ -352,7 +258,7 @@ function JobFormModal({
                 type="number"
                 value={salaryMin}
                 onChange={(e) => setSalaryMin(e.target.value)}
-                className="rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
                 placeholder="e.g. 80000"
               />
             </div>
@@ -364,7 +270,7 @@ function JobFormModal({
                 type="number"
                 value={salaryMax}
                 onChange={(e) => setSalaryMax(e.target.value)}
-                className="rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
                 placeholder="e.g. 120000"
               />
             </div>
@@ -376,7 +282,7 @@ function JobFormModal({
                 type="text"
                 value={jobUrl}
                 onChange={(e) => setJobUrl(e.target.value)}
-                className="rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
                 placeholder="https://..."
               />
             </div>
@@ -388,7 +294,7 @@ function JobFormModal({
                 type="date"
                 value={appliedAt}
                 onChange={(e) => setAppliedAt(e.target.value)}
-                className="rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
             </div>
           </div>
@@ -404,7 +310,7 @@ function JobFormModal({
             <textarea
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
-              className="h-28 w-full resize-none rounded-lg border border-gray-200 p-3 text-sm focus:border-orange-400 focus:outline-none"
+              className="h-28 w-full resize-none rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-3 text-sm focus:border-orange-400 focus:outline-none"
               placeholder="Paste the job description here..."
             />
           </div>
@@ -415,7 +321,7 @@ function JobFormModal({
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="h-20 w-full resize-none rounded-lg border border-gray-200 p-3 text-sm focus:border-orange-400 focus:outline-none"
+              className="h-20 w-full resize-none rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-3 text-sm focus:border-orange-400 focus:outline-none"
               placeholder="Any personal notes about this application..."
             />
           </div>
@@ -432,7 +338,7 @@ function JobFormModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 text-sm text-gray-600 hover:underline"
+              className="px-6 py-2 text-sm text-gray-600 dark:text-gray-400 hover:underline"
             >
               Cancel
             </button>
@@ -468,9 +374,9 @@ function DeleteConfirmModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+      <div className="mx-4 w-full max-w-md rounded-lg bg-white dark:bg-gray-800 p-6 shadow-xl">
         <h2 className="mb-2 text-lg font-bold">Delete Application</h2>
-        <p className="mb-6 text-sm text-gray-600">
+        <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
           Are you sure you want to delete your application for{" "}
           <strong>{job.position}</strong> at <strong>{job.company}</strong>? This
           action cannot be undone.
@@ -478,7 +384,7 @@ function DeleteConfirmModal({
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-600 hover:underline"
+            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:underline"
           >
             Cancel
           </button>
@@ -577,7 +483,7 @@ function StatusBadge({
       {open && (
         <div
           ref={dropdownRef}
-          className={`absolute left-0 z-50 w-40 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 ${
+          className={`absolute left-0 z-50 w-40 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 dark:ring-gray-700 ${
             openUpward ? "bottom-full mb-1" : "top-full mt-1"
           }`}
         >
@@ -588,8 +494,8 @@ function StatusBadge({
                 e.stopPropagation();
                 handleStatusChange(s);
               }}
-              className={`block w-full px-3 py-1.5 text-left text-xs hover:bg-gray-50 ${
-                s === job.status ? "font-bold text-orange-500" : "text-gray-700"
+              className={`block w-full px-3 py-1.5 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                s === job.status ? "font-bold text-orange-500" : "text-gray-700 dark:text-gray-300"
               }`}
             >
               {formatStatus(s)}
@@ -626,10 +532,10 @@ function StatsBar({ jobs }: { jobs: JobApplication[] }) {
       {stats.map((stat) => (
         <div
           key={stat.label}
-          className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center"
+          className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 text-center"
         >
-          <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-          <p className="text-xs text-gray-500">{stat.label}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</p>
         </div>
       ))}
     </div>
@@ -646,7 +552,6 @@ export default function JobsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [experienceLevelFilter, setExperienceLevelFilter] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
 
@@ -664,7 +569,6 @@ export default function JobsPage() {
       const params = new URLSearchParams();
       if (statusFilter) params.set("status", statusFilter);
       if (searchQuery) params.set("search", searchQuery);
-      if (experienceLevelFilter) params.set("experienceLevel", experienceLevelFilter);
       params.set("sortBy", sortBy);
       params.set("sortOrder", sortOrder);
 
@@ -677,7 +581,7 @@ export default function JobsPage() {
       // silently fail
     }
     setLoading(false);
-  }, [statusFilter, searchQuery, experienceLevelFilter, sortBy, sortOrder]);
+  }, [statusFilter, searchQuery, sortBy, sortOrder]);
 
   useEffect(() => {
     if (authStatus === "unauthenticated") {
@@ -712,7 +616,7 @@ export default function JobsPage() {
 
   if (authStatus === "loading") {
     return (
-      <main className="min-h-screen bg-white p-8">
+      <main className="min-h-screen bg-white dark:bg-gray-900 p-8">
         <div className="mx-auto max-w-7xl">
           <p className="text-sm text-gray-500">Loading...</p>
         </div>
@@ -721,20 +625,20 @@ export default function JobsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white p-8">
+    <main className="min-h-screen bg-white dark:bg-gray-900 p-8">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-8 flex items-start justify-between">
           <div>
             <h1 className="mb-2 text-3xl font-bold">Job Tracker</h1>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Track your job applications and monitor your progress.
             </p>
           </div>
           <div className="flex items-center gap-3">
             <a
               href="#suggestions"
-              className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="flex items-center gap-2 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <Sparkles className="h-4 w-4 text-orange-500" />
               See Suggestions
@@ -753,14 +657,14 @@ export default function JobsPage() {
         {jobs.length > 0 && <StatsBar jobs={jobs} />}
 
         {/* Filters */}
-        <div className="mb-6 rounded-lg border-2 border-black bg-white p-6">
+        <div className="mb-6 rounded-lg border-2 border-black dark:border-gray-600 bg-white dark:bg-gray-800 p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold">All Applications</h2>
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium">
+            <span className="rounded-full bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-3 py-1 text-xs font-medium">
               {jobs.length} Total
             </span>
           </div>
-          <hr className="-mx-6 mb-6 border-t-2 border-black" />
+          <hr className="-mx-6 mb-6 border-t-2 border-black dark:border-gray-600" />
 
           {/* Search & Filter Controls */}
           <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -771,13 +675,13 @@ export default function JobsPage() {
                 placeholder="Search by company or position..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="w-full rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
             >
               <option value="">All Statuses</option>
               {STATUS_OPTIONS.map((s) => (
@@ -786,23 +690,13 @@ export default function JobsPage() {
                 </option>
               ))}
             </select>
-            <select
-              value={experienceLevelFilter}
-              onChange={(e) => setExperienceLevelFilter(e.target.value)}
-              className="rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-            >
-              <option value="">All Levels</option>
-              {EXPERIENCE_LEVEL_OPTIONS.map((lvl) => (
-                <option key={lvl} value={lvl}>{lvl}</option>
-              ))}
-            </select>
           </div>
 
           {/* Job List */}
           {loading ? (
-            <p className="py-8 text-center text-sm text-gray-500">Loading...</p>
+            <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">Loading...</p>
           ) : jobs.length === 0 ? (
-            <div className="space-y-6 py-12 text-center text-gray-500">
+            <div className="space-y-6 py-12 text-center text-gray-500 dark:text-gray-400">
               <Briefcase className="mx-auto h-12 w-12 text-gray-300" />
               <p className="text-sm">No job applications yet</p>
               <p className="text-xs">
@@ -816,37 +710,37 @@ export default function JobsPage() {
               </button>
             </div>
           ) : (
-            <div className="rounded-lg border border-gray-200">
+            <div className="rounded-lg border border-gray-200 dark:border-gray-700">
               {/* Table Header */}
-              <div className="grid grid-cols-[2fr_2fr_140px_140px_140px_80px] gap-2 border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+              <div className="grid grid-cols-[2fr_2fr_140px_140px_140px_80px] gap-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 px-4 py-2.5">
                 <button
                   onClick={() => toggleSort("company")}
-                  className="flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
+                  className="flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
                 >
                   Company
                   <ArrowUpDown className="h-3 w-3" />
                 </button>
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                   Position
                 </span>
                 <button
                   onClick={() => toggleSort("status")}
-                  className="flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
+                  className="flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
                 >
                   Status
                   <ArrowUpDown className="h-3 w-3" />
                 </button>
                 <button
                   onClick={() => toggleSort("appliedAt")}
-                  className="flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
+                  className="flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
                 >
                   Applied
                   <ArrowUpDown className="h-3 w-3" />
                 </button>
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                   Salary
                 </span>
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                   Actions
                 </span>
               </div>
@@ -856,29 +750,29 @@ export default function JobsPage() {
                 <div
                   key={job.id}
                   onClick={() => router.push(`/jobs/${job.id}`)}
-                  className="grid cursor-pointer grid-cols-[2fr_2fr_140px_140px_140px_80px] gap-2 border-b border-gray-100 px-4 py-3 transition-colors hover:bg-gray-50"
+                  className="grid cursor-pointer grid-cols-[2fr_2fr_140px_140px_140px_80px] gap-2 border-b border-gray-100 dark:border-gray-700 px-4 py-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {job.company}
                     </p>
                     {job.location && (
-                      <p className="text-xs text-gray-400">{job.location}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">{job.location}</p>
                     )}
                   </div>
                   <div className="flex items-center">
-                    <p className="text-sm text-gray-700">{job.position}</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{job.position}</p>
                   </div>
                   <div className="flex items-center">
                     <StatusBadge job={job} onStatusChanged={fetchJobs} />
                   </div>
                   <div className="flex items-center">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       {formatDate(job.appliedAt)}
                     </p>
                   </div>
                   <div className="flex items-center">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       {formatSalary(job.salaryMin, job.salaryMax) || "—"}
                     </p>
                   </div>
@@ -889,7 +783,7 @@ export default function JobsPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                        className="rounded p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-300"
                         title="Open job posting"
                       >
                         <ExternalLink className="h-4 w-4" />
@@ -900,7 +794,7 @@ export default function JobsPage() {
                         e.stopPropagation();
                         setEditingJob(job);
                       }}
-                      className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                      className="rounded p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-300"
                       title="Edit"
                     >
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

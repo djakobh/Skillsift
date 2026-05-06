@@ -42,9 +42,9 @@ export default async function TechnicalInterviewResultsPage({
 
   // Format active time spent
   function formatDuration(startedAt: Date, completedAt: Date | null, totalPausedMs: number | null) {
-    const endTime = completedAt ? completedAt.getTime() : Date.now();
+    if (!completedAt) return "—";
     const pausedMs = totalPausedMs ?? 0;
-    const activeMs = endTime - startedAt.getTime() - pausedMs;
+    const activeMs = completedAt.getTime() - startedAt.getTime() - pausedMs;
     const totalSeconds = Math.floor(activeMs / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;

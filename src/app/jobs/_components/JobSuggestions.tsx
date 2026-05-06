@@ -20,6 +20,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import { LocationInput } from "./LocationInput";
 
 type AdzunaJob = {
   id: string;
@@ -81,6 +82,7 @@ export default function JobSuggestions({
 }) {
   const [keyword, setKeyword] = useState("");
   const [location, setLocation] = useState("");
+  const [experienceLevel, setExperienceLevel] = useState("");
   const [salaryMin, setSalaryMin] = useState<number>(0);
   const [salaryMax, setSalaryMax] = useState<number>(250_000);
   const [jobType, setJobType] = useState<string>("");
@@ -103,7 +105,8 @@ export default function JobSuggestions({
       setError(null);
 
       const params = new URLSearchParams();
-      if (keyword.trim()) params.set("keyword", keyword.trim());
+      const effectiveKeyword = [keyword.trim(), experienceLevel].filter(Boolean).join(" ");
+      if (effectiveKeyword) params.set("keyword", effectiveKeyword);
       if (location.trim()) params.set("location", location.trim());
       if (salaryMin > 0) params.set("salaryMin", String(salaryMin));
       if (salaryMax > 0 && salaryMax < 1_000_000)
@@ -153,7 +156,7 @@ export default function JobSuggestions({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [keyword, location, salaryMin, salaryMax, jobType, autoPopulated],
+    [keyword, location, experienceLevel, salaryMin, salaryMax, jobType, autoPopulated],
   );
 
   // Initial load: ask for the search profile
@@ -294,16 +297,29 @@ export default function JobSuggestions({
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
               Location
             </label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. San Francisco, Remote"
-                className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              />
-            </div>
+            <LocationInput
+              value={location}
+              onChange={setLocation}
+              placeholder="e.g. San Francisco, Remote"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+              Experience level
+            </label>
+            <select
+              value={experienceLevel}
+              onChange={(e) => setExperienceLevel(e.target.value)}
+              className="w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            >
+              <option value="">Any level</option>
+              <option value="internship">Internship</option>
+              <option value="entry level">Entry Level</option>
+              <option value="mid level">Mid Level</option>
+              <option value="senior">Senior Level</option>
+              <option value="lead">Lead / Principal</option>
+            </select>
           </div>
 
           <div>

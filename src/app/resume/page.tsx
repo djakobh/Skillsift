@@ -159,17 +159,17 @@ function UploadBox({ changeState, changeResumeText, changeResumeFileName, change
     };
 
     return (
-        <div className="w-1/2 border border-gray-200 rounded-lg overflow-hidden">
-            <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
-                <h2 className="text-gray-900 m-0">Upload Your Resume</h2>
+        <div className="w-1/2 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+            <div className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+                <h2 className="text-gray-900 dark:text-white m-0">Upload Your Resume</h2>
             </div>
 
             <div className="flex flex-col items-center gap-4 px-6 py-8">
                 {isLoading ? (
-                    <p className="text-gray-500 text-sm">Uploading...</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Uploading...</p>
                 ) : (
                     <>
-                        <div className="flex flex-col items-center gap-3 border-2 border-dashed border-gray-200 rounded-lg w-full py-8 px-4">
+                        <div className="flex flex-col items-center gap-3 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg w-full py-8 px-4">
                             <span className="text-4xl text-gray-300">↑</span>
                             <button className="orange_button" onClick={UploadResumeButton}>Upload Resume</button>
                             <p className="text-gray-400 text-xs m-0">.pdf, .docx, or .txt</p>
@@ -236,18 +236,18 @@ function AddJobDescriptionBox(
     const [template, setTemplate] = useState("");
 
     return (
-        <div className="w-1/2 border border-gray-200 rounded-lg overflow-hidden">
-            <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
-                <h2 className="text-gray-900 m-0">Add Job Description</h2>
+        <div className="w-1/2 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+            <div className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+                <h2 className="text-gray-900 dark:text-white m-0">Add Job Description</h2>
             </div>
 
             <div className="flex flex-col gap-4 px-6 py-6">
                 {isLoading ? (
-                    <p className="text-gray-500 text-sm">Analyzing your resume...</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Analyzing your resume...</p>
                 ) : (
                     <>
                         <textarea
-                            className={`w-full h-10 border rounded-lg p-3 text-sm text-gray-800 resize-none focus:outline-none focus:border-orange-400 ${isCompanyEmpty ? "border-red-400" : "border-gray-200"}`}
+                            className={`w-full h-10 border rounded-lg p-3 text-sm text-gray-800 dark:text-gray-200 dark:bg-gray-700 resize-none focus:outline-none focus:border-orange-400 ${isCompanyEmpty ? "border-red-400" : "border-gray-200 dark:border-gray-600"}`}
                             placeholder="Company / role name..."
                             value={companyName}
                             onChange={(e) => { setCompanyName(e.target.value); setCompanyEmpty(false); }}
@@ -258,7 +258,7 @@ function AddJobDescriptionBox(
                         )}
 
                         <textarea
-                            className="w-full h-40 border border-gray-200 rounded-lg p-3 text-sm text-gray-800 resize-none focus:outline-none focus:border-orange-400"
+                            className="w-full h-40 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg p-3 text-sm text-gray-800 resize-none focus:outline-none focus:border-orange-400"
                             placeholder="Paste a job description here..."
                             value={template}
                             onChange={(e) => setTemplate(e.target.value)}
@@ -270,7 +270,7 @@ function AddJobDescriptionBox(
                                 <select
                                     name="Templates"
                                     id="templates"
-                                    className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 bg-white focus:outline-none focus:border-orange-400"
+                                    className="border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 bg-white focus:outline-none focus:border-orange-400"
                                     onChange={(e) => {
                                         const key = e.target.value as JobDescriptionTemplate;
                                         setTemplate(JOB_DESCRIPTION_TEMPLATES[key]);
@@ -341,10 +341,10 @@ function ViewFeedbackBox({ changeState, data, jobDescription, resumeText, resume
     ];
 
     return (
-        <div className="flex w-11/12 max-w-screen-xl rounded-lg overflow-hidden border border-gray-200 min-h-[80vh]">
+        <div className="flex w-11/12 max-w-screen-xl rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 min-h-[80vh]">
 
             {/* ── Left Sidebar ── */}
-            <aside className="w-64 flex-shrink-0 bg-gray-50 border-r border-gray-200 flex flex-col gap-6 p-5">
+            <aside className="w-64 flex-shrink-0 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col gap-6 p-5">
                 <div className="flex flex-col items-center gap-3 pt-2">
                     <DonutChart score={score} />
                     <button className="orange_button w-full text-center text-sm" onClick={() => changeState(UploadPageState.UPLOAD)}>
@@ -352,7 +352,7 @@ function ViewFeedbackBox({ changeState, data, jobDescription, resumeText, resume
                     </button>
                 </div>
 
-                <hr className="border-gray-200" />
+                <hr className="border-gray-200 dark:border-gray-700" />
 
                 <div className="flex flex-col gap-4">
                     {DASHBOARD_SECTIONS.map(sec => (
@@ -366,15 +366,15 @@ function ViewFeedbackBox({ changeState, data, jobDescription, resumeText, resume
             </aside>
 
             {/* ── Right Panel ── */}
-            <div className="flex flex-col flex-1 min-w-0 bg-white">
+            <div className="flex flex-col flex-1 min-w-0 bg-white dark:bg-gray-900">
 
                 {/* Tab bar */}
-                <div className="flex border-b border-gray-200 bg-gray-50">
+                <div className="flex border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                     {tabs.map(tab => (
                         <button
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key)}
-                            className={`px-6 py-3 text-sm font-medium transition-colors ${activeTab === tab.key ? "border-b-2 border-orange-500 text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+                            className={`px-6 py-3 text-sm font-medium transition-colors ${activeTab === tab.key ? "border-b-2 border-orange-500 text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
                         >
                             {tab.label}
                         </button>
@@ -403,10 +403,10 @@ function ViewFeedbackBox({ changeState, data, jobDescription, resumeText, resume
                     {activeTab === "jobdesc" && (
                         <div className="max-w-3xl mx-auto">
                             <div className="flex gap-4 mb-5 text-sm">
-                                <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-green-500"></span><span className="text-gray-600">Found in resume</span></span>
-                                <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-red-500"></span><span className="text-gray-600">Missing from resume</span></span>
+                                <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-green-500"></span><span className="text-gray-600 dark:text-gray-400">Found in resume</span></span>
+                                <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-red-500"></span><span className="text-gray-600 dark:text-gray-400">Missing from resume</span></span>
                             </div>
-                            <div className="text-gray-800 text-sm leading-7 whitespace-pre-wrap font-mono bg-gray-50 border border-gray-200 rounded-lg p-5">
+                            <div className="text-gray-800 dark:text-gray-200 text-sm leading-7 whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5">
                                 {segments.map((seg, i) =>
                                     seg.color === "green" ? (
                                         <mark key={i} className="bg-green-100 text-green-800 rounded px-0.5">{seg.text}</mark>
@@ -424,9 +424,9 @@ function ViewFeedbackBox({ changeState, data, jobDescription, resumeText, resume
                         <div className="flex gap-4 flex-1 min-h-0 w-full">
 
                             {/* Left — Resume (PDF canvas view or plain text fallback) */}
-                            <div className="flex flex-col flex-1 min-w-0 border border-gray-200 rounded-lg overflow-hidden">
-                                <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center flex-shrink-0">
-                                    <h4 className="text-gray-800 m-0 text-sm font-semibold">Your Resume</h4>
+                            <div className="flex flex-col flex-1 min-w-0 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                                <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center flex-shrink-0">
+                                    <h4 className="text-gray-800 dark:text-gray-200 m-0 text-sm font-semibold">Your Resume</h4>
                                 </div>
                                 {resumeFile?.type === "application/pdf" ? (
                                     <Suspense fallback={
@@ -438,7 +438,7 @@ function ViewFeedbackBox({ changeState, data, jobDescription, resumeText, resume
                                         <PdfViewer file={resumeFile} />
                                     </Suspense>
                                 ) : (
-                                    <div className="flex-1 overflow-y-auto p-4 text-gray-800 text-xs leading-6 whitespace-pre-wrap font-mono bg-white">
+                                    <div className="flex-1 overflow-y-auto p-4 text-gray-800 dark:text-gray-200 text-xs leading-6 whitespace-pre-wrap font-mono bg-white dark:bg-gray-900">
                                         <HighlightedResumeText
                                             text={resumeText}
                                             highlights={optimizerResult
@@ -453,9 +453,9 @@ function ViewFeedbackBox({ changeState, data, jobDescription, resumeText, resume
                             </div>
 
                             {/* Right — Suggestions */}
-                            <div className="flex flex-col w-96 flex-shrink-0 border border-gray-200 rounded-lg overflow-hidden">
-                                <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
-                                    <h4 className="text-gray-800 m-0 text-sm font-semibold">Resume Suggestions</h4>
+                            <div className="flex flex-col w-96 flex-shrink-0 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                                <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
+                                    <h4 className="text-gray-800 dark:text-gray-200 m-0 text-sm font-semibold">Resume Suggestions</h4>
                                     {optimizerResult && !optimizerLoading && (
                                         <button className="orange_button text-xs py-1 px-3" onClick={runOptimizer}>Re-run</button>
                                     )}
@@ -466,8 +466,8 @@ function ViewFeedbackBox({ changeState, data, jobDescription, resumeText, resume
                                     {!optimizerResult && !optimizerLoading && !optimizerError && (
                                         <div className="flex flex-col items-center gap-4 p-8 text-center">
                                             <div>
-                                                <p className="text-gray-700 text-sm font-medium m-0 mb-1">Resume Optimizer</p>
-                                                <p className="text-gray-400 text-xs m-0">Lines to improve will be highlighted red in your resume.</p>
+                                                <p className="text-gray-700 dark:text-gray-300 text-sm font-medium m-0 mb-1">Resume Optimizer</p>
+                                                <p className="text-gray-400 dark:text-gray-500 text-xs m-0">Lines to improve will be highlighted red in your resume.</p>
                                             </div>
                                             <button className="orange_button" onClick={runOptimizer}>Optimize Resume</button>
                                         </div>
@@ -477,7 +477,7 @@ function ViewFeedbackBox({ changeState, data, jobDescription, resumeText, resume
                                     {optimizerLoading && (
                                         <div className="flex flex-col items-center gap-3 p-8">
                                             <div className="w-8 h-8 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
-                                            <p className="text-gray-500 text-sm m-0 text-center">Running analysis...</p>
+                                            <p className="text-gray-500 dark:text-gray-400 text-sm m-0 text-center">Running analysis...</p>
                                         </div>
                                     )}
 
@@ -509,13 +509,13 @@ function ViewFeedbackBox({ changeState, data, jobDescription, resumeText, resume
                                                 {optimizerResult.suggestions
                                                     .filter(s => (s.originalText || s.suggestion) && s.originalText !== s.replacementText)
                                                     .map((s: OptimizeSuggestion, i: number) => (
-                                                        <div key={i} className="flex flex-col border border-gray-200 rounded-lg overflow-hidden">
+                                                        <div key={i} className="flex flex-col border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
 
                                                             {/* Card header */}
-                                                            <div className="flex items-start px-4 py-2.5 bg-gray-50 border-b border-gray-200">
+                                                            <div className="flex items-start px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                                                                 <div className="flex flex-col gap-0.5 min-w-0">
-                                                                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-gray-200 text-gray-600 uppercase tracking-wide self-start">{s.section}</span>
-                                                                    <span className="text-gray-700 text-xs font-medium leading-5">{s.issue}</span>
+                                                                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 uppercase tracking-wide self-start">{s.section}</span>
+                                                                    <span className="text-gray-700 dark:text-gray-300 text-xs font-medium leading-5">{s.issue}</span>
                                                                 </div>
                                                             </div>
 

@@ -11,7 +11,7 @@ import {
 import { auth } from "~/server/auth";
 
 // points to our docker code-runner container
-const CODE_RUNNER_URL = process.env.CODE_RUNNER_URL || "http://localhost:2358";
+const CODE_RUNNER_URL = process.env.CODE_RUNNER_URL || "http://localhost:5000";
 
 interface ExecutionRequest {
   source_code: string;

@@ -11,6 +11,11 @@
     background-color: #111827; /* gray-900 */
     color: #f9fafb; /* gray-50 */
   }
+
+  html.dark .description,
+  html.dark .sub-description {
+    color: #9ca3af; /* gray-400 */
+  }
 }
 
 @theme {
