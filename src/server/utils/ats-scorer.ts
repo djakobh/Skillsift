@@ -195,22 +195,45 @@ function scoreExperience(requiredYears: number, resumeYears: number): number {
 // Education scoring
 // ============================================
 
-/** Degree levels ordered by seniority */
-const DEGREE_LEVELS: { pattern: RegExp; level: number }[] = [
-  { pattern: /\b(?:ph\.?d|doctorate|doctoral)\b/i, level: 4 },
-  { pattern: /\b(?:master'?s?|m\.?s\.?|m\.?a\.?|mba|m\.?eng)\b/i, level: 3 },
-  { pattern: /\b(?:bachelor'?s?|b\.?s\.?|b\.?a\.?|b\.?eng|undergraduate)\b/i, level: 2 },
-  { pattern: /\b(?:associate'?s?|a\.?s\.?|a\.?a\.?)\b/i, level: 1 },
-];
-
+/**
+ * Detects the highest degree level mentioned in a block of text.
+ *
+ * Uses word-prefix matching (e.g. /\bbachelor/ catches "bachelor",
+ * "bachelors", "bachelor's", "bachelor of science", "bachelors degree", etc.)
+ * so variations in phrasing are all recognised without relying on word-end
+ * boundaries that break on trailing punctuation like "B.S.".
+ *
+ * Returns: 4=PhD, 3=Master's, 2=Bachelor's, 1=Associate's, 0=none
+ */
 function detectDegreeLevel(text: string): number {
-  let highest = 0;
-  for (const { pattern, level } of DEGREE_LEVELS) {
-    if (pattern.test(text)) {
-      highest = Math.max(highest, level);
-    }
-  }
-  return highest;
+  const t = text.toLowerCase();
+
+  // PhD / doctorate
+  if (/\bph\.?d\b|\bdoctor(?:ate|al)\b/.test(t)) return 4;
+
+  // Master's — word prefix covers masters / master's / master of ...
+  // also catches m.s., m.a., mba, m.eng abbreviations
+  if (
+    /\bmaster/.test(t) ||
+    /\bmba\b/.test(t) ||
+    /(?<![a-z])m\.?(?:s|a|eng)\.?(?![a-z])/.test(t)
+  ) return 3;
+
+  // Bachelor's — word prefix covers bachelor / bachelors / bachelor's /
+  // bachelor of science / bachelors degree / etc.
+  // Also catches b.s., b.a., b.eng abbreviations.
+  if (
+    /\bbachelor/.test(t) ||
+    /(?<![a-z])b\.?(?:s|a|eng)\.?(?![a-z])/.test(t)
+  ) return 2;
+
+  // Associate's
+  if (
+    /\bassociate/.test(t) ||
+    /(?<![a-z])a\.?[sa]\.?(?![a-z])/.test(t)
+  ) return 1;
+
+  return 0;
 }
 
 /** Common field-of-study terms to match between JD and resume */

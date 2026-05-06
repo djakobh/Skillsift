@@ -34,8 +34,11 @@ const MAX_KEYWORDS = 5;
 const MAX_TITLES = 3;
 const MAX_LOCATIONS = 3;
 
-export function buildJobSearchProfile(jobs: TrackedJob[]): JobSearchProfile {
-  if (jobs.length === 0) {
+export function buildJobSearchProfile(
+  jobs: TrackedJob[],
+  atsKeywords: string[] = [],
+): JobSearchProfile {
+  if (jobs.length === 0 && atsKeywords.length === 0) {
     return {
       keyword: "",
       topKeywords: [],
@@ -49,6 +52,13 @@ export function buildJobSearchProfile(jobs: TrackedJob[]): JobSearchProfile {
 
   // Keyword frequency across position + description text
   const keywordCounts = new Map<string, number>();
+
+  // Seed with ATS keywords at weight 1 so they appear but don't dominate
+  // heavily-tracked-job keywords
+  for (const kw of atsKeywords) {
+    if (kw) keywordCounts.set(kw, (keywordCounts.get(kw) ?? 0) + 1);
+  }
+
   for (const job of jobs) {
     const text = [job.position, job.jobDescription].filter(Boolean).join(" ");
     if (!text) continue;
@@ -88,7 +98,9 @@ export function buildJobSearchProfile(jobs: TrackedJob[]): JobSearchProfile {
   const salaryMin = mins.length ? Math.min(...mins) : null;
   const salaryMax = maxes.length ? Math.max(...maxes) : null;
 
-  const keyword = topKeywords.slice(0, 3).join(" ");
+  // Use the most common position title as the seed keyword — it produces
+  // more targeted Adzuna results than joining raw tech-skill tokens.
+  const keyword = topTitles[0] ?? topKeywords.slice(0, 3).join(" ");
 
   return {
     keyword,
@@ -97,7 +109,7 @@ export function buildJobSearchProfile(jobs: TrackedJob[]): JobSearchProfile {
     topLocations,
     salaryMin,
     salaryMax,
-    hasData: true,
+    hasData: topKeywords.length > 0 || topLocations.length > 0,
   };
 }
 

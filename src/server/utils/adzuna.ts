@@ -12,6 +12,7 @@ import { env } from "~/env";
 
 export interface AdzunaSearchParams {
   keyword?: string;
+  experienceLevelPhrase?: string; // sent as what_phrase for exact phrase matching
   location?: string;
   salaryMin?: number;
   salaryMax?: number;
@@ -135,6 +136,8 @@ export async function searchAdzuna(
   url.searchParams.set("results_per_page", String(resultsPerPage));
   url.searchParams.set("content-type", "application/json");
   if (params.keyword) url.searchParams.set("what", params.keyword);
+  if (params.experienceLevelPhrase)
+    url.searchParams.set("what_phrase", params.experienceLevelPhrase);
   if (params.location) url.searchParams.set("where", params.location);
   if (params.salaryMin != null)
     url.searchParams.set("salary_min", String(params.salaryMin));

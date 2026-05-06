@@ -30,10 +30,11 @@ export default async function TechnicalInterviewHistoryPage() {
   });
 
   // Format milliseconds into a readable duration string
-  function formatDuration(startedAt: Date, completedAt: Date | null, totalPausedMs: number | null) {
-    if (!completedAt) return "—";
+  function formatDuration(startedAt: Date, completedAt: Date | null, totalPausedMs: number | null, status?: string) {
+    if (!completedAt) return status === "ABANDONED" ? "not recorded" : "—";
     const pausedMs = totalPausedMs ?? 0;
     const activeMs = completedAt.getTime() - startedAt.getTime() - pausedMs;
+    if (activeMs <= 0) return "< 1m";
     const totalSeconds = Math.floor(activeMs / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
@@ -123,7 +124,7 @@ export default async function TechnicalInterviewHistoryPage() {
                       </div>
 
                       <p className="text-xs text-gray-500">
-                        Time spent: {formatDuration(s.startedAt, s.completedAt, s.totalPausedMs)}
+                        Time spent: {formatDuration(s.startedAt, s.completedAt, s.totalPausedMs, s.status)}
                       </p>
 
                       {s.responses.length > 0 && (

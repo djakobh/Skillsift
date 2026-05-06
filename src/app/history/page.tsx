@@ -22,8 +22,8 @@ export default async function HistoryPage() {
     redirect("/login");
   }
 
-  // Fetch the most recent technical session
-  const latestTechnical = await db.interviewSession.findFirst({
+  // Fetch the 3 most recent technical sessions
+  const recentTechnical = await db.interviewSession.findMany({
     where: {
       userId: session.user.id,
       type: "TECHNICAL",
@@ -31,26 +31,27 @@ export default async function HistoryPage() {
     orderBy: {
       startedAt: "desc",
     },
+    take: 3,
   });
 
-  // Fetch the 2 most recent resume analyses
+  // Fetch the 3 most recent resume analyses
   const recentAnalyses = await db.resumeAnalysis.findMany({
     where: { userId: session.user.id },
     orderBy: { analyzedAt: "desc" },
-    take: 2,
+    take: 3,
   });
 
-  
-  //latest behavioral
-    const latestBehavioral = await db.interviewSession.findFirst({
-        where: {
-            userId: session.user.id,
-            type: "BEHAVIORAL",
-        },
-        orderBy: {
-            startedAt: "desc",
-        },
-    });
+  // Fetch the 3 most recent behavioral sessions
+  const recentBehavioral = await db.interviewSession.findMany({
+    where: {
+      userId: session.user.id,
+      type: "BEHAVIORAL",
+    },
+    orderBy: {
+      startedAt: "desc",
+    },
+    take: 3,
+  });
 
 
   return (
@@ -96,10 +97,10 @@ export default async function HistoryPage() {
                 const atsResult = analysis.feedback as unknown as ATSScoreResult;
                 const categories = getCategories(atsResult);
                 return (
-                  <div key={analysis.id} className={`flex items-center gap-5 ${idx > 0 ? "pt-5" : ""} ${idx < recentAnalyses.length - 1 ? "pb-5" : ""}`}>
-                    <MiniDonut score={atsResult.score} size={90} />
-                    <div className="flex flex-col gap-3 min-w-0">
-                      <p className="text-base font-semibold text-gray-900 truncate">
+                  <div key={analysis.id} className={`flex items-center gap-3 ${idx > 0 ? "pt-3" : ""} ${idx < recentAnalyses.length - 1 ? "pb-3" : ""}`}>
+                    <MiniDonut score={atsResult.score} size={65} />
+                    <div className="flex flex-col gap-2 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
                         {resolveLabel(analysis.jobDescription)}
                       </p>
                       <CategoryDotGrid categories={categories} />
@@ -124,7 +125,7 @@ export default async function HistoryPage() {
           </div>
           <hr className="-mx-6 mb-6 border-t-2 border-black" />
 
-                  <DisplayInterview interview={latestTechnical} type="technical" link="/technical" />
+                  <DisplayInterview interviews={recentTechnical} type="technical" link="/technical" />
 
         </div>
 
@@ -141,7 +142,7 @@ export default async function HistoryPage() {
           </div>
           <hr className="-mx-6 mb-6 border-t-2 border-black" />
 
-                  <DisplayInterview interview={latestBehavioral} type="behavioral" link="/interview/behavioral"/>
+                  <DisplayInterview interviews={recentBehavioral} type="behavioral" link="/interview/behavioral"/>
           </div>
         </div>
     </main>
@@ -151,7 +152,7 @@ export default async function HistoryPage() {
 function formatDate(date: Date) {
     //cast due to behaioral format being slightly different,
     //both technical and behavioral will get the same result
-    const newDate = new Date(date);  
+    const newDate = new Date(date);
 
     return newDate.toLocaleDateString("en-US", {
         month: "short",
@@ -162,60 +163,73 @@ function formatDate(date: Date) {
     });
 }
 
-function DisplayInterview({ interview, type, link}: { interview: any, type: string, link:string }) {
+function formatDuration(startedAt: Date, completedAt: Date | null, totalPausedMs: number | null): string {
+    if (!completedAt) return "";
+    const pausedMs = totalPausedMs ?? 0;
+    const activeMs = new Date(completedAt).getTime() - new Date(startedAt).getTime() - pausedMs;
+    if (activeMs <= 0) return "< 1m";
+    const totalSeconds = Math.floor(activeMs / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return minutes + "m " + seconds + "s";
+}
+
+function StatusBadge({ status }: { status: string }) {
+  if (status === "COMPLETED")
     return (
-        <div>
-        {
-                interview ? (
-            // Show latest session info
-            <div className = "space-y-3" >
-              <p className="text-xs text-gray-500">
-                            {formatDate(interview.startedAt)}
-              </p>
+      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+        Completed
+      </span>
+    );
+  if (status === "IN_PROGRESS")
+    return (
+      <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700">
+        In Progress
+      </span>
+    );
+  return (
+    <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600">
+      Abandoned
+    </span>
+  );
+}
 
-              <div className="flex items-center gap-2">
-                {interview.status === "COMPLETED" && (
-                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-                    Completed
-                  </span>
-                )}
-                {interview.status === "IN_PROGRESS" && (
-                  <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700">
-                    In Progress
-                  </span>
-                )}
-                {interview.status === "ABANDONED" && (
-                  <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600">
-                    Abandoned
-                  </span>
-                )}
-              </div>
+function DisplayInterview({ interviews, type, link }: { interviews: any[], type: string, link: string }) {
+  if (interviews.length === 0) {
+    return (
+      <div className="space-y-6 text-center text-gray-500">
+        <p className="text-sm">No {type} interviews yet</p>
+        <p className="text-xs">Start a {type} interview to see your results here!</p>
+        <Link
+          href={link}
+          className="inline-block rounded-full bg-orange-500 px-6 py-2 text-sm text-white hover:bg-orange-600"
+        >
+          Start Interview
+        </Link>
+      </div>
+    );
+  }
 
-                        {interview.type == "TECHNICAL" && (
-                            <TechnicalDisplay interview={interview} />
-                        )}
-
-                        {interview.type == "BEHAVIORAL" && (
-                            <BehavioralDisplay interview={interview} />
-                        ) }
-              
-            </div>
-          ) : (
-        // Empty state
-        <div className="space-y-6 text-center text-gray-500">
-                            <p className="text-sm">No {type} interviews yet</p>
-                            <p className="text-xs">Start a {type} interview to see your results here!</p>
-            <Link
-                                href={link}
-                className="inline-block rounded-full bg-orange-500 px-6 py-2 text-sm text-white hover:bg-orange-600"
-            >
-                Start Interview
-            </Link>
+  return (
+    <div className="flex flex-col divide-y divide-gray-100">
+      {interviews.map((interview, idx) => (
+        <div key={interview.id} className={`flex flex-col gap-2 ${idx > 0 ? "pt-4" : ""} ${idx < interviews.length - 1 ? "pb-4" : ""}`}>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-gray-500">{formatDate(interview.startedAt)}</p>
+            <StatusBadge status={interview.status} />
+          </div>
+          {(() => {
+            const time = formatDuration(interview.startedAt, interview.completedAt, interview.totalPausedMs);
+            return time ? (
+              <p className="text-xs text-gray-400">Time spent: {time}</p>
+            ) : null;
+          })()}
+          {interview.type === "TECHNICAL" && <TechnicalDisplay interview={interview} />}
+          {interview.type === "BEHAVIORAL" && <BehavioralDisplay interview={interview} />}
         </div>
-    )
-            }
-        </div>
-    )
+      ))}
+    </div>
+  );
 }
 
 function TechnicalDisplay({ interview }: { interview: any }) {

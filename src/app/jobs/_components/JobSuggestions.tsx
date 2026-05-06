@@ -105,8 +105,8 @@ export default function JobSuggestions({
       setError(null);
 
       const params = new URLSearchParams();
-      const effectiveKeyword = [keyword.trim(), experienceLevel].filter(Boolean).join(" ");
-      if (effectiveKeyword) params.set("keyword", effectiveKeyword);
+      if (keyword.trim()) params.set("keyword", keyword.trim());
+      if (experienceLevel) params.set("experienceLevel", experienceLevel);
       if (location.trim()) params.set("location", location.trim());
       if (salaryMin > 0) params.set("salaryMin", String(salaryMin));
       if (salaryMax > 0 && salaryMax < 1_000_000)
@@ -248,7 +248,7 @@ export default function JobSuggestions({
             Suggested Jobs
           </h2>
           <p className="text-sm text-gray-600">
-            Personalized listings from Adzuna based on your tracked applications.
+            Personalized listings from Adzuna based on your tracked applications and resume analyses.
           </p>
         </div>
         <button

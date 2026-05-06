@@ -183,7 +183,7 @@ function ListItem({ s }: { s: any }) {
                     </div>
 
                     <p className="text-xs text-gray-500">
-                        Time spent: {formatDuration(s.startedAt, s.completedAt, s.pausedAt, s.resumedAt)}
+                        Time spent: {formatDuration(s.startedAt, s.completedAt, s.pausedAt, s.resumedAt, s.status)}
                     </p>
 
                     {s.responses.length > 0 && (
@@ -264,7 +264,7 @@ function formatDate(date: Date) {
 }
 
 //Author: Justin Do
-function formatDuration(startedAt: Date, completedAt: Date | null, pausedAt: Date | null, resumedAt: Date | null) {
+function formatDuration(startedAt: Date, completedAt: Date | null, pausedAt: Date | null, resumedAt: Date | null, status?: string) {
     // Session paused but never resumed — active time is start → pause
     if (!completedAt && pausedAt && !resumedAt) {
         const activeMs = new Date(pausedAt).getTime() - new Date(startedAt).getTime();
@@ -275,7 +275,7 @@ function formatDuration(startedAt: Date, completedAt: Date | null, pausedAt: Dat
     }
 
     // No completion and no clean pause record — can't determine duration
-    if (!completedAt) return "—";
+    if (!completedAt) return status === "ABANDONED" ? "not recorded" : "—";
 
     const endTime = new Date(completedAt).getTime();
     let pausedMs = 0;
@@ -284,6 +284,7 @@ function formatDuration(startedAt: Date, completedAt: Date | null, pausedAt: Dat
     }
 
     const activeMs = endTime - new Date(startedAt).getTime() - pausedMs;
+    if (activeMs <= 0) return "< 1m";
     const totalSeconds = Math.floor(activeMs / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
