@@ -156,7 +156,6 @@ export default function Home() {
 
       {/* Scroll-down arrow */}
       <div className={`scroll-arrow${arrowHidden ? " hidden" : ""}`}>
-        <span className="scroll-arrow-label">Scroll</span>
         <ChevronDown size={22} strokeWidth={2.5} />
       </div>
 
