@@ -101,7 +101,7 @@ export default function SignupPage() {
         />
 
         <button
-          className="orange_button w-full disabled:opacity-60"
+          className="btn-primary w-full justify-center disabled:opacity-60"
           type="submit"
           disabled={loading}
         >
@@ -110,7 +110,7 @@ export default function SignupPage() {
 
         <p className="text-sm text-center mt-2">
           Already have an account?{" "}
-          <Link href="/login" className="text-blue-600 underline">
+          <Link href="/login" className="text-orange-500 hover:text-orange-600 underline">
             Login
           </Link>
         </p>

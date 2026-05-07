@@ -66,7 +66,7 @@ export default function ForgotPasswordPage(){
                         />
 
                         <button
-                            className="orange_button w-full disabled:opacity-60"
+                            className="btn-primary w-full justify-center disabled:opacity-60"
                             type="submit"
                             disabled={loading}
                         >
@@ -80,7 +80,7 @@ export default function ForgotPasswordPage(){
                 )}
 
                 <div className="mt-2">
-                    <Link href="/login" className="text-sm text-blue-600 hover:underline">
+                    <Link href="/login" className="text-sm text-orange-500 hover:text-orange-600 hover:underline">
                         Back to login
                     </Link>
                 </div>

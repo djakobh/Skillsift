@@ -69,7 +69,7 @@ function ResetPasswordForm() {
           />
           <button
             disabled={loading || !token}
-            className="w-full bg-orange-500 text-white p-2 rounded disabled:opacity-50"
+            className="btn-primary w-full justify-center disabled:opacity-50"
           >
             {loading ? "Updating..." : "Update Password"}
           </button>
