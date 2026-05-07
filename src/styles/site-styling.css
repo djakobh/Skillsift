@@ -585,3 +585,29 @@ h3 {
 .page-animate {
   animation: heroReveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+/* ============================================================
+   NATIVE DATE PICKER — styled to match site aesthetic
+   ============================================================ */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.75;
+  cursor: pointer;
+  filter: invert(40%) sepia(80%) saturate(500%) hue-rotate(0deg);
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+/* mm/dd/yyyy placeholder fields — low opacity */
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field,
+input[type="date"]::-webkit-datetime-edit-text {
+  color: #9ca3af;
+}
+/* Once a value is selected, restore full color */
+input[type="date"]:not([value=""])::-webkit-datetime-edit-month-field,
+input[type="date"]:not([value=""])::-webkit-datetime-edit-day-field,
+input[type="date"]:not([value=""])::-webkit-datetime-edit-year-field,
+input[type="date"]:not([value=""])::-webkit-datetime-edit-text {
+  color: #374151;
+}

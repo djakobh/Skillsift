@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "~/server/auth";
 import Link from "next/link";
 import { db } from "~/server/db";
+import { ArrowLeft, Plus, CheckCircle, XCircle } from "lucide-react";
 import type { ATSScoreResult } from "~/server/utils/ats-scorer";
 import { MiniDonut, GradeBadge, getCategories, CategoryDotGrid, resolveLabel } from "../_components/resumeAnalysisHelpers";
 
@@ -60,99 +61,99 @@ export default async function ResumeAnalysisDetailPage({
   );
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
-      <div className="mx-auto max-w-5xl">
+    <main className="page-blob-bg pt-12 pb-16 min-h-screen">
+      <div className="mx-auto max-w-5xl px-6 flex flex-col gap-6">
 
         {/* Nav */}
-        <div className="mb-6 flex items-center justify-between">
-          <Link href="/history/resume-analysis" className="text-sm text-gray-500 hover:text-black">
-            ← Back to All Scans
+        <div className="page-animate flex items-center justify-between" style={{ animationDelay: "0.05s" }}>
+          <Link href="/history/resume-analysis" className="btn-ghost btn-sm">
+            <ArrowLeft className="h-4 w-4" />
+            Back to All Scans
           </Link>
-          <Link
-            href="/resume"
-            className="rounded-full bg-orange-500 px-5 py-2 text-sm text-white hover:bg-orange-600"
-          >
-            Scan a new resume →
+          <Link href="/resume" className="btn-primary btn-sm">
+            <Plus className="h-4 w-4" />
+            Scan a New Resume
           </Link>
         </div>
 
         {/* Hero row */}
-        <div className="mb-6 flex items-center gap-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col items-center gap-2 flex-shrink-0">
-            <MiniDonut score={score} size={110} />
-            <GradeBadge grade={grade} />
+        <div className="page-animate border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden" style={{ animationDelay: "0.15s" }}>
+          <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+            <h3 className="text-gray-900 m-0">{resolveLabel(analysis.jobDescription)}</h3>
+            <p className="text-xs text-gray-400 m-0 mt-1">Scanned {formatDate(analysis.analyzedAt)}</p>
           </div>
+          <div className="flex items-center gap-6 p-6">
+            <div className="flex flex-col items-center gap-2 flex-shrink-0">
+              <MiniDonut score={score} />
+              <GradeBadge grade={grade} />
+            </div>
 
-          <div className="w-px self-stretch bg-gray-100" />
+            <div className="w-px self-stretch bg-gray-100" />
 
-          <div className="flex flex-col gap-1 min-w-0 flex-1">
-            <h1 className="text-2xl font-bold text-gray-900">
-              {resolveLabel(analysis.jobDescription)}
-            </h1>
-            <p className="text-sm text-gray-400">{analysis.resumeName}</p>
-            <p className="text-xs text-gray-400 mt-1">Scanned {formatDate(analysis.analyzedAt)}</p>
-          </div>
+            <div className="flex flex-col gap-1 min-w-0 flex-1">
+              <p className="text-xs text-gray-400 m-0">{analysis.resumeName}</p>
+            </div>
 
-          <div className="w-px self-stretch bg-gray-100" />
+            <div className="w-px self-stretch bg-gray-100" />
 
-          <div className="flex-shrink-0">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Category Summary</p>
-            <CategoryDotGrid categories={categories} />
+            <div className="flex-shrink-0">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 m-0">Category Summary</p>
+              <CategoryDotGrid categories={categories} />
+            </div>
           </div>
         </div>
 
         {/* Two-column body */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="page-animate grid grid-cols-1 gap-6 md:grid-cols-2" style={{ animationDelay: "0.25s" }}>
 
-          {/* ── ATS Dimension Breakdown ── */}
-          <div className="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
+          {/* ATS Dimension Breakdown */}
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
             <div className="px-5 py-4 bg-gray-50 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900">ATS Dimension Breakdown</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Weighted score across 5 hiring dimensions</p>
+              <p className="text-sm font-semibold text-gray-900 m-0">ATS Dimension Breakdown</p>
+              <p className="text-xs text-gray-500 m-0 mt-0.5">Weighted score across 5 hiring dimensions</p>
             </div>
             <div className="divide-y divide-gray-100">
               {details.map((d) => {
-                const dimKey = Object.values(breakdown).find(
-                  (b) => b.label === d.dimension
-                );
+                const dimKey = Object.values(breakdown).find((b) => b.label === d.dimension);
                 return (
                   <div key={d.dimension} className="px-5 py-4">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-sm font-medium text-gray-800">{d.dimension}</span>
                       {dimKey && (
-                        <span className="text-xs text-gray-400">
-                          {Math.round(dimKey.weight * 100)}% weight
-                        </span>
+                        <span className="text-xs text-gray-400">{Math.round(dimKey.weight * 100)}% weight</span>
                       )}
                     </div>
                     <ScoreBar score={d.score} />
-                    <p className="mt-1.5 text-xs text-gray-500 leading-relaxed">{d.explanation}</p>
+                    <p className="mt-1.5 text-xs text-gray-500 leading-relaxed m-0">{d.explanation}</p>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* ── Right column: keywords + formatting ── */}
+          {/* Right column */}
           <div className="flex flex-col gap-6">
 
             {/* Technical Skills */}
-            <div className="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
               <div className="px-5 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                <h2 className="font-semibold text-gray-900">Technical Skills</h2>
-                <span className="text-xs text-gray-500">
+                <p className="text-sm font-semibold text-gray-900 m-0">Technical Skills</p>
+                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
                   {technicalMatches.filter((m) => m.found).length} / {technicalMatches.length} found
                 </span>
               </div>
               {technicalMatches.length === 0 ? (
-                <p className="px-5 py-4 text-sm text-gray-400 italic">No technical skills detected in job description.</p>
+                <p className="px-5 py-4 text-sm text-gray-400 italic m-0">No technical skills detected in job description.</p>
               ) : (
                 <div className="divide-y divide-gray-100 max-h-52 overflow-y-auto">
                   {technicalMatches.map((m) => (
                     <div key={m.keyword} className="flex items-center justify-between px-5 py-2.5">
                       <span className="text-sm text-gray-700">{m.keyword}</span>
-                      <span className={`text-xs font-medium ${m.found ? "text-green-600" : "text-red-500"}`}>
-                        {m.found ? "✓ Found" : "✗ Missing"}
+                      <span className={`flex items-center gap-1 text-xs font-medium ${m.found ? "text-green-600" : "text-red-500"}`}>
+                        {m.found
+                          ? <><CheckCircle className="h-3.5 w-3.5" /> Found</>
+                          : <><XCircle className="h-3.5 w-3.5" /> Missing</>
+                        }
                       </span>
                     </div>
                   ))}
@@ -161,22 +162,25 @@ export default async function ResumeAnalysisDetailPage({
             </div>
 
             {/* Soft Skills */}
-            <div className="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
               <div className="px-5 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                <h2 className="font-semibold text-gray-900">Soft Skills & Keywords</h2>
-                <span className="text-xs text-gray-500">
+                <p className="text-sm font-semibold text-gray-900 m-0">Soft Skills & Keywords</p>
+                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
                   {softMatches.filter((m) => m.found).length} / {softMatches.length} found
                 </span>
               </div>
               {softMatches.length === 0 ? (
-                <p className="px-5 py-4 text-sm text-gray-400 italic">No soft skills detected in job description.</p>
+                <p className="px-5 py-4 text-sm text-gray-400 italic m-0">No soft skills detected in job description.</p>
               ) : (
                 <div className="divide-y divide-gray-100 max-h-52 overflow-y-auto">
                   {softMatches.map((m) => (
                     <div key={m.keyword} className="flex items-center justify-between px-5 py-2.5">
                       <span className="text-sm text-gray-700">{m.keyword}</span>
-                      <span className={`text-xs font-medium ${m.found ? "text-green-600" : "text-red-500"}`}>
-                        {m.found ? "✓ Found" : "✗ Missing"}
+                      <span className={`flex items-center gap-1 text-xs font-medium ${m.found ? "text-green-600" : "text-red-500"}`}>
+                        {m.found
+                          ? <><CheckCircle className="h-3.5 w-3.5" /> Found</>
+                          : <><XCircle className="h-3.5 w-3.5" /> Missing</>
+                        }
                       </span>
                     </div>
                   ))}
@@ -184,21 +188,24 @@ export default async function ResumeAnalysisDetailPage({
               )}
             </div>
 
-            {/* Formatting checks */}
-            <div className="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
+            {/* Formatting */}
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
               <div className="px-5 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                <h2 className="font-semibold text-gray-900">Formatting</h2>
-                <span className="text-xs text-gray-500">
+                <p className="text-sm font-semibold text-gray-900 m-0">Formatting</p>
+                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
                   {formattingResult.checks.filter((c) => c.passed).length} / {formattingResult.checks.length} passed
                 </span>
               </div>
               {formattingResult.checks.length === 0 ? (
-                <p className="px-5 py-4 text-sm text-gray-400 italic">No formatting checks available.</p>
+                <p className="px-5 py-4 text-sm text-gray-400 italic m-0">No formatting checks available.</p>
               ) : (
                 <div className="divide-y divide-gray-100">
                   {formattingResult.checks.map((c) => (
                     <div key={c.name} className="flex items-start gap-3 px-5 py-2.5">
-                      <span className="mt-0.5 flex-shrink-0">{c.passed ? "✅" : "❌"}</span>
+                      {c.passed
+                        ? <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        : <XCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                      }
                       <div className="flex flex-col gap-0.5 min-w-0">
                         <span className="text-sm font-medium text-gray-800">{c.name}</span>
                         <span className="text-xs text-gray-500">{c.explanation}</span>

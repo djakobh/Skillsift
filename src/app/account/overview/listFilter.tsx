@@ -4,40 +4,35 @@
 import { useState } from "react";
 import type { InterviewItem } from "./interviewItem";
 
+const inputClass =
+    "rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400 [color-scheme:light]";
+
 export function DateDisplay({ startDate, endDate, setStartDate, setEndDate }: {
     startDate: string,
     endDate: string,
     setStartDate: React.Dispatch<React.SetStateAction<string>>;
     setEndDate: React.Dispatch<React.SetStateAction<string>>;
 }) {
-
-
-    const handleStartDate = (event: any) => {
-        setStartDate(event.target.value);
-    };
-
-    const handleEndDate = (event: any) => {
-        setEndDate(event.target.value);
-    };
-
-
     return (
-        <div>
-            Date Range:
+        <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Date Range</span>
             <input
                 type="date"
                 id="start-input"
                 value={startDate}
-                onChange={handleStartDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className={`${inputClass} ${!startDate ? "text-opacity-40 text-gray-400" : ""}`}
+                placeholder="Start date"
             />
-            To
+            <span className="text-xs text-gray-400">to</span>
             <input
                 type="date"
                 id="end-input"
                 value={endDate}
-                onChange={handleEndDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className={`${inputClass} ${!endDate ? "text-opacity-40 text-gray-400" : ""}`}
+                placeholder="End date"
             />
-            <hr />
         </div>
     );
 }
@@ -46,20 +41,19 @@ export function FilterDisplay({ filterType, setFilterType }: {
     filterType: string,
     setFilterType: React.Dispatch<React.SetStateAction<string>>;
 }) {
-
     return (
-        <div>
-            Filter:
+        <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</span>
             <select
                 id="filter-input"
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
+                className={inputClass}
             >
                 <option value="all">All</option>
                 <option value="favorite">Favorite</option>
                 <option value="completed">Completed</option>
             </select>
-            <hr />
         </div>
     );
 }

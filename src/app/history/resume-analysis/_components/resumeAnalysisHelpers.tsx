@@ -89,44 +89,52 @@ export function CategoryDotGrid({ categories }: { categories: CategoryDotData[] 
     );
 }
 
-// ─── Mini donut ───────────────────────────────────────────────────────────────
-// Uses the exact same 120×120 viewBox geometry as the dashboard DonutChart
-// so proportions are always correct at any rendered size.
-// Color is always orange (#f97316) per design spec.
+// ─── Mini half-circle ─────────────────────────────────────────────────────────
+// Matches the HalfCircleChart style from resumeCharts.tsx, scaled down.
+// Only the percentage is shown, centered inside the arc.
 
-export function MiniDonut({ score, size = 80 }: { score: number; size?: number }) {
-    // Fixed geometry matching resumeCharts.tsx DonutChart
-    const r = 44;
-    const cx = 60;
-    const cy = 60;
-    const circumference = 2 * Math.PI * r;
-    const offset = circumference * (1 - Math.min(score, 100) / 100);
-    const color = score >= 70 ? "#22c55e" : score >= 50 ? "#f97316" : "#ef4444";
+export function MiniDonut({ score }: { score: number }) {
+    // Identical geometry to HalfCircleChart — just rendered at 65% of the original size
+    const r = 80;
+    const cx = 100;
+    const cy = 100;
+    const arcLength = Math.PI * r;
+    const clampedScore = Math.min(Math.max(score, 0), 100);
+    const offset = arcLength * (1 - clampedScore / 100);
+    const color = clampedScore >= 70 ? "#22c55e" : clampedScore >= 50 ? "#FF6900" : "#ef4444";
 
     return (
-        <svg width={size} height={size} viewBox="0 0 120 120" className="flex-shrink-0">
-            <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e5e7eb" strokeWidth="12" />
-            <circle
-                cx={cx} cy={cy} r={r}
-                fill="none"
-                stroke={color}
-                strokeWidth="12"
-                strokeDasharray={circumference}
-                strokeDashoffset={offset}
-                strokeLinecap="round"
-                transform={`rotate(-90 ${cx} ${cy})`}
-            />
-            <text
-                x={cx} y={cy}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fill="#111827"
-                fontSize="20"
-                fontWeight="bold"
-            >
-                {score}%
-            </text>
-        </svg>
+        <div className="flex flex-col items-center flex-shrink-0">
+            <svg width="140" height="77" viewBox="0 0 200 108" aria-label={`Score: ${score}%`}>
+                {/* Track */}
+                <path
+                    d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
+                    fill="none"
+                    stroke="#e5e7eb"
+                    strokeWidth="16"
+                    strokeLinecap="round"
+                />
+                {/* Progress */}
+                <path
+                    d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
+                    fill="none"
+                    stroke={color}
+                    strokeWidth="16"
+                    strokeLinecap="round"
+                    strokeDasharray={arcLength}
+                    strokeDashoffset={offset}
+                    style={{ transition: "stroke-dashoffset 0.8s cubic-bezier(0.22, 1, 0.36, 1)" }}
+                />
+                {/* Percentage */}
+                <text x={cx} y={cy - 18} textAnchor="middle" style={{ fontSize: "32px", fontWeight: 700, fill: "#141212" }}>
+                    {clampedScore}%
+                </text>
+                {/* Label */}
+                <text x={cx} y={cy - 1} textAnchor="middle" style={{ fontSize: "13px", fill: "#898989", letterSpacing: "0.03em" }}>
+                    Matching Score
+                </text>
+            </svg>
+        </div>
     );
 }
 

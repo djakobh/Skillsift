@@ -1,4 +1,4 @@
-﻿//Author: Brandon Christian
+//Author: Brandon Christian
 //Date: 12/12/2025
 
 //Date: 1/31/2026
@@ -9,9 +9,7 @@
 
 
 import { useEffect, useState } from "react";
-import styles from "./test.module.css";
 import React from "react";
-import type { ReactNode } from "react";
 import { AudioMeterAndCameraBox } from "./userInput"
 import { BIPageState, OnFailedEndInterview } from "./main";
 import { AbandonSession, PauseSession } from "./behavioralService";
@@ -35,34 +33,21 @@ export function BIActive({ changeState, prompt, audioRef, storeVideoRef, session
 
     const EndInterviewButton = async () => {
         try {
-
             setLoading(true);
-
-            //Change state if successful, send data as we enter the next page
-            //The audio data is triggered by the re-render for the next page state
-            //A useEffect cleanUp for the audio recording will set the audioData as the new
-            //Page is rendered
-
             changeState(BIPageState.END);
-
         } catch (error) {
             console.log(error);
             OnFailedEndInterview();
-
             setLoading(false);
         }
     };
 
     const AbandonInterviewButton = async () => {
         try {
-
             setLoading(true);
 
             async function OnAbandonConfirm() {
-                //Update interview to be abandoned status
                 const resp = await AbandonSession(sessionId);
-
-                //navigate to home page
                 window.location.href = "/";
             }
 
@@ -77,7 +62,6 @@ export function BIActive({ changeState, prompt, audioRef, storeVideoRef, session
         } catch (error) {
             console.log(error);
             OnFailedEndInterview();
-
             setLoading(false);
         }
     }
@@ -87,9 +71,6 @@ export function BIActive({ changeState, prompt, audioRef, storeVideoRef, session
             setLoading(true);
 
             function OnPauseConfirm() {
-                //rather than pause here, continue to the next screen to allow the
-                //recording to end naturally
-                //use marker value to indicate we want to pause the session not end it in the next screen
                 setPause(true);
                 changeState(BIPageState.END);
             }
@@ -109,55 +90,93 @@ export function BIActive({ changeState, prompt, audioRef, storeVideoRef, session
         }
     }
 
-    const DisplayBox = ({ title, children }: { title: string; children: ReactNode }) => {
-
-        return (
-            <div className="outline-2 rounded w-full">
-                <h2>{title}</h2>
-                <hr />
-                {children}
-            </div>
-        )
-    };
-
     return (
-        <div className={`${styles.centered_column} w-3/4`}>
-            <AudioMeterAndCameraBox recordAudio={true} audioRef={audioRef} recordVideo={true} storeVideoRef={storeVideoRef} />
-            <DisplayBox title="Interview Prompt">
-                <p>
-                    {prompt}
-                </p>
-            </DisplayBox>
-            {!loading && (
-                <div className={`${styles.centered_row}`}>
-                    <button className="orange_button" onClick={EndInterviewButton}>End Interview</button> 
-                    <PauseButton onClick={PauseInterviewButton} resumedBefore={resumedBefore} />
-                    <button className="orange_button" onClick={AbandonInterviewButton}>Abandon</button>
+        <main className="page-blob-bg h-screen flex flex-col overflow-hidden">
+            <div className="flex flex-col flex-1 min-h-0 w-full max-w-6xl self-center px-3 pt-6 pb-3 gap-3">
+
+                {/* Header bar */}
+                <div className="page-animate bg-white border border-gray-200 rounded-xl shrink-0 shadow-sm" style={{ animationDelay: "0.05s" }}>
+                    <div className="px-4 py-2.5 flex items-center justify-between">
+                        <p className="text-sm font-semibold text-gray-800 m-0">Behavioral Interview</p>
+                        {!loading ? (
+                            <div className="flex items-center gap-2">
+                                <button
+                                    className="btn-outline btn-sm"
+                                    style={{ color: "#ef4444", borderColor: "#fca5a5" }}
+                                    onClick={AbandonInterviewButton}
+                                >
+                                    Abandon
+                                </button>
+                                <PauseButton onClick={PauseInterviewButton} resumedBefore={resumedBefore} />
+                                <button className="btn-primary btn-sm" onClick={EndInterviewButton}>
+                                    End Interview
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                                <div className="w-4 h-4 border-2 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
+                                Processing...
+                            </div>
+                        )}
+                    </div>
                 </div>
-            )}
-            {loading && (
-                <div>
-                    loading...
+
+                {/* Body */}
+                <div className="flex flex-1 min-h-0 gap-3">
+
+                    {/* Left: Camera + mic */}
+                    <div className="page-animate flex flex-col w-80 shrink-0 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm" style={{ animationDelay: "0.1s" }}>
+                        <div className="bg-gray-50 border-b border-gray-200 px-4 py-2.5">
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide m-0">Camera Preview</p>
+                        </div>
+                        <div className="p-4 flex flex-col items-center gap-3 flex-1 overflow-y-auto">
+                            <AudioMeterAndCameraBox
+                                recordAudio={true}
+                                audioRef={audioRef}
+                                recordVideo={true}
+                                storeVideoRef={storeVideoRef}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Right: Prompt */}
+                    <div className="page-animate flex flex-col flex-1 min-h-0 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm" style={{ animationDelay: "0.15s" }}>
+                        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+                            <p className="text-sm font-semibold text-gray-800 m-0">Interview Prompt</p>
+                            <p className="text-xs text-gray-500 m-0 mt-0.5">Take your time to structure your response clearly.</p>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-6">
+                            <p className="text-gray-700 leading-relaxed m-0 text-base">{prompt}</p>
+                        </div>
+                    </div>
+
                 </div>
-            ) }
-           
-            
-        </div>
+
+            </div>
+        </main>
     );
 }
 
 function PauseButton({ onClick, resumedBefore }: {
-    onClick: React.MouseEventHandler<HTMLButtonElement>
-    resumedBefore: boolean
+    onClick: React.MouseEventHandler<HTMLButtonElement>;
+    resumedBefore: boolean;
 }) {
-
     if (!resumedBefore) {
-        return (<button className="orange_button" onClick={onClick}>Pause and Resume Later</button>);
+        return (
+            <button className="btn-ghost btn-sm" onClick={onClick}>
+                Pause & Resume Later
+            </button>
+        );
     }
-    else {
-        return (<button className="orange_button" >Pause Used</button>);
-    }
-
+    return (
+        <button
+            className="btn-ghost btn-sm"
+            disabled
+            style={{ opacity: 0.4, cursor: "not-allowed" }}
+        >
+            Pause Used
+        </button>
+    );
 }
 
 function Prompt(text: string, onConfirm: () => void, onDeny: () => void) {
@@ -170,7 +189,6 @@ function Prompt(text: string, onConfirm: () => void, onDeny: () => void) {
         onDeny();
     }
 }
-
 
 
 

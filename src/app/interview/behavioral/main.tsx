@@ -1,4 +1,4 @@
-﻿//Author: Brandon Christian
+//Author: Brandon Christian
 //Date: 12/12/2025
 
 //Date: 1/31/2026
@@ -10,7 +10,6 @@
 
 "use client";
 import { useState, useRef } from "react";
-import styles from "./test.module.css";
 import React from "react";
 import { GetPrompt, CreateSession } from "./behavioralService";
 import { BIStart } from "./start";
@@ -66,23 +65,8 @@ export function OnFailedEndInterview() {
 //  View
 //-------------------------------------
 
-
 export function BehavioralInterview() {
-
-   return (
-
-        <main className={`${styles.centered_column} pt-12`}>
-            <h1>Behavioral Interview Session</h1>
-            <p className="description">
-                Simulate an authentic interview experience.
-                Your responses will be evaluated for clairty, tone, and professionalism.
-            </p>
-            <ViewSwitcher />
-            <br />
-        </main>
-
-
-    )
+    return <ViewSwitcher />;
 }
 
 
@@ -160,6 +144,5 @@ function ViewSwitcher() {
             return (<BIEnd changeState={setPageState} waitForAudio={waitForAudio} waitForVideo={waitForVideo} sessionId={sessionId} usePause={usePause} />);
     }
 }
-
 
 

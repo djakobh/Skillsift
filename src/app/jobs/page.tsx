@@ -1,8 +1,5 @@
 // Alvin Ngo student work report 3
 // Main Job Tracker dashboard page.
-// Displays all tracked job applications in a sortable, filterable table.
-// Includes: stats bar, search/filter controls, inline status dropdown,
-// add/edit modal, delete confirmation, and links to job detail pages.
 
 "use client";
 
@@ -10,11 +7,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Briefcase, Plus, Search, ChevronDown, Trash2, ExternalLink, ArrowUpDown, Sparkles } from "lucide-react";
+import { Briefcase, Plus, Search, ChevronDown, Trash2, ExternalLink, ArrowUpDown, Pencil } from "lucide-react";
 import JobSuggestions from "./_components/JobSuggestions";
 import { LocationInput } from "./_components/LocationInput";
 
-// TypeScript type matching the JobApplication Prisma model
 type JobApplication = {
   id: string;
   company: string;
@@ -40,7 +36,6 @@ const EXPERIENCE_LEVEL_OPTIONS = [
   "Lead / Principal",
 ];
 
-// All possible application statuses — matches the ApplicationStatus enum in Prisma
 const STATUS_OPTIONS = [
   "SAVED",
   "APPLIED",
@@ -54,7 +49,6 @@ const STATUS_OPTIONS = [
   "GHOSTED",
 ];
 
-// Color-coded badge styles for each status (Tailwind classes)
 const STATUS_COLORS: Record<string, string> = {
   SAVED: "bg-gray-200 text-gray-700",
   APPLIED: "bg-blue-100 text-blue-700",
@@ -81,7 +75,7 @@ function formatSalary(min: number | null, max: number | null) {
 }
 
 function formatDate(dateStr: string | null) {
-  if (!dateStr) return "—";
+  if (!dateStr) return "-";
   return new Date(dateStr).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -89,9 +83,11 @@ function formatDate(dateStr: string | null) {
   });
 }
 
+// ─── Shared input class ─────────────────────────────────────────────
+const inputClass =
+  "rounded-lg border border-gray-200 p-2 text-sm text-gray-800 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400 bg-white w-full";
+
 // ─── Add/Edit Job Modal ─────────────────────────────────────────────
-// Reused for both creating and editing jobs.
-// When `job` prop is null, it renders as "Add". When a job is passed, it pre-fills fields for editing.
 
 function JobFormModal({
   job,
@@ -102,7 +98,7 @@ function JobFormModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const isEdit = !!job; // Determines if we're editing an existing job or creating a new one
+  const isEdit = !!job;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -128,12 +124,10 @@ function JobFormModal({
       setError("Company and position are required.");
       return;
     }
-
     if (salaryMin && salaryMax && Number(salaryMin) > Number(salaryMax)) {
       setError("Minimum salary cannot exceed maximum salary.");
       return;
     }
-
     if (jobUrl && !/^https?:\/\/.+/.test(jobUrl)) {
       setError("Please enter a valid URL (starting with http:// or https://).");
       return;
@@ -178,172 +172,112 @@ function JobFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="mx-4 w-full max-w-2xl rounded-lg bg-white dark:bg-gray-800 p-6 shadow-xl">
-        <h2 className="mb-4 text-xl font-bold">
-          {isEdit ? "Edit Job Application" : "Add Job Application"}
-        </h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="w-full max-w-2xl rounded-xl bg-white shadow-xl overflow-hidden">
+        {/* Modal header */}
+        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+          <h3 className="text-gray-900 m-0">
+            {isEdit ? "Edit Job Application" : "Add Job Application"}
+          </h3>
+        </div>
 
-        {error && (
-          <p className="mb-4 rounded bg-red-50 dark:bg-red-950 p-2 text-sm text-red-600 dark:text-red-400">{error}</p>
-        )}
+        <div className="px-6 py-5">
+          {error && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
+              {error}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 gap-4">
-            {/* Company */}
-            <div className="flex flex-col">
-              <label className="mb-1 text-sm font-medium">Company *</label>
-              <input
-                type="text"
-                value={company}
-                onChange={(e) => setCompany(e.target.value)}
-                className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                placeholder="e.g. Google"
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Company *</label>
+                <input type="text" value={company} onChange={(e) => setCompany(e.target.value)} className={inputClass} placeholder="e.g. Google" />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Position *</label>
+                <input type="text" value={position} onChange={(e) => setPosition(e.target.value)} className={inputClass} placeholder="e.g. Software Engineer" />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</label>
+                <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputClass}>
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s} value={s}>{formatStatus(s)}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Experience Level</label>
+                <select value={experienceLevel} onChange={(e) => setExperienceLevel(e.target.value)} className={inputClass}>
+                  <option value="">Any</option>
+                  {EXPERIENCE_LEVEL_OPTIONS.map((lvl) => (
+                    <option key={lvl} value={lvl}>{lvl}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-span-2 flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Location</label>
+                <LocationInput value={location} onChange={setLocation} />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Salary Min</label>
+                <input type="number" value={salaryMin} onChange={(e) => setSalaryMin(e.target.value)} className={inputClass} placeholder="e.g. 80000" />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Salary Max</label>
+                <input type="number" value={salaryMax} onChange={(e) => setSalaryMax(e.target.value)} className={inputClass} placeholder="e.g. 120000" />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Job URL</label>
+                <input type="text" value={jobUrl} onChange={(e) => setJobUrl(e.target.value)} className={inputClass} placeholder="https://..." />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Date Applied</label>
+                <input type="date" value={appliedAt} onChange={(e) => setAppliedAt(e.target.value)} className={inputClass} />
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Job Description</label>
+                <span className="text-xs text-gray-400">{jobDescription.length} characters</span>
+              </div>
+              <textarea
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
+                className="h-28 w-full resize-none rounded-lg border border-gray-200 p-3 text-sm text-gray-800 focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                placeholder="Paste the job description here..."
               />
             </div>
 
-            {/* Position */}
-            <div className="flex flex-col">
-              <label className="mb-1 text-sm font-medium">Position *</label>
-              <input
-                type="text"
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
-                className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                placeholder="e.g. Software Engineer"
+            <div className="mt-4 flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Notes</label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="h-20 w-full resize-none rounded-lg border border-gray-200 p-3 text-sm text-gray-800 focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                placeholder="Any personal notes about this application..."
               />
             </div>
 
-            {/* Status */}
-            <div className="flex flex-col">
-              <label className="mb-1 text-sm font-medium">Status</label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              >
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {formatStatus(s)}
-                  </option>
-                ))}
-              </select>
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button type="button" onClick={onClose} className="btn-ghost btn-sm">
+                Cancel
+              </button>
+              <button type="submit" disabled={saving} className="btn-primary btn-sm">
+                {saving ? "Saving..." : isEdit ? "Save Changes" : "Add Job"}
+              </button>
             </div>
-
-            {/* Experience Level */}
-            <div className="flex flex-col">
-              <label className="mb-1 text-sm font-medium">Experience Level</label>
-              <select
-                value={experienceLevel}
-                onChange={(e) => setExperienceLevel(e.target.value)}
-                className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              >
-                <option value="">Any</option>
-                {EXPERIENCE_LEVEL_OPTIONS.map((lvl) => (
-                  <option key={lvl} value={lvl}>{lvl}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Location — full width with autocomplete */}
-            <div className="col-span-2 flex flex-col">
-              <label className="mb-1 text-sm font-medium">Location</label>
-              <LocationInput value={location} onChange={setLocation} />
-            </div>
-
-            {/* Salary Min */}
-            <div className="flex flex-col">
-              <label className="mb-1 text-sm font-medium">Salary Min</label>
-              <input
-                type="number"
-                value={salaryMin}
-                onChange={(e) => setSalaryMin(e.target.value)}
-                className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                placeholder="e.g. 80000"
-              />
-            </div>
-
-            {/* Salary Max */}
-            <div className="flex flex-col">
-              <label className="mb-1 text-sm font-medium">Salary Max</label>
-              <input
-                type="number"
-                value={salaryMax}
-                onChange={(e) => setSalaryMax(e.target.value)}
-                className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                placeholder="e.g. 120000"
-              />
-            </div>
-
-            {/* Job URL */}
-            <div className="flex flex-col">
-              <label className="mb-1 text-sm font-medium">Job URL</label>
-              <input
-                type="text"
-                value={jobUrl}
-                onChange={(e) => setJobUrl(e.target.value)}
-                className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                placeholder="https://..."
-              />
-            </div>
-
-            {/* Applied Date */}
-            <div className="flex flex-col">
-              <label className="mb-1 text-sm font-medium">Date Applied</label>
-              <input
-                type="date"
-                value={appliedAt}
-                onChange={(e) => setAppliedAt(e.target.value)}
-                className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              />
-            </div>
-          </div>
-
-          {/* Job Description */}
-          <div className="mt-4 flex flex-col">
-            <div className="mb-1 flex items-center justify-between">
-              <label className="text-sm font-medium">Job Description</label>
-              <span className="text-xs text-gray-400">
-                {jobDescription.length} characters
-              </span>
-            </div>
-            <textarea
-              value={jobDescription}
-              onChange={(e) => setJobDescription(e.target.value)}
-              className="h-28 w-full resize-none rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-3 text-sm focus:border-orange-400 focus:outline-none"
-              placeholder="Paste the job description here..."
-            />
-          </div>
-
-          {/* Notes */}
-          <div className="mt-4 flex flex-col">
-            <label className="mb-1 text-sm font-medium">Notes</label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="h-20 w-full resize-none rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-3 text-sm focus:border-orange-400 focus:outline-none"
-              placeholder="Any personal notes about this application..."
-            />
-          </div>
-
-          {/* Actions */}
-          <div className="mt-6 flex justify-center gap-4">
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-md bg-orange-400 px-6 py-2 text-white hover:bg-orange-500 disabled:opacity-60"
-            >
-              {saving ? "Saving..." : isEdit ? "Save Changes" : "Add Job"}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2 text-sm text-gray-600 dark:text-gray-400 hover:underline"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );
@@ -373,28 +307,27 @@ function DeleteConfirmModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="mx-4 w-full max-w-md rounded-lg bg-white dark:bg-gray-800 p-6 shadow-xl">
-        <h2 className="mb-2 text-lg font-bold">Delete Application</h2>
-        <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
-          Are you sure you want to delete your application for{" "}
-          <strong>{job.position}</strong> at <strong>{job.company}</strong>? This
-          action cannot be undone.
-        </p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:underline"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            className="rounded-md bg-red-500 px-4 py-2 text-sm text-white hover:bg-red-600 disabled:opacity-60"
-          >
-            {deleting ? "Deleting..." : "Delete"}
-          </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="w-full max-w-md rounded-xl bg-white shadow-xl overflow-hidden">
+        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+          <h3 className="text-gray-900 m-0">Delete Application</h3>
+        </div>
+        <div className="px-6 py-5">
+          <p className="text-sm text-gray-600 m-0">
+            Are you sure you want to delete your application for{" "}
+            <strong>{job.position}</strong> at <strong>{job.company}</strong>? This action cannot be undone.
+          </p>
+          <div className="mt-6 flex items-center justify-end gap-3">
+            <button onClick={onClose} className="btn-ghost btn-sm">Cancel</button>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="btn-outline btn-sm"
+              style={{ color: "#ef4444", borderColor: "#fca5a5" }}
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -402,9 +335,6 @@ function DeleteConfirmModal({
 }
 
 // ─── Inline Status Dropdown ─────────────────────────────────────────
-// Clickable status badge that opens a dropdown to quickly change status
-// without opening the full edit modal. Detects available viewport space
-// and opens upward if near the bottom of the screen.
 
 function StatusBadge({
   job,
@@ -419,7 +349,6 @@ function StatusBadge({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on click outside
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
@@ -436,8 +365,6 @@ function StatusBadge({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
-  // Check if there's enough space below the button for the dropdown (280px),
-  // otherwise open it upward to prevent it from going off-screen
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!open && buttonRef.current) {
@@ -449,10 +376,7 @@ function StatusBadge({
   };
 
   const handleStatusChange = async (newStatus: string) => {
-    if (newStatus === job.status) {
-      setOpen(false);
-      return;
-    }
+    if (newStatus === job.status) { setOpen(false); return; }
     setUpdating(true);
     try {
       await fetch(`/api/jobs/${job.id}/status`, {
@@ -461,9 +385,7 @@ function StatusBadge({
         body: JSON.stringify({ status: newStatus }),
       });
       onStatusChanged();
-    } catch {
-      // silently fail
-    }
+    } catch { /* silently fail */ }
     setUpdating(false);
     setOpen(false);
   };
@@ -483,20 +405,13 @@ function StatusBadge({
       {open && (
         <div
           ref={dropdownRef}
-          className={`absolute left-0 z-50 w-40 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 dark:ring-gray-700 ${
-            openUpward ? "bottom-full mb-1" : "top-full mt-1"
-          }`}
+          className={`absolute left-0 z-50 w-40 rounded-lg bg-white shadow-lg border border-gray-200 ${openUpward ? "bottom-full mb-1" : "top-full mt-1"}`}
         >
           {STATUS_OPTIONS.map((s) => (
             <button
               key={s}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleStatusChange(s);
-              }}
-              className={`block w-full px-3 py-1.5 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                s === job.status ? "font-bold text-orange-500" : "text-gray-700 dark:text-gray-300"
-              }`}
+              onClick={(e) => { e.stopPropagation(); void handleStatusChange(s); }}
+              className={`block w-full px-3 py-1.5 text-left text-xs hover:bg-gray-50 ${s === job.status ? "font-bold text-orange-500" : "text-gray-700"}`}
             >
               {formatStatus(s)}
             </button>
@@ -508,39 +423,7 @@ function StatusBadge({
 }
 
 // ─── Stats Bar ──────────────────────────────────────────────────────
-// Summary cards shown above the job list when the user has applications.
-// "Active" counts applications still in progress (not in a terminal state).
 
-function StatsBar({ jobs }: { jobs: JobApplication[] }) {
-  const total = jobs.length;
-  // Active = everything except terminal statuses
-  const active = jobs.filter(
-    (j) => !["ACCEPTED", "REJECTED", "WITHDRAWN", "GHOSTED"].includes(j.status)
-  ).length;
-  const offers = jobs.filter((j) => j.status === "OFFER" || j.status === "ACCEPTED").length;
-  const rate = total > 0 ? Math.round((offers / total) * 100) : 0;
-
-  const stats = [
-    { label: "Total", value: total },
-    { label: "Active", value: active },
-    { label: "Offers", value: offers },
-    { label: "Offer Rate", value: `${rate}%` },
-  ];
-
-  return (
-    <div className="mb-6 grid grid-cols-4 gap-4">
-      {stats.map((stat) => (
-        <div
-          key={stat.label}
-          className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 text-center"
-        >
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 // ─── Main Page ──────────────────────────────────────────────────────
 
@@ -555,14 +438,10 @@ export default function JobsPage() {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
 
-  // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingJob, setEditingJob] = useState<JobApplication | null>(null);
   const [deletingJob, setDeletingJob] = useState<JobApplication | null>(null);
 
-  // Fetch jobs from the API with current filter/sort state.
-  // Wrapped in useCallback so it can be used as a dependency in useEffect
-  // and re-called when filters change.
   const fetchJobs = useCallback(async () => {
     setLoading(true);
     try {
@@ -577,34 +456,18 @@ export default function JobsPage() {
         const data = await res.json();
         setJobs(data);
       }
-    } catch {
-      // silently fail
-    }
+    } catch { /* silently fail */ }
     setLoading(false);
   }, [statusFilter, searchQuery, sortBy, sortOrder]);
 
   useEffect(() => {
-    if (authStatus === "unauthenticated") {
-      router.push("/login");
-      return;
-    }
-    if (authStatus === "authenticated") {
-      fetchJobs();
-    }
+    if (authStatus === "unauthenticated") { router.push("/login"); return; }
+    if (authStatus === "authenticated") { fetchJobs(); }
   }, [authStatus, fetchJobs, router]);
 
-  const handleSaved = () => {
-    setShowAddModal(false);
-    setEditingJob(null);
-    fetchJobs();
-  };
+  const handleSaved = () => { setShowAddModal(false); setEditingJob(null); fetchJobs(); };
+  const handleDeleted = () => { setDeletingJob(null); fetchJobs(); };
 
-  const handleDeleted = () => {
-    setDeletingJob(null);
-    fetchJobs();
-  };
-
-  // Toggle sort direction on the same column, or switch to a new column (default desc)
   const toggleSort = (field: string) => {
     if (sortBy === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -616,210 +479,176 @@ export default function JobsPage() {
 
   if (authStatus === "loading") {
     return (
-      <main className="min-h-screen bg-white dark:bg-gray-900 p-8">
-        <div className="mx-auto max-w-7xl">
-          <p className="text-sm text-gray-500">Loading...</p>
-        </div>
+      <main className="page-blob-bg min-h-screen flex items-center justify-center">
+        <div className="w-6 h-6 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-white dark:bg-gray-900 p-8">
-      <div className="mx-auto max-w-7xl">
+    <main className="page-blob-bg pt-12 pb-16 min-h-screen">
+      <div className="mx-auto max-w-7xl px-6 flex flex-col gap-6">
+
         {/* Header */}
-        <div className="mb-8 flex items-start justify-between">
-          <div>
-            <h1 className="mb-2 text-3xl font-bold">Job Tracker</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Track your job applications and monitor your progress.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <a
-              href="#suggestions"
-              className="flex items-center gap-2 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-            >
-              <Sparkles className="h-4 w-4 text-orange-500" />
-              See Suggestions
-            </a>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-orange-600"
-            >
-              <Plus className="h-4 w-4" />
-              Add Job
-            </button>
-          </div>
+        <div className="page-animate text-center" style={{ animationDelay: "0.05s" }}>
+          <h1 className="m-0">Job Tracker</h1>
+          <p className="description m-0 mt-1">
+            Track your job applications and monitor your progress.
+          </p>
         </div>
 
-        {/* Stats */}
-        {jobs.length > 0 && <StatsBar jobs={jobs} />}
-
-        {/* Filters */}
-        <div className="mb-6 rounded-lg border-2 border-black dark:border-gray-600 bg-white dark:bg-gray-800 p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold">All Applications</h2>
-            <span className="rounded-full bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-3 py-1 text-xs font-medium">
-              {jobs.length} Total
-            </span>
-          </div>
-          <hr className="-mx-6 mb-6 border-t-2 border-black dark:border-gray-600" />
-
-          {/* Search & Filter Controls */}
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search by company or position..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              />
-            </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-            >
-              <option value="">All Statuses</option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {formatStatus(s)}
-                </option>
+        {/* Main content card */}
+        <div
+          className="page-animate border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden"
+          style={{ animationDelay: "0.25s" }}
+        >
+          {/* Card header */}
+          <div className="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-wrap gap-3">
+            <h3 className="text-gray-900 m-0">All Applications</h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              {jobs.length > 0 && [
+                { label: "Total", value: jobs.length },
+                { label: "Active", value: jobs.filter((j) => !["ACCEPTED","REJECTED","WITHDRAWN","GHOSTED"].includes(j.status)).length },
+                { label: "Offers", value: jobs.filter((j) => j.status === "OFFER" || j.status === "ACCEPTED").length },
+                { label: "Offer Rate", value: `${jobs.length > 0 ? Math.round((jobs.filter((j) => j.status === "OFFER" || j.status === "ACCEPTED").length / jobs.length) * 100) : 0}%` },
+              ].map((stat) => (
+                <span key={stat.label} className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+                  <span className="font-bold text-gray-800">{stat.value}</span> {stat.label}
+                </span>
               ))}
-            </select>
-          </div>
-
-          {/* Job List */}
-          {loading ? (
-            <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">Loading...</p>
-          ) : jobs.length === 0 ? (
-            <div className="space-y-6 py-12 text-center text-gray-500 dark:text-gray-400">
-              <Briefcase className="mx-auto h-12 w-12 text-gray-300" />
-              <p className="text-sm">No job applications yet</p>
-              <p className="text-xs">
-                Start tracking your applications to stay organized!
-              </p>
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="inline-block rounded-full bg-orange-500 px-6 py-2 text-sm text-white hover:bg-orange-600"
-              >
-                Add Your First Job
+              <button onClick={() => setShowAddModal(true)} className="btn-primary btn-sm">
+                <Plus className="h-4 w-4" />
+                Add Job
               </button>
             </div>
-          ) : (
-            <div className="rounded-lg border border-gray-200 dark:border-gray-700">
-              {/* Table Header */}
-              <div className="grid grid-cols-[2fr_2fr_140px_140px_140px_80px] gap-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 px-4 py-2.5">
-                <button
-                  onClick={() => toggleSort("company")}
-                  className="flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
-                >
-                  Company
-                  <ArrowUpDown className="h-3 w-3" />
-                </button>
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  Position
-                </span>
-                <button
-                  onClick={() => toggleSort("status")}
-                  className="flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
-                >
-                  Status
-                  <ArrowUpDown className="h-3 w-3" />
-                </button>
-                <button
-                  onClick={() => toggleSort("appliedAt")}
-                  className="flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
-                >
-                  Applied
-                  <ArrowUpDown className="h-3 w-3" />
-                </button>
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  Salary
-                </span>
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  Actions
-                </span>
-              </div>
+          </div>
 
-              {/* Table Rows */}
-              {jobs.map((job) => (
-                <div
-                  key={job.id}
-                  onClick={() => router.push(`/jobs/${job.id}`)}
-                  className="grid cursor-pointer grid-cols-[2fr_2fr_140px_140px_140px_80px] gap-2 border-b border-gray-100 dark:border-gray-700 px-4 py-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {job.company}
-                    </p>
-                    {job.location && (
-                      <p className="text-xs text-gray-400 dark:text-gray-500">{job.location}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center">
-                    <p className="text-sm text-gray-700 dark:text-gray-300">{job.position}</p>
-                  </div>
-                  <div className="flex items-center">
-                    <StatusBadge job={job} onStatusChanged={fetchJobs} />
-                  </div>
-                  <div className="flex items-center">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {formatDate(job.appliedAt)}
-                    </p>
-                  </div>
-                  <div className="flex items-center">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {formatSalary(job.salaryMin, job.salaryMax) || "—"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {job.jobUrl && (
-                      <a
-                        href={job.jobUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="rounded p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-300"
-                        title="Open job posting"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
-                    )}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingJob(job);
-                      }}
-                      className="rounded p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-300"
-                      title="Edit"
-                    >
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeletingJob(job);
-                      }}
-                      className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                      title="Delete"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+          <div className="p-6">
+            {/* Search & Filter Controls */}
+            <div className="mb-5 flex flex-wrap items-center gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search by company or position..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm text-gray-800 focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400"
+                />
+              </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400"
+              >
+                <option value="">All Statuses</option>
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s} value={s}>{formatStatus(s)}</option>
+                ))}
+              </select>
             </div>
-          )}
+
+            {/* Job List */}
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <div className="w-6 h-6 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
+              </div>
+            ) : jobs.length === 0 ? (
+              <div className="flex flex-col items-center gap-4 py-16 text-center">
+                <Briefcase className="h-12 w-12 text-gray-300" />
+                <div>
+                  <p className="text-sm font-medium text-gray-700 m-0">No job applications yet</p>
+                  <p className="text-xs text-gray-400 m-0 mt-1">Start tracking your applications to stay organized.</p>
+                </div>
+                <button onClick={() => setShowAddModal(true)} className="btn-primary btn-sm">
+                  <Plus className="h-4 w-4" /> Add Your First Job
+                </button>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-gray-200 overflow-hidden">
+                {/* Table Header */}
+                <div className="grid grid-cols-[2fr_2fr_140px_140px_140px_80px] gap-2 border-b border-gray-200 bg-gray-50 px-4 py-2.5">
+                  <button onClick={() => toggleSort("company")} className="flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Company <ArrowUpDown className="h-3 w-3" />
+                  </button>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Position</span>
+                  <button onClick={() => toggleSort("status")} className="flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Status <ArrowUpDown className="h-3 w-3" />
+                  </button>
+                  <button onClick={() => toggleSort("appliedAt")} className="flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Applied <ArrowUpDown className="h-3 w-3" />
+                  </button>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Salary</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Actions</span>
+                </div>
+
+                {/* Table Rows */}
+                {jobs.map((job) => (
+                  <div
+                    key={job.id}
+                    onClick={() => router.push(`/jobs/${job.id}`)}
+                    className="grid cursor-pointer grid-cols-[2fr_2fr_140px_140px_140px_80px] gap-2 border-b border-gray-100 last:border-0 px-4 py-3 transition-colors hover:bg-gray-50"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 m-0">{job.company}</p>
+                      {job.location && (
+                        <p className="text-xs text-gray-400 m-0 mt-0.5">{job.location}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center">
+                      <p className="text-sm text-gray-700 m-0">{job.position}</p>
+                    </div>
+                    <div className="flex items-center">
+                      <StatusBadge job={job} onStatusChanged={fetchJobs} />
+                    </div>
+                    <div className="flex items-center">
+                      <p className="text-sm text-gray-500 m-0">{formatDate(job.appliedAt)}</p>
+                    </div>
+                    <div className="flex items-center">
+                      <p className="text-sm text-gray-500 m-0">
+                        {formatSalary(job.salaryMin, job.salaryMax) || "-"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {job.jobUrl && (
+                        <a
+                          href={job.jobUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                          title="Open job posting"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setEditingJob(job); }}
+                        className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                        title="Edit"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDeletingJob(job); }}
+                        className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Adzuna-powered suggestions embedded below the tracker */}
-        <JobSuggestions onJobAdded={fetchJobs} />
+        {/* Job Suggestions */}
+        <div className="page-animate" style={{ animationDelay: "0.35s" }} id="suggestions">
+          <JobSuggestions onJobAdded={fetchJobs} />
+        </div>
+
       </div>
 
       {/* Modals */}

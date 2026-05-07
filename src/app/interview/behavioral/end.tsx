@@ -1,4 +1,4 @@
-﻿//Author: Brandon Christian
+//Author: Brandon Christian
 //Date: 12/12/2025
 
 //Date: 1/31/2026
@@ -8,9 +8,7 @@
 //Move to end.tsx
 
 import { useState, useEffect, useRef } from "react";
-import styles from "./test.module.css";
 import React from "react";
-import type { ReactNode } from "react";
 import type { FeedbackItem } from "./feedbackItem";
 import { BIPageState } from "./main";
 import { SendAudioVideoToServer, EndSession, PauseSession } from "./behavioralService";
@@ -24,12 +22,10 @@ export function BIEnd({ changeState, waitForAudio, waitForVideo, sessionId, useP
     waitForVideo: () => Promise<Blob>;
     sessionId: string;
 }) {
-    //Helps set useState typing
-    const test_items : FeedbackItem[] = [
+    const test_items: FeedbackItem[] = [
         { key: "None", content: "Eye Contact", score: 1 }
     ];
 
-    //Modified for UC 1 to include loading and error states
     const [data, setFeedbackData] = useState(test_items);
     const [loading, setLoading] = useState(false);
     const [usePauseScreen, setUsePauseScreen] = useState(false);
@@ -39,9 +35,8 @@ export function BIEnd({ changeState, waitForAudio, waitForVideo, sessionId, useP
 
     const effectHasRun = useRef(false);
 
-    useEffect(() => { //Call once on page state load
+    useEffect(() => {
 
-        //Prevent multiple runs during dev mode
         if (effectHasRun.current) return;
 
         effectHasRun.current = true;
@@ -52,18 +47,14 @@ export function BIEnd({ changeState, waitForAudio, waitForVideo, sessionId, useP
             try {
                 setLoading(true);
 
-                //Try and Wait For Upload
-                //Send the audio data previously set by the useEffect cleanup in
-                //The Active page state to the server to be transcribed.
                 console.log("Waiting for audioData to resolve.")
 
-                const audioData = await waitForAudio(); //await for the audio data to be sent by BIActive
-                const videoData = await waitForVideo(); //await for the audio data to be sent by BIActive
+                const audioData = await waitForAudio();
+                const videoData = await waitForVideo();
 
                 console.log("Waiting for audioData to be analyzed with session ID: " + sessionId)
 
                 if (usePause) {
-                    //Pause session instead of ending it
                     const result = await PauseSession(sessionId, audioData, videoData);
 
                     if (!result.success)
@@ -74,12 +65,11 @@ export function BIEnd({ changeState, waitForAudio, waitForVideo, sessionId, useP
                 }
                 else {
 
-                    const result = await SendAudioVideoToServer(sessionId, audioData, videoData); //await for the audio data to be uploaded
-                    await EndSession(sessionId);   //update session with completed state
+                    const result = await SendAudioVideoToServer(sessionId, audioData, videoData);
+                    await EndSession(sessionId);
 
                     console.log("Completed audio upload and session end.")
 
-                    //store data in useState
                     setFeedbackData(result);
                     setVideo(videoData);
                     setAudio(audioData);
@@ -98,7 +88,7 @@ export function BIEnd({ changeState, waitForAudio, waitForVideo, sessionId, useP
     },
 
     [])
-    
+
     const RestartInterviewButton = async () => {
         changeState(BIPageState.START);
     };
@@ -106,97 +96,98 @@ export function BIEnd({ changeState, waitForAudio, waitForVideo, sessionId, useP
 
     if (usePauseScreen) {
         return (
-            <div>
-                Session successfully paused. It is now safe to leave this screen.
-            </div>
+            <main className="page-blob-bg min-h-screen flex items-center justify-center px-6">
+                <div className="page-animate border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm w-full max-w-md">
+                    <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+                        <p className="text-sm font-semibold text-gray-800 m-0">Session Paused</p>
+                    </div>
+                    <div className="px-6 py-8 text-center">
+                        <p className="text-gray-600 m-0">Your session has been paused. It is safe to leave this page and resume later.</p>
+                    </div>
+                </div>
+            </main>
         );
     }
 
     return (
-        <div className={`${styles.centered_column} w-full`}>
+        <main className="page-blob-bg min-h-screen pt-12 pb-16">
+            <div className="mx-auto max-w-3xl px-6 flex flex-col gap-6">
 
-            <RecordedVideoBox video={video} audio={audio} />
-
-            {loading && (
-                <div>
-                Loading feedback...
+                {/* Page header */}
+                <div className="page-animate text-center" style={{ animationDelay: "0.05s" }}>
+                    <h1>Interview Complete</h1>
+                    <p className="description">Review your recorded session and feedback below.</p>
                 </div>
-            )}
 
-            {!loading && !error && (
-                <div className={`${styles.centered_column} w-full`}>
-                    <button className="orange_button" onClick={RestartInterviewButton}>Restart Interview</button>
-                    {/* <DataDisplay data={data} /> */}
-                    <DisplayFeedbackItems items={data}/>
+                {/* Video card */}
+                <div className="page-animate border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm" style={{ animationDelay: "0.1s" }}>
+                    <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+                        <p className="text-sm font-semibold text-gray-800 m-0">Recorded Session</p>
+                        <p className="text-xs text-gray-500 m-0 mt-0.5">Playback your interview recording.</p>
+                    </div>
+                    <div className="p-6 flex justify-center">
+                        <RecordedVideoBox video={video} audio={audio} />
+                    </div>
                 </div>
-            )}
 
-            {error  && (
-                <div>
-                    Failed to load feedback!
-                </div>
-            )}
+                {/* Loading */}
+                {loading && (
+                    <div className="page-animate border border-gray-200 rounded-xl bg-white shadow-sm px-6 py-10 flex flex-col items-center gap-3" style={{ animationDelay: "0.15s" }}>
+                        <div className="w-6 h-6 border-2 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
+                        <p className="text-sm text-gray-500 m-0">Analyzing your interview...</p>
+                    </div>
+                )}
 
-            
-        </div>
+                {/* Error */}
+                {error && (
+                    <div className="page-animate border border-red-200 rounded-xl bg-red-50 px-6 py-5" style={{ animationDelay: "0.15s" }}>
+                        <p className="text-sm text-red-600 font-medium m-0">Failed to load feedback. Please try again.</p>
+                    </div>
+                )}
+
+                {/* Feedback */}
+                {!loading && !error && (
+                    <div className="page-animate" style={{ animationDelay: "0.2s" }}>
+                        <DisplayFeedbackItems items={data} />
+                    </div>
+                )}
+
+                {/* Restart button */}
+                {!loading && (
+                    <div className="page-animate flex justify-center" style={{ animationDelay: "0.3s" }}>
+                        <button className="btn-primary" onClick={RestartInterviewButton}>
+                            Start New Interview
+                        </button>
+                    </div>
+                )}
+
+            </div>
+        </main>
     );
 
 }
 
-function RecordedVideoBox({ video, audio }: { video: Blob | null , audio: Blob | null}) {
+function RecordedVideoBox({ video, audio }: { video: Blob | null, audio: Blob | null }) {
 
-    let hasVideo = false;
-    let videoURL: string = "";
-
-    if (video) {
-        videoURL = URL.createObjectURL(video);
-        hasVideo = true;
+    if (!video) {
+        return (
+            <div className="flex items-center gap-2 text-sm text-gray-400 py-8">
+                <div className="w-4 h-4 border-2 border-gray-200 border-t-gray-400 rounded-full animate-spin" />
+                Loading video...
+            </div>
+        );
     }
 
+    const videoURL = URL.createObjectURL(video);
 
-    return (
-        <div className={`${styles.centered_column} outline-2 rounded w-3/4 p-2`}>
-            {hasVideo && (
-                <VideoPlayer src={videoURL} />
-            )}
-            {!hasVideo && (
-                <div>
-                    Loading Video...
-                </div>
-            )}
-            
-        </div>  
-    );
-}
-
-interface VideoPlayerProps {
-    src?: string;
-    width?: number;
-    height?: number;
-    controls?: boolean;
-}
-
-const VideoPlayer: React.FC<VideoPlayerProps> = ({
-    src,
-    width = 640,
-    height = 360,
-    controls = true,
-}) => {
     return (
         <video
-            width={width}
-            height={height}
-            controls={controls}
-            style={{
-                backgroundColor: "#000", // shows black box if no video
-                display: "block",
-            }}
+            controls
+            className="w-full max-w-lg rounded-lg"
+            style={{ backgroundColor: "#000" }}
         >
-            {src ? <source src={src} type="video/mp4" /> : null}
+            <source src={videoURL} type="video/mp4" />
             Your browser does not support the video tag.
         </video>
     );
-};
-
-
-
+}

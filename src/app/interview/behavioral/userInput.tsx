@@ -1,9 +1,8 @@
-﻿//Author: Brandon Christian
+//Author: Brandon Christian
 //Date: 2/24/2026
-//Base file for general input functions and 
+//Base file for general input functions and
 //Component merging audio/video components
 
-import styles from "./test.module.css";
 import { AudioMeter } from "./userAudio";
 import { CameraBox } from "./userVideo";
 
@@ -27,11 +26,10 @@ export function AudioMeterAndCameraBox({ recordAudio, audioRef, recordVideo, sto
 }) {
 
     return (
-        <div className={`${styles.centered_column} outline-2 rounded w-3/4 p-2`}>
-            <CameraBox recordVideo={recordVideo} storeVideoRef={storeVideoRef}/>
+        <div className="flex flex-col items-center gap-4 w-full">
+            <CameraBox recordVideo={recordVideo} storeVideoRef={storeVideoRef} />
             <AudioMeter recordAudio={recordAudio} audioRef={audioRef} />
         </div>
-
     )
 }
 
@@ -39,7 +37,7 @@ export function StartRecording(mediaRecorder: MediaRecorder) {
     let chunks: Blob[] = []
 
     //Use media recorder to push the data as its recorded into "chunks"
-    //which is actiely updated
+    //which is actively updated
     mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
             chunks.push(event.data);
@@ -78,6 +76,5 @@ async function StopRecording(mediaRecorder: MediaRecorder, chunks: Blob[], isAud
         mediaRecorder.stop();
     });
 }
-
 
 
