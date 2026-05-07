@@ -76,10 +76,11 @@ export default function Navbar() {
           <div className="hidden flex-1 items-center justify-center gap-1 md:flex">
             {leftNavLinks.map((link) => {
               const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
+              const href = session?.user ? link.href : "/signup";
               return (
                 <Link
                   key={link.href}
-                  href={link.href}
+                  href={href}
                   className={`relative rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     isActive
                       ? "bg-orange-500 text-white shadow-sm"

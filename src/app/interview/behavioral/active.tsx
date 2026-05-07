@@ -134,7 +134,7 @@ export function BIActive({ changeState, prompt, audioRef, storeVideoRef, session
 
                 {/* Camera + mic centered below */}
                 <div className="page-animate flex flex-col items-center flex-1 min-h-0" style={{ animationDelay: "0.15s" }}>
-                    <div className="flex flex-col border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm w-full">
+                    <div className="flex flex-col border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm w-full max-w-lg">
                         <div className="bg-gray-50 border-b border-gray-200 px-4 py-2.5">
                             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide m-0 text-center">Camera Preview</p>
                         </div>
