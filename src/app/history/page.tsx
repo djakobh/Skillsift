@@ -88,7 +88,7 @@ export default async function HistoryPage() {
                           key={analysis.id}
                           className={`flex items-center gap-3 ${idx > 0 ? "pt-3" : ""} ${idx < recentAnalyses.length - 1 ? "pb-3" : ""}`}
                         >
-                          <MiniDonut score={atsResult.score} size={65} />
+                          <MiniDonut score={atsResult.score} />
                           <div className="flex flex-col gap-2 min-w-0">
                             <p className="text-sm font-semibold text-gray-900 truncate m-0">
                               {resolveLabel(analysis.jobDescription)}

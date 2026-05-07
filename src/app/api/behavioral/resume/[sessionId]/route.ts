@@ -9,9 +9,9 @@ import { auth } from "src/server/auth"
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { sessionId: string } }
+    { params }: { params: Promise<{ sessionId: string }> }
 ) {
-    const { sessionId } = params;
+    const { sessionId } = await params;
 
     const session = await auth();
 

@@ -9,9 +9,9 @@ import { auth } from "src/server/auth"
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { sessionId: string } }
+    { params }: { params: Promise<{ sessionId: string }> }
 ) {
-    const { sessionId } = params;
+    const { sessionId } = await params;
 
     const session = await auth();
 
@@ -22,7 +22,8 @@ export async function POST(
     const formData = await req.formData();
     const rawFeedback = formData.get("feedback") as string;
 
-    let feedback: unknown;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let feedback: any;
     try {
         feedback = JSON.parse(rawFeedback);
     } catch {
