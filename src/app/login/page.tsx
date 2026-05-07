@@ -56,10 +56,10 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-200 via-orange-300 to-orange-400">
+    <main className="page-blob-bg flex items-center justify-center min-h-screen">
       <form
         onSubmit={handleLogin}
-        className="flex flex-col gap-4 w-full max-w-sm bg-white p-8 rounded shadow"
+        className="page-animate flex flex-col gap-4 w-full max-w-sm"
       >
         <div className="flex flex-col items-center gap-3 mb-2">
           <img

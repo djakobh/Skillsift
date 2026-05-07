@@ -42,8 +42,8 @@ function ResetPasswordForm() {
   }
 
   return (
-    <main className="flex items-center justify-center min-h-screen bg-orange-100">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
+    <main className="page-blob-bg flex items-center justify-center min-h-screen">
+      <div className="page-animate bg-white p-8 rounded-xl shadow-sm border border-gray-200 w-full max-w-md">
         <h1 className="text-xl font-bold mb-4">Set New Password</h1>
         {message.text && (
           <p className={`p-2 mb-4 rounded ${message.type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>

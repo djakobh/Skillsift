@@ -571,9 +571,9 @@ export default function TechnicalInterviewViewSwitcher({
                     ) : (
                       <div className="flex flex-col items-center justify-center gap-4 h-full min-h-[200px]">
                         {/* Blurred code preview behind overlay */}
-                        <div className="relative w-full rounded-lg overflow-hidden">
+                        <div className="relative w-full rounded-lg overflow-hidden" style={{ maxHeight: "180px" }}>
                           <pre className="bg-gray-900 text-gray-100 text-xs p-4 font-mono leading-relaxed select-none"
-                            style={{ filter: "blur(6px)", opacity: 0.5, userSelect: "none", pointerEvents: "none" }}>
+                            style={{ filter: "blur(5px)", opacity: 0.25, userSelect: "none", pointerEvents: "none", maxHeight: "180px", overflow: "hidden" }}>
                             {solutions[currentQuestion.id]!.python}
                           </pre>
 

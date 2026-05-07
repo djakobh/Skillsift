@@ -9,8 +9,8 @@ export default function ForgotPasswordPage(){
     const [error, setError] = useState<string | null>(null);
     const [submitted, setSubmitted] = useState(false);
 
-    const wrapper = "flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-200 via-orange-300 to-orange-400";
-    const cardContainer = "flex flex-col gap-4 w-full max-w-sm bg-white p-8 rounded shadow text-center";
+    const wrapper = "page-blob-bg flex items-center justify-center min-h-screen";
+    const cardContainer = "page-animate flex flex-col gap-4 w-full max-w-sm bg-white p-8 rounded-xl shadow-sm border border-gray-200 text-center";
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>){
         event.preventDefault();

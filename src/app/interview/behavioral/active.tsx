@@ -121,15 +121,24 @@ export function BIActive({ changeState, prompt, audioRef, storeVideoRef, session
                     </div>
                 </div>
 
-                {/* Body */}
-                <div className="flex flex-1 min-h-0 gap-3">
+                {/* Prompt */}
+                <div className="page-animate flex flex-col border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm shrink-0" style={{ animationDelay: "0.1s" }}>
+                    <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+                        <p className="text-sm font-semibold text-gray-800 m-0">Interview Prompt</p>
+                        <p className="text-xs text-gray-500 m-0 mt-0.5">Take your time to structure your response clearly.</p>
+                    </div>
+                    <div className="p-6 overflow-y-auto" style={{ maxHeight: "28vh" }}>
+                        <p className="text-gray-700 leading-relaxed m-0 text-base">{prompt}</p>
+                    </div>
+                </div>
 
-                    {/* Left: Camera + mic */}
-                    <div className="page-animate flex flex-col w-80 shrink-0 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm" style={{ animationDelay: "0.1s" }}>
+                {/* Camera + mic centered below */}
+                <div className="page-animate flex flex-col items-center flex-1 min-h-0" style={{ animationDelay: "0.15s" }}>
+                    <div className="flex flex-col border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm w-full max-w-sm">
                         <div className="bg-gray-50 border-b border-gray-200 px-4 py-2.5">
-                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide m-0">Camera Preview</p>
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide m-0 text-center">Camera Preview</p>
                         </div>
-                        <div className="p-4 flex flex-col items-center gap-3 flex-1 overflow-y-auto">
+                        <div className="p-4 flex flex-col items-center gap-3">
                             <AudioMeterAndCameraBox
                                 recordAudio={true}
                                 audioRef={audioRef}
@@ -138,18 +147,6 @@ export function BIActive({ changeState, prompt, audioRef, storeVideoRef, session
                             />
                         </div>
                     </div>
-
-                    {/* Right: Prompt */}
-                    <div className="page-animate flex flex-col flex-1 min-h-0 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm" style={{ animationDelay: "0.15s" }}>
-                        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
-                            <p className="text-sm font-semibold text-gray-800 m-0">Interview Prompt</p>
-                            <p className="text-xs text-gray-500 m-0 mt-0.5">Take your time to structure your response clearly.</p>
-                        </div>
-                        <div className="flex-1 overflow-y-auto p-6">
-                            <p className="text-gray-700 leading-relaxed m-0 text-base">{prompt}</p>
-                        </div>
-                    </div>
-
                 </div>
 
             </div>
