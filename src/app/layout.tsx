@@ -18,7 +18,7 @@ import { ThemeProvider } from "~/components/ThemeProvider";
 export const metadata: Metadata = {
   title: "SkillSift",
   description: "AI-powered interview prep that gets you hired",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  icons: [{ rel: "icon", url: "/images/landing/skillsift-split-circle.png" }],
 };
 
 const geist = Geist({
