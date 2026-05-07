@@ -17,7 +17,7 @@ import { ThemeProvider } from "~/components/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "SkillSift",
-  description: "AI-powered interview prep that gets you hired",
+  description: "All in one prep tool that actually works.",
   icons: [{ rel: "icon", url: "/images/landing/skillsift-split-circle.png" }],
 };
 
