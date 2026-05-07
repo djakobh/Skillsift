@@ -25,7 +25,7 @@ const config = {
           },
           {
             key: "Permissions-Policy",
-            value: "camera=self, microphone=self, geolocation=()",
+            value: "camera=(self), microphone=(self), geolocation=()",
           },
           {
             key: "Strict-Transport-Security",
