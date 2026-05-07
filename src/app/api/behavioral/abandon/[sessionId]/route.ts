@@ -15,15 +15,9 @@ export async function POST(
     const session = await auth();
 
 
-    if (session && session.user) {
-        return AbandonSession(sessionId, session.user.id);
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    //Failed to authenticate the user
-    return NextResponse.json(
-        {
-            success: false,
-            session: null
-        }
-    );
+    return AbandonSession(sessionId, session.user.id);
 }

@@ -16,6 +16,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (typeof password !== "string" || password.length < 8) {
+      return NextResponse.json(
+        { error: "Password must be at least 8 characters." },
+        { status: 400 }
+      );
+    }
+
     // check if user is existing
     const existing = await db.user.findUnique({
       where: { email },

@@ -96,8 +96,8 @@ export async function PUT(
       position,
       jobDescription: jobDescription || null,
       jobUrl: jobUrl || null,
-      salaryMin: salaryMin != null ? parseInt(salaryMin) : null,
-      salaryMax: salaryMax != null ? parseInt(salaryMax) : null,
+      salaryMin: salaryMin != null ? parseInt(salaryMin, 10) : null,
+      salaryMax: salaryMax != null ? parseInt(salaryMax, 10) : null,
       location: location || null,
       experienceLevel: experienceLevel || null,
       // Fall back to existing status if none provided

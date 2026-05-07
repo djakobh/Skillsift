@@ -18,23 +18,24 @@ export async function POST(req: NextRequest) {
 
     console.log("extracted prompt from body")
 
-    if (session && session.user) {
-        const response = await db.interviewSession.create(
-            {
-                data: {
-                    type: "BEHAVIORAL",
-                    userId: session.user.id,
-                    status: "IN_PROGRESS",
-                    prompt: prompt 
-                },
-                select: {
-                    id: true,
-                }
-            }
-        );
-
-        return NextResponse.json(response);
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const response = await db.interviewSession.create(
+        {
+            data: {
+                type: "BEHAVIORAL",
+                userId: session.user.id,
+                status: "IN_PROGRESS",
+                prompt: prompt
+            },
+            select: {
+                id: true,
+            }
+        }
+    );
+
+    return NextResponse.json(response);
 }
     

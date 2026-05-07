@@ -6,7 +6,14 @@ export async function POST(req: Request) {
   try {
     const { token, password } = await req.json();
 
-    if (!token) return NextResponse.json({ error: "Missing token" });
+    if (!token) return NextResponse.json({ error: "Missing token" }, { status: 400 });
+
+    if (typeof password !== "string" || password.length < 8) {
+      return NextResponse.json(
+        { error: "Password must be at least 8 characters." },
+        { status: 400 }
+      );
+    }
 
     const existingToken = await db.verificationToken.findUnique({
       where: { token },

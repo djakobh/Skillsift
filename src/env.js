@@ -20,6 +20,11 @@ export const env = createEnv({
       .enum(["development", "test", "production"])
       .default("development"),
     GROQ_API_KEY: z.string(),
+    GEMINI_API_KEY: z.string().optional(),
+    ASSEMBLY_AI_API_KEY: z.string().optional(),
+    RESEND_API_KEY: z.string().optional(),
+    RESEND_FROM_EMAIL: z.string().optional(),
+    CODE_RUNNER_URL: z.string().url().optional(),
   },
 
   /**
@@ -44,6 +49,11 @@ export const env = createEnv({
     ADZUNA_APP_KEY: process.env.ADZUNA_APP_KEY,
     NODE_ENV: process.env.NODE_ENV,
     GROQ_API_KEY: process.env.GROQ_API_KEY,
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+    ASSEMBLY_AI_API_KEY: process.env.ASSEMBLY_AI_API_KEY,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
+    CODE_RUNNER_URL: process.env.CODE_RUNNER_URL,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

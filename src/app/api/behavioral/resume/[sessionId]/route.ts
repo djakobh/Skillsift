@@ -15,40 +15,23 @@ export async function POST(
 
     const session = await auth();
 
-    if (session && session.user) {
-
-        //Update resumed date
-        const interviewSession = await db.interviewSession.update({
-            where: {
-                userId: session.user.id,
-                id: sessionId,
-            },
-            data: {
-                resumedAt: new Date()
-            }
-        });
-
-        //Return if successful
-        if (interviewSession) {
-
-            return NextResponse.json(
-                {
-                    success: true,
-                    session: interviewSession
-                }
-            );
-        }
-        else {
-            console.log("failed to find session. id: " + sessionId)
-        }
-        
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    //Failed to update session for some reason
-    return NextResponse.json(
-        {
-            success: false,
-            session: null
+    const interviewSession = await db.interviewSession.update({
+        where: {
+            userId: session.user.id,
+            id: sessionId,
+        },
+        data: {
+            resumedAt: new Date()
         }
-    );
+    });
+
+    if (interviewSession) {
+        return NextResponse.json({ success: true, session: interviewSession });
+    }
+
+    return NextResponse.json({ success: false, session: null }, { status: 500 });
 }

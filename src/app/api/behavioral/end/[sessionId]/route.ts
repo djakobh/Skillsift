@@ -17,42 +17,25 @@ export async function POST(
 
     console.log("interiew session id: " + sessionId)
 
-    if (session && session.user) {
-        //Update the first session whose ID matches the one we
-        //created at session start for this user
-        const interviewSession = await db.interviewSession.update({
-            where: {
-                userId: session.user.id,
-                id: sessionId,
-            },
-            data: {
-                completedAt: new Date(),
-                status: "COMPLETED"
-            }
-        });
-
-        //Return if successful
-        if (interviewSession) {
-
-            return NextResponse.json(
-                {
-                    success: true,
-                    session: interviewSession
-                }
-            );
-        }
-        else {
-            console.log("failed to find session. id: " + sessionId)
-        }
-        
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    //Failed to update session for some reason
-    return NextResponse.json(
-        {
-            success: false,
-            session: null
+    const interviewSession = await db.interviewSession.update({
+        where: {
+            userId: session.user.id,
+            id: sessionId,
+        },
+        data: {
+            completedAt: new Date(),
+            status: "COMPLETED"
         }
-    );
+    });
+
+    if (interviewSession) {
+        return NextResponse.json({ success: true, session: interviewSession });
+    }
+
+    return NextResponse.json({ success: false, session: null }, { status: 500 });
 }
     

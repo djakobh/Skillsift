@@ -78,18 +78,17 @@ export async function POST(req: Request) {
 
       analysis = JSON.parse(stdout);
     } catch (e: any) {
-      console.error("Python analysis failed:", e);
+      console.error("Python analysis failed:", {
+        message: e?.message,
+        stderr: e?.stderr,
+        stdout: e?.stdout,
+        scriptPath,
+        pythonCmd: PYTHON_CMD,
+        videoPath,
+      });
 
       return NextResponse.json(
-        {
-          error: "analysis_failed",
-          detail: e?.message ?? String(e),
-          stderr: e?.stderr ?? null,
-          stdout: e?.stdout ?? null,
-          scriptPath,
-          pythonCmd: PYTHON_CMD,
-          videoPath,
-        },
+        { error: "Analysis failed. Please try again." },
         { status: 500 }
       );
     }
@@ -114,7 +113,7 @@ export async function POST(req: Request) {
   } catch (err: any) {
     console.error("behavioral-analyzer error:", err);
     return NextResponse.json(
-      { error: err?.message ?? String(err) },
+      { error: "Internal server error." },
       { status: 500 }
     );
   }

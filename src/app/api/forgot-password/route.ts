@@ -7,20 +7,17 @@ export async function POST(req: Request) {
   try {
     const { email } = await req.json();
 
-    console.log("searchning for email:", email);
-
     const user = await db.user.findUnique({
       where: { email: email },
     });
 
-    console.log("user found:", user);
-
+    // Always return the same response to prevent user enumeration
     if (!user) {
-      return NextResponse.json({ error: "User not found" });
+      return NextResponse.json({ success: true });
     }
 
     const token = randomUUID();
-    const expires = new Date(Date.now() + 3600000); 
+    const expires = new Date(Date.now() + 3600000);
 
     await db.verificationToken.upsert({
       where: { token: token },
