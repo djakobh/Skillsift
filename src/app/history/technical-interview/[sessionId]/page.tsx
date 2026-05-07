@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export default async function TechnicalInterviewResultsPage({
   params,
 }: {
-  params: { sessionId: string };
+  params: Promise<{ sessionId: string }>;
 }) {
   const session = await auth();
 
@@ -16,7 +16,7 @@ export default async function TechnicalInterviewResultsPage({
     redirect("/login");
   }
 
-  const { sessionId } = params;
+  const { sessionId } = await params;
 
   // Fetch the session and its responses from the DB
   const interviewSession = await db.interviewSession.findUnique({
