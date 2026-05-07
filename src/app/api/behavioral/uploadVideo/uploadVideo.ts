@@ -25,18 +25,10 @@ export async function GetVideoFeedback(videos: Blob) {
 export async function UploadVideo(req: NextRequest) {
     //extract the audio from the formData sent
     const formData = await req.formData();
-    const video = formData.get("video") as Blob;
-
-
-    if (!video || !(video instanceof Blob)) {
-        return NextResponse.json(
-            { error: "No video file received" },
-            { status: 400 }
-        );
-    }
+    const video = formData.get("video") as Blob | null;
 
     //Get analysis of video from service
-    const feedback_items: any[] = await GetVideoFeedback(video);
+    const feedback_items: any[] = await GetVideoFeedback(video!);
 
     const sessionId: string = formData.get("sessionId") as string;
     const averaged_items: any[] = await AverageFeedbackItems(feedback_items, sessionId);

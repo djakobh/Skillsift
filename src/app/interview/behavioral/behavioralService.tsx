@@ -21,7 +21,7 @@ import type { AnalysisResponse, VolumeAnalysisResponse, FillerAnalysisResponse, 
 export async function SendAudioVideoToServer(sessionId: string, audioData: Blob, videoData: Blob) {
 
     const audioAnalysisResponse = await SendToServer(sessionId, audioData, "/api/behavioral/uploadAudio", "audio");
-    const videoAnalysisResponse = await SendToServer(sessionId, videoData, "/api/behavioral/uploadVideo", "video");
+    const videoAnalysisResponse = await SendVideoSessionId(sessionId, "/api/behavioral/uploadVideo");
 
     const audioFeedback = await AudioAnalysisToFBItem(audioAnalysisResponse);
     const videoFeedback = await VideoAnalysisToFBItem(videoAnalysisResponse);
@@ -75,6 +75,13 @@ async function VideoAnalysisToFBItem(videoAnalysisResponse: Response) {
     const fbItems: FeedbackItem[] = AnalysisResultToFBItems(JSON.stringify(videoResponseData));
 
     return fbItems;
+}
+
+async function SendVideoSessionId(sessionId: string, apiURL: string) {
+    const formData = new FormData();
+    formData.append("sessionId", sessionId);
+    const response = await fetch(apiURL, { method: "POST", body: formData });
+    return response;
 }
 
 async function SendToServer(sessionId: string, data: Blob, apiURL: string, formDataKey: string) {
