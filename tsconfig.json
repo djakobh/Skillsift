@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
+    /* Typescript support for some modules */
+    "typeRoots": [ "./node_modules/@types", "./declarations.d.ts" ],
+
     /* Base Options: */
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -16,18 +19,18 @@
     "checkJs": true,
 
     /* Bundled projects */
-    "lib": ["dom", "dom.iterable", "ES2022"],
+    "lib": [ "dom", "dom.iterable", "ES2022" ],
     "noEmit": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "preserve",
-    "plugins": [{ "name": "next" }],
+    "plugins": [ { "name": "next" } ],
     "incremental": true,
 
     /* Path Aliases */
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./src/*"]
+      "~/*": [ "./src/*" ]
     }
   },
   "include": [

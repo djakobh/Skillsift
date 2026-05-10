@@ -71,7 +71,7 @@ export function BIStart({ changeState, changePrompt, audioRef, setSessionId, sto
 
                         //Abandon if previously resumed
                         AbandonSession(findResp.session.id);
-
+                        setLoading(false);
                     }
                     else {
                         function ContinueToActivePage() {
@@ -111,9 +111,11 @@ export function BIStart({ changeState, changePrompt, audioRef, setSessionId, sto
 
     return (
         <div className={`${styles.centered_column} w-full`}>
-            <AudioMeterAndCameraBox recordAudio={false} audioRef={audioRef} recordVideo={false} storeVideoRef={storeVideoRef} />
+            <div id="tour-camera-box">
+                <AudioMeterAndCameraBox recordAudio={false} audioRef={audioRef} recordVideo={false} storeVideoRef={storeVideoRef} />
+            </div>
             {!loading && (
-                <button className="orange_button" onClick={StartInterviewButton}>Start Interview</button>
+                <button id="tour-start-interview" className="orange_button" onClick={StartInterviewButton}>Start Interview</button>
             )}
 
             {loading && (

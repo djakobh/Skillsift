@@ -45,12 +45,12 @@ async function GetPausedSession() {
         }
 
         //Session already resumed before
-        if (inprogressSession.resumedAt) {
+        if (inprogressSession.resumedAt != null) {
             return NextResponse.json(
                 {
                     success: true,
                     canResume: false,
-                    session: null
+                    session: inprogressSession
                 }
             );
         }

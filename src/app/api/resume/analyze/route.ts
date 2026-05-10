@@ -3,9 +3,8 @@ import { auth } from "~/server/auth";
 import { preprocessJobDescription } from "~/server/utils/document-parser";
 import { computeATSScore } from "~/server/utils/ats-scorer";
 import type { ATSScoreResult } from "~/server/utils/ats-scorer";
-import {
-  VALIDATION_CONFIG,
-} from "~/server/utils/file-validation";
+import { VALIDATION_CONFIG } from "~/server/utils/file-validation";
+import { db } from "~/server/db";
 
 // ============================================
 // Types
@@ -15,6 +14,7 @@ interface AnalyzeRequest {
   resumeText: string;
   jobDescription: string;
   resumeFileName: string;
+  companyName?: string;
 }
 
 interface AnalyzeSuccessResponse {
@@ -59,7 +59,7 @@ export async function POST(req: Request): Promise<NextResponse<AnalyzeResponse>>
     // 2. Parse request body
     const body = (await req.json()) as Partial<AnalyzeRequest>;
 
-    const { resumeText, jobDescription, resumeFileName } = body;
+    const { resumeText, jobDescription, resumeFileName, companyName } = body;
 
     // 3. Validate inputs
     if (!resumeText || typeof resumeText !== "string") {
@@ -120,7 +120,39 @@ export async function POST(req: Request): Promise<NextResponse<AnalyzeResponse>>
     // 5. Compute full ATS score (includes keyword matching internally)
     const atsResult = computeATSScore(resumeText, cleanedJobDesc);
 
-    // 6. Return results
+    // 6. Persist to ResumeAnalysis (non-fatal — never blocks the response)
+    try {
+      const roleTitle =
+        companyName?.trim() ||
+        jobDescription.split("\n").map((l) => l.trim()).find((l) => l.length > 0) ||
+        "Untitled Role";
+
+      await db.resumeAnalysis.create({
+        data: {
+          userId: session.user.id,
+          resumeName: resumeFileName ?? "resume",
+          jobDescription: roleTitle,
+          atsScore: atsResult.score,
+          matchScore: atsResult.score,
+          feedback: atsResult as object,
+        },
+      });
+
+      // Enforce 10-scan cap — delete oldest beyond limit
+      const all = await db.resumeAnalysis.findMany({
+        where: { userId: session.user.id },
+        orderBy: { analyzedAt: "desc" },
+        select: { id: true },
+      });
+      if (all.length > 10) {
+        const toDelete = all.slice(10).map((a) => a.id);
+        await db.resumeAnalysis.deleteMany({ where: { id: { in: toDelete } } });
+      }
+    } catch (saveErr) {
+      console.error("Failed to save resume analysis:", saveErr);
+    }
+
+    // 7. Return results
     return NextResponse.json(
       {
         success: true,

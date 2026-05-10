@@ -14,6 +14,8 @@ export const env = createEnv({
     AUTH_DISCORD_ID: z.string().optional(),
     AUTH_DISCORD_SECRET: z.string().optional(),
     DATABASE_URL: z.string().url(),
+    ADZUNA_APP_ID: z.string().optional(),
+    ADZUNA_APP_KEY: z.string().optional(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -39,6 +41,8 @@ export const env = createEnv({
     AUTH_DISCORD_ID: process.env.AUTH_DISCORD_ID,
     AUTH_DISCORD_SECRET: process.env.AUTH_DISCORD_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
+    ADZUNA_APP_ID: process.env.ADZUNA_APP_ID,
+    ADZUNA_APP_KEY: process.env.ADZUNA_APP_KEY,
     NODE_ENV: process.env.NODE_ENV,
     OLLAMA_BASE: process.env.OLLAMA_BASE,
     OLLAMA_MODEL: process.env.OLLAMA_MODEL,

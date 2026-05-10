@@ -13,11 +13,13 @@ export enum FeedbackCategory {
     SOCIABILITY = "Sociability",
     CLEAR_SPEECH = "Clear Speech"
 }
+import type { AnalysisItem } from "../../api/behavioral/analyze/analysisItem";
 
 export type FeedbackItem = {
-    key: FeedbackCategory,
-    content: string,
-    score: number
+    key: string,
+    content?: string,
+    score?: number,
+    graph? : any[]
 }
 
 /*Convert analysis response into form the UI can read*/
@@ -55,15 +57,13 @@ export function AnalysisResultToFBItems(analysisJSON: string)
     return fbItems;
 }
 
-export function CreateFeedbackItem(acategory: string, acontent: string, ascore: number)
+export function CreateFeedbackItem(acategory: string, acontent?: string, ascore?: number, agraph?: any[])
 {
-    const category = acategory as FeedbackCategory;
+    let category = acategory;
 
-    const fbItem: FeedbackItem = {
-        key: category,
-        content: acontent,
-        score: ascore
-    };
+    console.log("Created FBItem with category " + category + " and content " + acontent + " and score " + ascore);
+
+    const fbItem: FeedbackItem = { key: category, content: acontent, score: ascore, graph: agraph };
 
     return fbItem   
 }

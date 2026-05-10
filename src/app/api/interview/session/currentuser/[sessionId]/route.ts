@@ -14,7 +14,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" });
     }
 
-    const { sessionId } = params;
+    const { sessionId } = await params;
     const { action, responses } = await req.json();
 
     // Verify the session exists and belongs to this user
@@ -115,7 +115,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" });
     }
 
-    const { sessionId } = params;
+    const { sessionId } = await params;
 
     const interviewSession = await db.interviewSession.findUnique({
       where: { id: sessionId },

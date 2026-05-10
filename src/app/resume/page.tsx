@@ -5,7 +5,7 @@
 //Date: 01/20/2026 - End of Semester 
 
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, lazy, Suspense } from "react";
 import styles from "./test.module.css";
 import React from "react";
 import { OnUploadResumeClicked, OnAddJobDescriptionClicked } from "./uploadResume"
@@ -22,6 +22,9 @@ import {
     HighlightedResumeText,
 } from "./resumeCharts"
 import { fetchOptimizations } from "./optimizerService"
+import ResumeTour from "~/components/tutorial-tour/ResumeTour";
+
+const PdfViewer = lazy(() => import("./PdfViewer"));
 
 function OnFailedUpload() {
     console.log("Failed Upload");
@@ -43,6 +46,7 @@ export default function ResumeUpload() {
             <Instructions />
             <ViewSwitcher />
             <br />
+            <ResumeTour />
         </main>
 
 
@@ -69,16 +73,17 @@ function ViewSwitcher() {
     const [resumeText, setResumeText] = useState("")
     const [resumeFileName, setResumeFileName] = useState("")
     const [jobDescription, setJobDescription] = useState("")
+    const [resumeFile, setResumeFile] = useState<File | null>(null)
 
     switch (uploadState) {
         case UploadPageState.UPLOAD:
-            return (<UploadBox changeState={setUploadState} changeResumeText={setResumeText} changeResumeFileName={setResumeFileName} />);
+            return (<UploadBox changeState={setUploadState} changeResumeText={setResumeText} changeResumeFileName={setResumeFileName} changeResumeFile={setResumeFile} />);
 
         case UploadPageState.ADD_JOB_DESC:
             return (<AddJobDescriptionBox changeState={setUploadState} changeFeedbackData={setFeedbackData} resumeText={resumeText} resumeFileName={resumeFileName} changeJobDescription={setJobDescription} />);
 
         case UploadPageState.FEEDBACK:
-            return (<ViewFeedbackBox changeState={setUploadState} data={feedbackData} jobDescription={jobDescription} resumeText={resumeText} />);
+            return (<ViewFeedbackBox changeState={setUploadState} data={feedbackData} jobDescription={jobDescription} resumeText={resumeText} resumeFile={resumeFile} />);
     }
 }
 
@@ -114,10 +119,11 @@ function Instructions() {
     )
 }
 
-function UploadBox({ changeState, changeResumeText, changeResumeFileName }: {
+function UploadBox({ changeState, changeResumeText, changeResumeFileName, changeResumeFile }: {
     changeState: React.Dispatch<React.SetStateAction<UploadPageState>>;
     changeResumeText: React.Dispatch<React.SetStateAction<string>>;
     changeResumeFileName: React.Dispatch<React.SetStateAction<string>>;
+    changeResumeFile: React.Dispatch<React.SetStateAction<File | null>>;
 }) {
 
     const [isEmpty, setEmpty] = useState(false);
@@ -145,6 +151,7 @@ function UploadBox({ changeState, changeResumeText, changeResumeFileName }: {
             console.log("Upload successful:", result.fileName, `(${result.textLength} chars)`);
             changeResumeText(result.extractedText);
             changeResumeFileName(result.fileName);
+            changeResumeFile(result.file);
 
             changeState(UploadPageState.ADD_JOB_DESC);
         } catch (error: any) {
@@ -154,7 +161,7 @@ function UploadBox({ changeState, changeResumeText, changeResumeFileName }: {
     };
 
     return (
-        <div className="w-1/2 border border-gray-200 rounded-lg overflow-hidden">
+        <div id="tour-upload-box" className="w-1/2 border border-gray-200 rounded-lg overflow-hidden">
             <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
                 <h2 className="text-gray-900 m-0">Upload Your Resume</h2>
             </div>
@@ -166,7 +173,7 @@ function UploadBox({ changeState, changeResumeText, changeResumeFileName }: {
                     <>
                         <div className="flex flex-col items-center gap-3 border-2 border-dashed border-gray-200 rounded-lg w-full py-8 px-4">
                             <span className="text-4xl text-gray-300">↑</span>
-                            <button className="orange_button" onClick={UploadResumeButton}>Upload Resume</button>
+                            <button id="tour-upload-btn" className="orange_button" onClick={UploadResumeButton}>Upload Resume</button>
                             <p className="text-gray-400 text-xs m-0">.pdf, .docx, or .txt</p>
                         </div>
 
@@ -195,18 +202,27 @@ function AddJobDescriptionBox(
 ) {
 
     const [isEmpty, setEmpty] = useState(false);
+    const [isCompanyEmpty, setCompanyEmpty] = useState(false);
     const [isLoading, setLoading] = useState(false);
+    const [companyName, setCompanyName] = useState("");
 
     const AddJobDescButton = async () => {
         try {
+            if (companyName.trim() == "") {
+                setCompanyEmpty(true);
+                return;
+            }
+
             if (template == "") {
                 setEmpty(true);
                 return;
             }
 
+            setCompanyEmpty(false);
+
             setLoading(true);
 
-            const result = await OnAddJobDescriptionClicked(resumeText, template, resumeFileName);
+            const result = await OnAddJobDescriptionClicked(resumeText, template, resumeFileName, companyName);
 
             setLoading(false);
 
@@ -233,6 +249,17 @@ function AddJobDescriptionBox(
                 ) : (
                     <>
                         <textarea
+                            className={`w-full h-10 border rounded-lg p-3 text-sm text-gray-800 resize-none focus:outline-none focus:border-orange-400 ${isCompanyEmpty ? "border-red-400" : "border-gray-200"}`}
+                            placeholder="Company / role name..."
+                            value={companyName}
+                            onChange={(e) => { setCompanyName(e.target.value); setCompanyEmpty(false); }}
+                            rows={1}
+                        />
+                        {isCompanyEmpty && (
+                            <p className="text-red-500 text-sm -mt-2 m-0">Please enter a company or role name.</p>
+                        )}
+
+                        <textarea
                             className="w-full h-40 border border-gray-200 rounded-lg p-3 text-sm text-gray-800 resize-none focus:outline-none focus:border-orange-400"
                             placeholder="Paste a job description here..."
                             value={template}
@@ -246,7 +273,13 @@ function AddJobDescriptionBox(
                                     name="Templates"
                                     id="templates"
                                     className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 bg-white focus:outline-none focus:border-orange-400"
-                                    onChange={(e) => setTemplate(JOB_DESCRIPTION_TEMPLATES[e.target.value as JobDescriptionTemplate])}
+                                    onChange={(e) => {
+                                        const key = e.target.value as JobDescriptionTemplate;
+                                        setTemplate(JOB_DESCRIPTION_TEMPLATES[key]);
+                                        if (key !== JobDescriptionTemplate.NONE) {
+                                            setCompanyName(JOB_DESCRIPTION_LABELS[key]);
+                                        }
+                                    }}
                                 >
                                     {Object.values(JobDescriptionTemplate).map((key) => (
                                         <option key={key} value={key}>{JOB_DESCRIPTION_LABELS[key]}</option>
@@ -270,11 +303,12 @@ function AddJobDescriptionBox(
 
 // ─── Main feedback view ───────────────────────────────────────────────────────
 
-function ViewFeedbackBox({ changeState, data, jobDescription, resumeText }: {
+function ViewFeedbackBox({ changeState, data, jobDescription, resumeText, resumeFile }: {
     changeState: React.Dispatch<React.SetStateAction<UploadPageState>>;
     data: FeedbackItem[];
     jobDescription: string;
     resumeText: string;
+    resumeFile: File | null;
 }) {
     const [activeTab, setActiveTab] = useState<"report" | "jobdesc" | "optimizer">("report");
 
@@ -391,22 +425,33 @@ function ViewFeedbackBox({ changeState, data, jobDescription, resumeText }: {
                     {activeTab === "optimizer" && (
                         <div className="flex gap-4 flex-1 min-h-0 w-full">
 
-                            {/* Left — Resume with highlights */}
+                            {/* Left — Resume (PDF canvas view or plain text fallback) */}
                             <div className="flex flex-col flex-1 min-w-0 border border-gray-200 rounded-lg overflow-hidden">
                                 <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center flex-shrink-0">
                                     <h4 className="text-gray-800 m-0 text-sm font-semibold">Your Resume</h4>
                                 </div>
-                                <div className="flex-1 overflow-y-auto p-4 text-gray-800 text-xs leading-6 whitespace-pre-wrap font-mono bg-white">
-                                    <HighlightedResumeText
-                                        text={resumeText}
-                                        highlights={optimizerResult
-                                            ? optimizerResult.suggestions
-                                                .filter(s => !!s.originalText)
-                                                .map(s => s.originalText)
-                                            : []
-                                        }
-                                    />
-                                </div>
+                                {resumeFile?.type === "application/pdf" ? (
+                                    <Suspense fallback={
+                                        <div className="flex flex-col items-center justify-center flex-1 gap-3">
+                                            <div className="w-7 h-7 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
+                                            <p className="text-gray-500 text-sm m-0">Loading viewer...</p>
+                                        </div>
+                                    }>
+                                        <PdfViewer file={resumeFile} />
+                                    </Suspense>
+                                ) : (
+                                    <div className="flex-1 overflow-y-auto p-4 text-gray-800 text-xs leading-6 whitespace-pre-wrap font-mono bg-white">
+                                        <HighlightedResumeText
+                                            text={resumeText}
+                                            highlights={optimizerResult
+                                                ? optimizerResult.suggestions
+                                                    .filter(s => !!s.originalText)
+                                                    .map(s => s.originalText)
+                                                : []
+                                            }
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             {/* Right — Suggestions */}
@@ -422,7 +467,6 @@ function ViewFeedbackBox({ changeState, data, jobDescription, resumeText }: {
                                     {/* Pre-run */}
                                     {!optimizerResult && !optimizerLoading && !optimizerError && (
                                         <div className="flex flex-col items-center gap-4 p-8 text-center">
-                                            <span className="text-4xl">✨</span>
                                             <div>
                                                 <p className="text-gray-700 text-sm font-medium m-0 mb-1">Resume Optimizer</p>
                                                 <p className="text-gray-400 text-xs m-0">Lines to improve will be highlighted red in your resume.</p>

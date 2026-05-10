@@ -1,14 +1,10 @@
 ﻿//Author: Brandon Christian
-//Date: 1-30-2026
-//Handle API or DB requests between the user and the server
+//Date: 1-30-2026-1/31/2026
+//Handles API or DB requests between the user and the server
+//and send result to client
 
-//Date: 1-31-2026
-//Send result to client
-
-//Date: 2/17/2026
+//Date: 2/17/2026-2/19/2026
 //GET prompt from DB
-
-//Date: 2/19/2026
 //Change api point "store" to "end"
 
 //Alexander Tu
@@ -171,6 +167,15 @@ async function SendToServer(sessionId: string, data: Blob, apiURL: string, formD
     console.log("got response from " + apiURL);
 
     return response;
+
+    //Convert json to FeedbackItem objects
+    /*const responseData = await response.json();
+    const fbItems: FeedbackItem[] = AnalysisResultToFBItems(JSON.stringify(responseData));
+
+    console.log("convert to fbItems from  " + apiURL);
+
+    //send to end.tsx
+    return fbItems;*/
 }
 
 

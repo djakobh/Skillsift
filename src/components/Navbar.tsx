@@ -38,11 +38,11 @@ export default function Navbar() {
   };
 
   const leftNavLinks = [
-    { href: "/resume", label: "Resume Scanner" },
-    { href: "/interview/behavioral", label: "Behavioral" },
-    { href: "/technical", label: "Technical" },
-    { href: "/jobs", label: "Job Tracker" },
-    { href: "/history", label: "History" },
+    { href: "/resume", label: "Resume Scanner", id: "nav-resume" },
+    { href: "/interview/behavioral", label: "Behavioral", id: "nav-behavioral" },
+    { href: "/technical", label: "Technical", id: "nav-technical" },
+    { href: "/jobs", label: "Job Tracker", id: "nav-jobs" },
+    { href: "/history", label: "History", id: "nav-history" },
   ];
 
   const rightNavLinks = [
@@ -70,6 +70,7 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
+                  id={link.id}
                   className={`rounded px-3 py-2 transition-colors ${
                     pathname === link.href
                       ? "bg-orange-500 text-white"
@@ -87,6 +88,7 @@ export default function Navbar() {
             {session?.user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
+                  id="nav-account"
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center justify-center rounded-full border-2 border-orange-500 p-2 text-orange-500 transition-colors hover:bg-orange-50"
                   aria-label="Account Menu"

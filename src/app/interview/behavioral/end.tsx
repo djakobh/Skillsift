@@ -11,13 +11,13 @@ import { useState, useEffect, useRef } from "react";
 import styles from "./test.module.css";
 import React from "react";
 import type { ReactNode } from "react";
-import { FeedbackCategory } from "./feedbackItem";
 import type { FeedbackItem } from "./feedbackItem";
 import { BIPageState } from "./main";
 import { SendAudioVideoToServer, EndSession, PauseSession } from "./behavioralService";
 import VideoPlayerWithOverlay from "../../../components/VideoPlayerWithOverlay";
+import { DisplayFeedbackItems } from "./feedbackDisplay";
 
-//TODO: have to refactor to combine audio and video data into one call
+
 export function BIEnd({ changeState, waitForAudio, waitForVideo, sessionId, usePause }: {
     changeState: React.Dispatch<React.SetStateAction<BIPageState>>;
     usePause: boolean;
@@ -48,6 +48,8 @@ export function BIEnd({ changeState, waitForAudio, waitForVideo, sessionId, useP
             }
         };
     }, [videoUrl]);
+
+    const effectHasRun = useRef(false);
 
     useEffect(() => { //Call once on page state load
 
@@ -88,7 +90,7 @@ export function BIEnd({ changeState, waitForAudio, waitForVideo, sessionId, useP
                 else {
 
                     const result = await SendAudioVideoToServer(sessionId, audioData, videoData); //await for the audio data to be uploaded
-                    const updatedSession = await EndSession(sessionId);   //update session with completed state
+                    await EndSession(sessionId);   //update session with completed state
 
                     console.log("Completed audio upload and session end.");
                     console.log("RAW ANALYSIS:", result.rawVideoAnalysis);
@@ -168,8 +170,7 @@ export function BIEnd({ changeState, waitForAudio, waitForVideo, sessionId, useP
                                 </div>
                             )
                         )}
-                    </div>
-                </div>
+                    </div>                </div>
             );
 
         };
@@ -219,7 +220,8 @@ export function BIEnd({ changeState, waitForAudio, waitForVideo, sessionId, useP
             {!loading && !error && (
                 <div className={`${styles.centered_column} w-full`}>
                     <button className="orange_button" onClick={RestartInterviewButton}>Restart Interview</button>
-                     <DataDisplay data={data} />
+                    {/* <DataDisplay data={data} /> */}
+                    <DisplayFeedbackItems items={data}/>
                 </div>
             )}
 

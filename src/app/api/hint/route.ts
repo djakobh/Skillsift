@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "~/server/auth";
 
 export async function POST(req: Request) {
+  console.log("Key prefix:", process.env.GEMINI_API_KEY?.slice(0, 8));
   try {
     const session = await auth();
 
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
     const data = await response.json();
     const hintText =
       data.candidates?.[0]?.content?.parts?.[0]?.text ?? "Could not generate hint.";
-
+    console.log("Gemini response:", JSON.stringify(data));
     return NextResponse.json({ hint: hintText });
   } catch (err) {
     console.error("HINT GENERATION ERROR:", err);

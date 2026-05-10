@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ProcessAudioToText, ProcessTextToTokens } from "./audioProcess";
 import { db } from "~/server/db";
+import { TestAnalyzeVolume } from "../analyze/analyze";
 
 export async function POST(req: NextRequest) {
 
@@ -44,15 +45,14 @@ export async function POST(req: NextRequest) {
 
     const tokensByCount = ProcessTextToTokens(text);
 
+    //TODO: replace with full analysis
+    //for now, test volume, output to console
+    const audioFeedbackItems = await TestAnalyzeVolume(audio, tokensByCount, text);
 
-    //TODO: send processed results to Behavioral Analysis
 
-    //TODO: test items in place of actual data
-    const test_items = [
-        { category: "Notes", content: text, score: 0 }
-
-    ];
+    //TODO: combine audioFeedbackItems with video feedbackItems
+    
 
     //send to behavioralSerice.tsx
-    return NextResponse.json(test_items);
+    return NextResponse.json(audioFeedbackItems);
 }

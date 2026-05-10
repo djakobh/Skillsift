@@ -9,6 +9,7 @@ import { useInterviewSession, type SessionResponse } from "./useInterviewSession
 import type { TestResult } from "~/lib/testHarness";
 import type { QuestionSummary } from "~/app/api/questions/route";
 import DraggableNotepad from "./_components/DraggableNotepad";
+import TechnicalTour from "~/components/tutorial-tour/TechnicalTour";
 
 type SolutionsMap = Record<string, Record<string, string>>;
 
@@ -328,12 +329,12 @@ export default function TechnicalInterviewViewSwitcher({
               </p>
             </div>
             <div className="flex flex-col items-end gap-1">
-              <span className="font-semibold">Time Remaining: {formatTime(timeLeft)}</span>
+              <span id="tour-timer" className="font-semibold">Time Remaining: {formatTime(timeLeft)}</span>
               <SessionBadge />
             </div>
           </div>
 
-          <div className="max-w-2xl mx-auto mt-10 border rounded-lg">
+          <div id="tour-question-list" className="max-w-2xl mx-auto mt-10 border rounded-lg">
             <div className="bg-orange-500 text-white px-4 py-2 font-semibold">
               Technical Skill Testing
             </div>
@@ -365,6 +366,7 @@ export default function TechnicalInterviewViewSwitcher({
               </div>
             ))}
           </div>
+          <TechnicalTour />
         </main>
       );
 

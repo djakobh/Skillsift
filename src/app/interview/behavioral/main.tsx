@@ -16,7 +16,7 @@ import { GetPrompt, CreateSession } from "./behavioralService";
 import { BIStart } from "./start";
 import { BIActive } from "./active";
 import { BIEnd } from "./end";
-
+import BehavioralTour from "~/components/tutorial-tour/BehavioralTour";
 
 //-------------------------------------
 //  Functionality
@@ -79,6 +79,7 @@ export function BehavioralInterview() {
             </p>
             <ViewSwitcher />
             <br />
+            <BehavioralTour />
         </main>
 
 

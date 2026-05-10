@@ -11,7 +11,7 @@ export async function POST(
     request: NextRequest,
     { params }: { params: { sessionId: string } }
 ) {
-    const { sessionId } = params;
+    const { sessionId } =  params;
 
     const session = await auth();
 

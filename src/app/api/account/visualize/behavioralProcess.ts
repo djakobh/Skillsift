@@ -17,11 +17,15 @@ import type { GraphPoint, GraphItem  } from "./generalProcess";
 
 export function GraphItemsFromBehavioralScore(sessions: any[]) {
 
+    console.log("Begin GraphItemsFromBehavioralScore");
+
     const gpByCategory: Record<string, GraphPoint[]> = GraphPointsFromBehavioralScore(sessions);
     const graphItems: GraphItem[] = []
 
     Object.entries(gpByCategory).forEach(
         ([category, graphPoints]) => {
+            console.log("GraphItemsFromBehavioralScore for " + category);
+
             graphItems.push(CreateGraphItem(graphPoints, category, GraphType.BEHAVIORAL));
         }
     );
@@ -34,9 +38,13 @@ function GraphPointsFromBehavioralScore(sessions: any[]) {
     const overallAveragesByCategoryAndDate : Record<string, Record<number, number>> = GraphByBehavioralScore(sessions);
     const graphPointsByCategory: Record<string, GraphPoint[]> = {};
 
+    console.log("Begin GraphPointsFromBehavioralScore");
+
     //for every category
     Object.entries(overallAveragesByCategoryAndDate).forEach(
         ([category, byDate]) => {
+
+            console.log("GraphItemsFromBehavioralScore for " + category);
 
             graphPointsByCategory[category] = OverallAveragesToGraphPoints(byDate);
 
@@ -70,8 +78,10 @@ function GraphByBehavioralScore(sessions: any[]) {
     //group those further by date
     //for each category
     //turn into graph points of average score on each day
-    //convert those points into 
+    //convert those points into
     //average score over time
+
+    console.log("Begin GraphByBehavioralScore");
 
     const filtered = FilterByType(sessions, "BEHAVIORAL");
     const byCategoryAndDate: Record<string, Record<number, any[]>> = GroupByFeedbackCategoryThenDate(filtered);
@@ -80,6 +90,8 @@ function GraphByBehavioralScore(sessions: any[]) {
 
     Object.entries(byCategoryAndDate).forEach(
         ([category, byDate]) => {
+
+            console.log("GraphByBehavioralScore for " + category);
 
             //get averages per day first
             const averagesByDay: Record<number, number> = AverageByDay(category, byDate);
@@ -146,11 +158,19 @@ function GetFeedbackScore(session: any, category: string) {
 
     //Don't use for each to search because the return from
     //it doesnt return fully
-    if (feedback && category in feedback) {
-        return Number(feedback[category]);
+    //if (feedback && category in feedback) {
+    if (feedback) {
+
+        const found = feedback.find((item: any) => item.key === category);
+
+        console.log("GetFeedbackScore " + found.score);
+
+        return found ? found.score : 0;
+
+        //return Number(feedback[category]);
     }
 
-    return 0;
+    return -1;
 }
 
 function GroupByFeedbackCategoryThenDate(sessions: any[]) {
@@ -187,8 +207,24 @@ function GroupByFeedbackCategory(sessions: any[]) {
 
             //if there is feedback, for every kv pair in the feedback
             if (feedback) {
-                Object.entries(feedback).forEach(
-                    ([key, value]) => {
+                //Object.entries(feedback).forEach(
+                feedback.forEach(
+                    (item: any) => {
+
+                        console.log("GroupByFeedbackCategory try item");
+
+                        //refactor to be based on the key, score, notes format of objects
+                        //push the session to that type of category
+                        //add the category if it doesnt exist
+                        if (item.key != null && item.score != null) {
+
+                            console.log("GroupByFeedbackCategory for " + item.key);
+
+                            (byCategory[item.key] ??= []).push(session);
+                        }
+                    }
+
+                    /*([key, value]) => {
 
                         //skip categories that don't use numbers as values
                         //push the session to that type of category
@@ -196,7 +232,7 @@ function GroupByFeedbackCategory(sessions: any[]) {
                         if (typeof value === "number")
                             (byCategory[key] ??= []).push(session);
 
-                    }
+                    }*/
                 );
             }
 

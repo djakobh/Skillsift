@@ -90,7 +90,8 @@ async function SetupAudioAsync(
         {
             console.log("Start audio recording")
 
-            let mediaRecorder: MediaRecorder = new MediaRecorder(stream);
+            const options = { mimeType: 'audio/webm' };  //Ensure webm format of audio
+            let mediaRecorder: MediaRecorder = new MediaRecorder(stream, options);
             let chunks: Blob[] = StartRecording(mediaRecorder);
 
             //return cleanup function that stops the audio and sends it to the server

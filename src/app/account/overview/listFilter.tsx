@@ -56,8 +56,6 @@ export function FilterDisplay({ filterType, setFilterType }: {
                 onChange={(e) => setFilterType(e.target.value)}
             >
                 <option value="all">All</option>
-                <option value="behavioral">Behavioral</option>
-                <option value="technical">Technical</option>
                 <option value="favorite">Favorite</option>
                 <option value="completed">Completed</option>
             </select>
@@ -66,15 +64,15 @@ export function FilterDisplay({ filterType, setFilterType }: {
     );
 }
 
-export function FilterItems(startDate: string, endDate: string, filterType: string, items: InterviewItem[]) {
+export function FilterItems(startDate: string, endDate: string, filterType: string, items: any[]) {
     const start = StringToTimestamp(startDate);
     const end = StringToTimestamp(endDate);
 
-    let filteredByDate: InterviewItem[] = items;
+    let filteredByDate: any[] = items;
 
     if (start != -1 && end != -1) {
 
-        const byDate: InterviewItem[] = [];
+        const byDate: any[] = [];
 
         filteredByDate.forEach((item) => {
             const timestamp = new Date(item.startedAt).getTime();
@@ -89,7 +87,7 @@ export function FilterItems(startDate: string, endDate: string, filterType: stri
         filteredByDate = byDate;
     }
 
-    let finalFilter: InterviewItem[] = filteredByDate;
+    let finalFilter: any[] = filteredByDate;
 
     filteredByDate.forEach((item) => {
 
@@ -101,16 +99,16 @@ export function FilterItems(startDate: string, endDate: string, filterType: stri
         //do nothing
     }
     else if (filterType == "favorite") {
-        finalFilter = items.filter(item => item.isFavorite == true);
+        finalFilter = filteredByDate.filter(item => item.isFavorite == true);
     }
     else if (filterType == "completed") {
-        finalFilter = items.filter(item => item.status == "COMPLETED");
+        finalFilter = filteredByDate.filter(item => item.status == "COMPLETED");
     }
     else if (filterType == "behavioral") {
-        finalFilter = items.filter(item => item.type == "BEHAVIORAL");
+        finalFilter = filteredByDate.filter(item => item.type == "BEHAVIORAL");
     }
     else if (filterType == "technical") {
-        finalFilter = items.filter(item => item.type == "TECHNICAL");
+        finalFilter = filteredByDate.filter(item => item.type == "TECHNICAL");
     }
 
     return finalFilter;

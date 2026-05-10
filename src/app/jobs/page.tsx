@@ -10,7 +10,9 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Briefcase, Plus, Search, ChevronDown, Trash2, ExternalLink, ArrowUpDown } from "lucide-react";
+import { Briefcase, Plus, Search, ChevronDown, Trash2, ExternalLink, ArrowUpDown, Sparkles } from "lucide-react";
+import JobSuggestions from "./_components/JobSuggestions";
+import JobsTour from "~/components/tutorial-tour/JobsTour";
 
 // TypeScript type matching the JobApplication Prisma model
 type JobApplication = {
@@ -613,13 +615,24 @@ export default function JobsPage() {
               Track your job applications and monitor your progress.
             </p>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-orange-600"
-          >
-            <Plus className="h-4 w-4" />
-            Add Job
-          </button>
+          <div className="flex items-center gap-3">
+            <a
+              id="tour-suggestions"
+              href="#suggestions"
+              className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              <Sparkles className="h-4 w-4 text-orange-500" />
+              See Suggestions
+            </a>
+            <button
+              id="tour-add-job"
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-orange-600"
+            >
+              <Plus className="h-4 w-4" />
+              Add Job
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -786,6 +799,9 @@ export default function JobsPage() {
             </div>
           )}
         </div>
+
+        {/* Adzuna-powered suggestions embedded below the tracker */}
+        <JobSuggestions onJobAdded={fetchJobs} />
       </div>
 
       {/* Modals */}
@@ -798,6 +814,7 @@ export default function JobsPage() {
       {deletingJob && (
         <DeleteConfirmModal job={deletingJob} onClose={() => setDeletingJob(null)} onDeleted={handleDeleted} />
       )}
+      <JobsTour />
     </main>
   );
 }

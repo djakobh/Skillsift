@@ -6,6 +6,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
+import Tutorial from "~/components/tutorial-tour/Tutorial";
 
 export default function Home() {
   const { data: session } = useSession();
@@ -47,6 +48,11 @@ export default function Home() {
             </Link>
           </>
         )}
+
+        {/* Tutorial button */}
+        <div className="mt-6">
+          <Tutorial />
+        </div>
       </div>
 
       {/* Feature Cards Section */}

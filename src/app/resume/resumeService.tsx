@@ -32,7 +32,7 @@ export async function SendResumeToServer(file: File) {
     return response;
 }
 
-export async function SendResumeTextAndJobDescToServer(resumeText: string, jobDescText: string, resumeFileName: string) {
+export async function SendResumeTextAndJobDescToServer(resumeText: string, jobDescText: string, resumeFileName: string, companyName?: string) {
 
     /* Send the resume text string back to the server as well as the job description
     At this point we should perform an analysis of the resume and job desc and receive that
@@ -45,6 +45,7 @@ export async function SendResumeTextAndJobDescToServer(resumeText: string, jobDe
             resumeText,
             jobDescription: jobDescText,
             resumeFileName,
+            companyName,
         })
     });
 

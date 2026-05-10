@@ -235,13 +235,13 @@ async function AverageFeedbackItems(base_items: FeedbackItem[], sessionId: strin
 
             const key = item.category;
 
-            if (totals[key] && counts[key]) {
+            if (totals[key] != null && counts[key] != null) {
                 item.score = totals[key] / counts[key];
             }
         }
     )
 
-    return final_items;
+    return base_items;
 }
 
 /*

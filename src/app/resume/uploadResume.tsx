@@ -11,6 +11,7 @@ interface UploadResult {
     fileName: string;
     extractedText: string;
     textLength: number;
+    file: File;
 }
 
 interface UploadError {
@@ -45,6 +46,7 @@ export async function OnUploadResumeClicked(): Promise<UploadResponse>  {
             fileName: result.data.fileName,
             extractedText: result.data.extractedText,
             textLength: result.data.textLength,
+            file,
         };
 
     } catch (err) {
@@ -89,11 +91,12 @@ async function WaitForFile(): Promise<File> {
 export async function OnAddJobDescriptionClicked(
     resumeText: string,
     jobDesc: string,
-    resumeFileName: string
+    resumeFileName: string,
+    companyName?: string
 ): Promise<FeedbackItem[]> {
 
     //Send resume and job desc to server to be analyzed
-    const response = await SendResumeTextAndJobDescToServer(resumeText, jobDesc, resumeFileName);
+    const response = await SendResumeTextAndJobDescToServer(resumeText, jobDesc, resumeFileName, companyName);
     const result = await response.json();
 
     if (!result.success) {

@@ -4,8 +4,6 @@
 // Date: 1-30-2026
 // Refactored from CS to be JS instead
 
-import type { Dict } from "@trpc/server";
-
 class TokenizeText {
     // INPUT: string containing the textified audio
     // OUTPUT: object mapping tokens by count
@@ -42,7 +40,7 @@ class TokenizeText {
     // INPUT: list of non-unique tokens ordered by appearance
     // OUTPUT: object of tokens as keys and their count as values
     static groupTokens(allTokens: string[]) {
-        const tokensByCount: Dict<number> = {};
+        const tokensByCount: Record<string, number> = {};
 
         for (const t of allTokens) {
             const normalized = TokenizeText.normalizeToken(t);

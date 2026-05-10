@@ -70,3 +70,6 @@ tmp_uploads/
 #virtual environment
 venv/
 venv310/
+
+#context of project
+usecases.md
