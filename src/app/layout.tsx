@@ -13,6 +13,8 @@ import { TRPCReactProvider } from "~/trpc/react";
 import Navbar from "~/components/Navbar";
 import SessionProvider from "~/components/SessionProvider";
 import ChatWidget from "~/components/ChatWidget";
+import { auth } from "~/server/auth";
+import { db } from "~/server/db";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -25,23 +27,43 @@ const geist = Geist({
   variable: "--font-geist-sans",
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const session = await auth();
+
+  let fontScale = 1.0;
+
+  if (session?.user?.email) {
+    const user = await db.user.findUnique({
+      where: { email: session.user.email },
+      include: { settings: true },
+    });
+
+    if (typeof user?.settings?.fontScale === "number") {
+      fontScale = user.settings.fontScale;
+    }
+  }
+
   return (
     <html lang="en" className={`${geist.variable}`}>
-      {/* suppressHydrationWarning: Grammarly and similar extensions inject
-          attributes (data-gr-ext-installed, data-new-gr-c-s-check-loaded)
-          onto <body> before React hydrates, which otherwise triggers a
-          hydration mismatch warning. */}
-      <body suppressHydrationWarning>
-        <TRPCReactProvider>
-          <SessionProvider>
-            <Navbar />
-            {children}
-            <ChatWidget />
-          </SessionProvider>
-        </TRPCReactProvider>
+      <body>
+        <div
+          style={
+            {
+              "--font-scale": fontScale,
+              fontSize: "calc(16px * var(--font-scale, 1))",
+            } as React.CSSProperties
+          }
+        >
+          <TRPCReactProvider>
+            <SessionProvider>
+              <Navbar />
+              {children}
+              <ChatWidget />
+            </SessionProvider>
+          </TRPCReactProvider>
+        </div>
       </body>
     </html>
   );

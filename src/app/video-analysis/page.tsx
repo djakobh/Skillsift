@@ -46,8 +46,7 @@ export default function VideoAnalysisPage() {
         throw new Error(JSON.stringify(data, null, 2));
       }
 
-      setVideoId(data.videoId);
-      setAnalysis(data.analysis);
+      window.location.href = `/video-analysis/${data.videoId}`;
     } catch (e: any) {
       setError(e?.message ?? String(e));
     } finally {

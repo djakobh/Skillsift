@@ -21,13 +21,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { prefersDarkMode, languagePref } = await request.json();
+  const { prefersDarkMode, languagePref, fontScale } = await request.json();
 
   const updated = await db.userSettings.update({
     where: { userId: session.user.id },
     data: {
       ...(typeof prefersDarkMode === "boolean" && { prefersDarkMode }),
       ...(typeof languagePref === "string" && { languagePref }),
+      ...(typeof fontScale === "number" && { fontScale }),
     },
   });
 

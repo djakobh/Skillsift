@@ -7,15 +7,59 @@
 //GET prompt from DB
 //Change api point "store" to "end"
 
-//Date: 4/6/2026-4/14/2026
-//Volume analysis
-//esponse feedback reformat
-
+//Alexander Tu
+//Date: 04/25/26
+//updated to handle object shape uploadVideo.ts
 
 import type { FeedbackItem } from "./feedbackItem";
 import { CombineFeedback } from "./feedbackItem";
-import { AnalysisResultToFBItems, CreateFeedbackItem } from "./feedbackItem";
-import type { AnalysisResponse, VolumeAnalysisResponse, FillerAnalysisResponse, BasicAnalysisResponse } from "../../api/behavioral/analyze/analysisResponse";
+import { AnalysisResultToFBItems } from "./feedbackItem";
+import type {
+    AnalysisResponse,
+    VolumeAnalysisResponse,
+    FillerAnalysisResponse,
+    BasicAnalysisResponse
+} from "../../api/behavioral/analyze/analysisResponse";
+
+type RawVideoAnalysis = {
+    summary?: {
+        video?: {
+            sample_fps?: number;
+            sampled_frames?: number;
+        };
+        posture?: {
+            valid_frames?: number;
+            good_frames?: number;
+            good_percent?: number;
+        };
+        eye_contact?: {
+            valid_frames?: number;
+            good_frames?: number;
+            good_percent?: number;
+        };
+        facial_expression?: {
+            valid_frames?: number;
+            good_frames?: number;
+            good_percent?: number;
+        };
+    };
+    segments?: Array<{
+        id?: string;
+        category: string;
+        startSec: number;
+        endSec: number;
+        isGood: boolean;
+        scoreAvg?: number | null;
+        note?: string | null;
+        createdAt?: string;
+    }>;
+    error?: string;
+};
+
+type UploadResult = {
+    feedback: FeedbackItem[];
+    rawAnalysis?: RawVideoAnalysis;
+};
 
 //Wrapper function to simplify calls to behavioral service
 export async function SendAudioVideoToServer(sessionId: string, audioData: Blob, videoData: Blob) {
@@ -24,8 +68,9 @@ export async function SendAudioVideoToServer(sessionId: string, audioData: Blob,
     const videoAnalysisResponse = await SendToServer(sessionId, videoData, "/api/behavioral/uploadVideo", "video");
 
     const audioFeedback = await AudioAnalysisToFBItem(audioAnalysisResponse);
-    const videoFeedback = await VideoAnalysisToFBItem(videoAnalysisResponse);
-    const allFeedback = CombineFeedback(audioFeedback, videoFeedback);
+    const videoResult = await VideoAnalysisToFBItem(videoAnalysisResponse);
+
+    const allFeedback = CombineFeedback(audioFeedback, videoResult.feedback);
 
     const formData = new FormData();
 
@@ -40,8 +85,10 @@ export async function SendAudioVideoToServer(sessionId: string, audioData: Blob,
         body: formData
     });
 
-    //return the data to the user
-    return allFeedback;
+    return {
+        allFeedback,
+        rawVideoAnalysis: videoResult.rawAnalysis ?? null
+    };
 }
 
 async function AudioAnalysisToFBItem(audioAnalysisResponse: Response) {
@@ -50,7 +97,6 @@ async function AudioAnalysisToFBItem(audioAnalysisResponse: Response) {
     const volumeData: VolumeAnalysisResponse = audioAnalysisData.volumeAnalysis;
     const fillerData: FillerAnalysisResponse = audioAnalysisData.fillerAnalysis;
     const wordcountData: BasicAnalysisResponse = audioAnalysisData.wordCountAnalysis;
-
 
     const volumeFBItems: FeedbackItem[] = AnalysisResultToFBItems(
         JSON.stringify(volumeData.feedbackItems)
@@ -70,14 +116,32 @@ async function AudioAnalysisToFBItem(audioAnalysisResponse: Response) {
     return bc;
 }
 
-async function VideoAnalysisToFBItem(videoAnalysisResponse: Response) {
+async function VideoAnalysisToFBItem(videoAnalysisResponse: Response): Promise<UploadResult> {
     const videoResponseData = await videoAnalysisResponse.json();
-    const fbItems: FeedbackItem[] = AnalysisResultToFBItems(JSON.stringify(videoResponseData));
 
-    return fbItems;
+    // NEW format (with rawAnalysis)
+    if (videoResponseData.feedback) {
+        const fbItems: FeedbackItem[] = AnalysisResultToFBItems(
+            JSON.stringify(videoResponseData.feedback)
+        );
+
+        return {
+            feedback: fbItems,
+            rawAnalysis: videoResponseData.rawAnalysis
+        };
+    }
+
+    // OLD fallback format
+    const fbItems: FeedbackItem[] = AnalysisResultToFBItems(
+        JSON.stringify(videoResponseData)
+    );
+
+    return {
+        feedback: fbItems
+    };
 }
 
-async function SendToServer(sessionId: string, data: Blob, apiURL: string, formDataKey: string) {
+async function SendToServer(sessionId: string, data: Blob, apiURL: string, formDataKey: string): Promise<Response> {
     //Attach data to form data
     //in order to send it to the api
     console.log("Send blob to " + apiURL);
@@ -136,9 +200,7 @@ export async function GetPrompt() {
             success: true,
             prompt: "TODO: fill DB with prompts."
         });
-        //throw err;
     }
-    
 }
 
 //Various functions related to handling a behavioral session on the DB including
@@ -147,26 +209,14 @@ export async function GetPrompt() {
 export async function PauseSession(sessionId: string, audioData: Blob, videoData: any) {
     const formData = new FormData();
 
-    formData.append(
-        "audio",
-        audioData
-    );
-
-    formData.append(
-        "video",
-        videoData
-    );
-
-    formData.append(
-        "sessionId",
-        sessionId
-    );
-
+    formData.append("audio", audioData);
+    formData.append("video", videoData);
+    formData.append("sessionId", sessionId);
 
     const response = await fetch("/api/behavioral/pause", {
         method: "POST",
         body: formData
-    })
+    });
 
     return response.json();
 }
@@ -180,18 +230,17 @@ export async function AbandonSession(sessionId: string) {
 }
 
 export async function CreateSession(prompt: string) {
-    console.log("Creating session POST")
+    console.log("Creating session POST");
 
     const response = await fetch("/api/behavioral/create", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-
         body: JSON.stringify({ prompt }),
     });
 
-    console.log("Created session POST")
+    console.log("Created session POST");
 
     return response.json();
 }
@@ -223,10 +272,7 @@ export async function ResumeSession(sessionId: string) {
 export async function AnalyzeAudio(blob: Blob) {
     const formData = new FormData();
 
-    formData.append(
-        "audio",
-        blob
-    );
+    formData.append("audio", blob);
 
     const response = await fetch(`/api/behavioral/analyze`, {
         method: "POST",

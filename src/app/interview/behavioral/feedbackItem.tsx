@@ -4,6 +4,15 @@
 //Date: 1/31/2026
 //Separate into own file, conversion functions
 
+export enum FeedbackCategory {
+    NONE = "None",
+    NOTES = "Notes",
+    EYE_CONTACT = "Eye Contact",
+    CONFIDENCE = "Confidence",
+    QUALITY_OF_ANSWERS = "Quality of Answers",
+    SOCIABILITY = "Sociability",
+    CLEAR_SPEECH = "Clear Speech"
+}
 import type { AnalysisItem } from "../../api/behavioral/analyze/analysisItem";
 
 export type FeedbackItem = {
@@ -17,22 +26,32 @@ export type FeedbackItem = {
 
 export function AnalysisResultToFBItems(analysisJSON: string)
 {
-    const analysisItems: AnalysisItem[] = JSON.parse(analysisJSON);
+    const parsed = JSON.parse(analysisJSON);
 
+    // NEW: handle both formats safely
+    let analysisItems: any[];
+
+    if (Array.isArray(parsed)) {
+        // old format
+        analysisItems = parsed;
+    } else if (parsed.feedback && Array.isArray(parsed.feedback)) {
+        // new format
+        analysisItems = parsed.feedback;
+    } else {
+        console.error("Invalid analysis format:", parsed);
+        return [];
+    }
+
+    // FIX: don't pre-size array + push (that creates empty slots)
     const fbItems: FeedbackItem[] = [];
 
     analysisItems.forEach((element) => {
-
-        let category = element.category;
-        let content = element.content;
-        let score = element.score;
-        let graph = element.graph;
-
-        console.log("Create FBItem from analysisItem: " + element);
-
-        let fbItem: FeedbackItem = CreateFeedbackItem(category, content, score, graph);
+        const fbItem: FeedbackItem = CreateFeedbackItem(
+            element.category,
+            element.content,
+            element.score
+        );
         fbItems.push(fbItem);
-
     });
 
     return fbItems;
@@ -50,9 +69,5 @@ export function CreateFeedbackItem(acategory: string, acontent?: string, ascore?
 }
 
 export function CombineFeedback(a: FeedbackItem[], b: FeedbackItem[]) {
-    a.forEach((fbItem) => {
-        b.push(fbItem);
-    });
-
-    return b;
+    return [...b, ...a]; // cleaner + avoids mutation bugs
 }

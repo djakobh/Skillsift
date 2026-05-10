@@ -12,7 +12,10 @@ import { db } from "~/server/db";
 export const runtime = "nodejs";
 
 const execFileAsync = promisify(execFile);
-const UPLOAD_DIR = path.join(process.cwd(), "tmp_uploads");
+const UPLOAD_DIR =
+  process.env.UPLOAD_DIR
+    ? path.join(process.cwd(), process.env.UPLOAD_DIR)
+    : path.join(process.cwd(), "tmp_uploads");
 
 export async function POST(req: Request) {
   try {
@@ -59,9 +62,10 @@ export async function POST(req: Request) {
     const scriptPath = path.join(process.cwd(), "scripts", "analyze_video.py");
 
     const PYTHON_CMD =
-      process.platform === "win32"
+      process.env.PYTHON_PATH ||
+      (process.platform === "win32"
         ? path.join(process.cwd(), "venv310", "Scripts", "python.exe")
-        : path.join(process.cwd(), "venv310", "bin", "python");
+        : path.join(process.cwd(), "venv310", "bin", "python"));
 
     let analysis: any = null;
 
@@ -101,15 +105,34 @@ export async function POST(req: Request) {
         mimeType: file.type,
         sizeBytes: file.size,
         storageKey,
-        analysis,
+        analyzedAt: new Date(),
+        analysis: analysis.summary ?? analysis,
       },
     });
+
+    if (Array.isArray(analysis.segments) && analysis.segments.length > 0) {
+      await db.videoAnalysisSegment.createMany({
+        data: analysis.segments.map((segment: any) => ({
+          videoUploadId: row.id,
+          category: segment.category,
+          startSec: typeof segment.startSec === "number" ? segment.startSec : 0,
+          endSec: typeof segment.endSec === "number" ? segment.endSec : 0,
+          isGood: Boolean(segment.isGood),
+          scoreAvg:
+            typeof segment.scoreAvg === "number" ? segment.scoreAvg : null,
+          note: typeof segment.note === "string" ? segment.note : null,
+        })),
+      });
+    }
 
     return NextResponse.json({
       ok: true,
       videoId: row.id,
       playbackUrl: `/api/videos/${row.id}`,
       analysis: row.analysis,
+      segmentsSaved: Array.isArray(analysis.segments)
+        ? analysis.segments.length
+        : 0,
     });
   } catch (err: any) {
     console.error("behavioral-analyzer error:", err);
