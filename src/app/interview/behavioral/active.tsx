@@ -186,6 +186,3 @@ function Prompt(text: string, onConfirm: () => void, onDeny: () => void) {
         onDeny();
     }
 }
-
-
-

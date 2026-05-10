@@ -46,7 +46,11 @@ export async function POST(req: Request) {
     // Call python analyzer script
     const scriptPath = path.join(process.cwd(), "scripts", "analyze_video.py");
 
-    const PYTHON_CMD = process.platform === "win32" ? "py" : "python3";
+    const PYTHON_CMD =
+      process.env.PYTHON_PATH ||
+      (process.platform === "win32"
+        ? path.join(process.cwd(), "venv310", "Scripts", "python.exe")
+        : path.join(process.cwd(), "venv310", "bin", "python"));
 
     const { stdout, stderr } = await execFileAsync(
       PYTHON_CMD,

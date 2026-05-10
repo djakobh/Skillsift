@@ -1,4 +1,4 @@
-﻿//Author: Brandon Christian
+//Author: Brandon Christian
 //Date: 12/12/2025
 //Initial creation
 //Date: 1/31/2026
@@ -17,22 +17,31 @@ export type FeedbackItem = {
 
 export function AnalysisResultToFBItems(analysisJSON: string)
 {
-    const analysisItems: AnalysisItem[] = JSON.parse(analysisJSON);
+    const parsed = JSON.parse(analysisJSON);
+
+    // Handle both formats safely
+    let analysisItems: any[];
+
+    if (Array.isArray(parsed)) {
+        // old format
+        analysisItems = parsed;
+    } else if (parsed.feedback && Array.isArray(parsed.feedback)) {
+        // new format
+        analysisItems = parsed.feedback;
+    } else {
+        console.error("Invalid analysis format:", parsed);
+        return [];
+    }
 
     const fbItems: FeedbackItem[] = [];
 
     analysisItems.forEach((element) => {
-
-        let category = element.category;
-        let content = element.content;
-        let score = element.score;
-        let graph = element.graph;
-
-        console.log("Create FBItem from analysisItem: " + element);
-
-        let fbItem: FeedbackItem = CreateFeedbackItem(category, content, score, graph);
+        const fbItem: FeedbackItem = CreateFeedbackItem(
+            element.category,
+            element.content,
+            element.score
+        );
         fbItems.push(fbItem);
-
     });
 
     return fbItems;
@@ -46,13 +55,9 @@ export function CreateFeedbackItem(acategory: string, acontent?: string, ascore?
 
     const fbItem: FeedbackItem = { key: category, content: acontent, score: ascore, graph: agraph };
 
-    return fbItem   
+    return fbItem
 }
 
 export function CombineFeedback(a: FeedbackItem[], b: FeedbackItem[]) {
-    a.forEach((fbItem) => {
-        b.push(fbItem);
-    });
-
-    return b;
+    return [...b, ...a];
 }

@@ -16,7 +16,6 @@ import { BIStart } from "./start";
 import { BIActive } from "./active";
 import { BIEnd } from "./end";
 
-
 //-------------------------------------
 //  Functionality
 //-------------------------------------
@@ -144,5 +143,3 @@ function ViewSwitcher() {
             return (<BIEnd changeState={setPageState} waitForAudio={waitForAudio} waitForVideo={waitForVideo} sessionId={sessionId} usePause={usePause} />);
     }
 }
-
-

@@ -14,6 +14,7 @@ export function CameraBox({ recordVideo, storeVideoRef }: {
     recordVideo: boolean,
     storeVideoRef: React.RefObject<Blob | null>;
 }) {
+    //ref for the video component to display the current video frame
     const activeVideoRef = useRef<HTMLVideoElement | null>(null);
 
     const [error, setError] = useState<string | null>(null);

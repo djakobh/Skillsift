@@ -58,6 +58,7 @@ export default async function HistoryPage() {
 
           {/* Resume Analysis Card */}
           <div
+            id="tour-resume-card"
             className="page-animate border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden flex flex-col"
             style={{ animationDelay: "0.15s" }}
           >
@@ -115,6 +116,7 @@ export default async function HistoryPage() {
 
           {/* Technical Interview Card */}
           <div
+            id="tour-technical-card"
             className="page-animate border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden flex flex-col"
             style={{ animationDelay: "0.25s" }}
           >
@@ -133,6 +135,7 @@ export default async function HistoryPage() {
 
           {/* Behavioral Interview Card */}
           <div
+            id="tour-behavioral-card"
             className="page-animate border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden flex flex-col"
             style={{ animationDelay: "0.35s" }}
           >

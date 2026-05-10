@@ -27,6 +27,8 @@ export const env = createEnv({
     CODE_RUNNER_URL: z.string().url().optional(),
     ANALYZER_URL: z.string().url().optional(),
     ANALYZER_SECRET: z.string().optional(),
+    OLLAMA_BASE: z.string().url().default("http://localhost:11434"),
+    OLLAMA_MODEL: z.string().default("llama3.2"),
   },
 
   /**
@@ -58,6 +60,8 @@ export const env = createEnv({
     CODE_RUNNER_URL: process.env.CODE_RUNNER_URL,
     ANALYZER_URL: process.env.ANALYZER_URL,
     ANALYZER_SECRET: process.env.ANALYZER_SECRET,
+    OLLAMA_BASE: process.env.OLLAMA_BASE,
+    OLLAMA_MODEL: process.env.OLLAMA_MODEL,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

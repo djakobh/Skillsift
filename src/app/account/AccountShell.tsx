@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, Shield, Settings, Moon } from "lucide-react";
+import { User, Shield, Settings } from "lucide-react";
 import { useState } from "react";
 
 const sidebarItems = [

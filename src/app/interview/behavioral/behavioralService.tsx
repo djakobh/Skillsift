@@ -1,4 +1,4 @@
-﻿//Author: Brandon Christian
+//Author: Brandon Christian
 //Date: 1-30-2026-1/31/2026
 //Handles API or DB requests between the user and the server
 //and send result to client
@@ -9,7 +9,7 @@
 
 //Date: 4/6/2026-4/14/2026
 //Volume analysis
-//esponse feedback reformat
+//Response feedback reformat
 
 
 import type { FeedbackItem } from "./feedbackItem";
@@ -50,7 +50,6 @@ async function AudioAnalysisToFBItem(audioAnalysisResponse: Response) {
     const volumeData: VolumeAnalysisResponse = audioAnalysisData.volumeAnalysis;
     const fillerData: FillerAnalysisResponse = audioAnalysisData.fillerAnalysis;
     const wordcountData: BasicAnalysisResponse = audioAnalysisData.wordCountAnalysis;
-
 
     const volumeFBItems: FeedbackItem[] = AnalysisResultToFBItems(
         JSON.stringify(volumeData.feedbackItems)
@@ -110,15 +109,6 @@ async function SendToServer(sessionId: string, data: Blob, apiURL: string, formD
     console.log("got response from " + apiURL);
 
     return response;
-
-    //Convert json to FeedbackItem objects
-    /*const responseData = await response.json();
-    const fbItems: FeedbackItem[] = AnalysisResultToFBItems(JSON.stringify(responseData));
-
-    console.log("convert to fbItems from  " + apiURL);
-
-    //send to end.tsx
-    return fbItems;*/
 }
 
 
@@ -145,7 +135,7 @@ export async function GetPrompt() {
         });
         //throw err;
     }
-    
+
 }
 
 //Various functions related to handling a behavioral session on the DB including
@@ -168,7 +158,6 @@ export async function PauseSession(sessionId: string, audioData: Blob, videoData
         "sessionId",
         sessionId
     );
-
 
     const response = await fetch("/api/behavioral/pause", {
         method: "POST",

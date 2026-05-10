@@ -101,6 +101,7 @@ model UserSettings {
   prefersDarkMode Boolean @default(false)
   languagePref    String? @default("JavaScript")
   user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fontScale       Float   @default(1.0)
 
   @@index([userId])
 }
@@ -206,22 +207,27 @@ model BehavioralPrompt {
 }
 
 model VideoUpload {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   originalName String
   mimeType     String
   sizeBytes    Int
-  storageKey   String @unique
+  storageKey   String   @unique
 
-  createdAt DateTime @default(now())
-  analysis  Json?
-  marks     VideoAnalysisMark[]
+  createdAt    DateTime @default(now())
+  analyzedAt   DateTime?
+
+  analysis     Json?
+  marks        VideoAnalysisMark[]
+  segments     VideoAnalysisSegment[]
+
+  @@index([userId])
 }
 
 model VideoAnalysisMark {
-  id            String   @id @default(cuid())
+  id            String      @id @default(cuid())
   videoUploadId String
   videoUpload   VideoUpload @relation(fields: [videoUploadId], references: [id], onDelete: Cascade)
 
@@ -238,19 +244,23 @@ model VideoAnalysisMark {
 }
 
 model VideoAnalysisSegment {
-  id            String   @id
+  id            String      @id @default(cuid())
   videoUploadId String
+  videoUpload   VideoUpload @relation(fields: [videoUploadId], references: [id], onDelete: Cascade)
+
   category      String
   startSec      Float
   endSec        Float
   isGood        Boolean
   scoreAvg      Float?
   note          String?
+
   createdAt     DateTime @default(now())
 
-  @@index([category])
   @@index([videoUploadId])
+  @@index([category])
 }
+
 
 model StoredBehavioralSession {
 	id			String		 @id @default(cuid())
@@ -260,7 +270,6 @@ model StoredBehavioralSession {
 	videoURL	String?
 	feedback	Json?
 }
-
 
 // Job Tracker
 
@@ -275,9 +284,9 @@ model JobApplication {
   jobUrl         String?
   salaryMin      Int?
   salaryMax      Int?
-  location       String?
+  location        String?
   experienceLevel String?
-  status         ApplicationStatus @default(SAVED)
+  status          ApplicationStatus @default(SAVED)
   notes          String?           @db.Text
   appliedAt      DateTime?
   createdAt      DateTime          @default(now())

@@ -93,6 +93,7 @@ export default function TechnicalInterviewViewSwitcher({
       .catch((e) => console.error("Failed to load solutions:", e));
   }, []);
 
+  // Pause the session in the DB when the user navigates away from the page
   useEffect(() => {
     function handleBeforeUnload() {
       if (session.status === "active" && session.dbSessionId) {
@@ -579,7 +580,6 @@ export default function TechnicalInterviewViewSwitcher({
 
                           {/* Gray overlay */}
                           <div className="absolute inset-0 bg-gray-100/80 flex flex-col items-center justify-center gap-3 rounded-lg">
-                            {/* Lock / Unlock icon with hover animation */}
                             <button
                               onMouseEnter={() => setLockHovered(true)}
                               onMouseLeave={() => setLockHovered(false)}

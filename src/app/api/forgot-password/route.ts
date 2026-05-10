@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "~/server/db"; 
+import { db } from "~/server/db";
 import { sendPasswordResetEmail } from "~/server/utils/mail";
 import { randomUUID } from "crypto";
 

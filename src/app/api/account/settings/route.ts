@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { prefersDarkMode, languagePref } = await request.json();
+  const { prefersDarkMode, languagePref, fontScale } = await request.json();
 
   const updated = await db.userSettings.upsert({
     where: { userId: session.user.id },
@@ -29,10 +29,12 @@ export async function POST(request: Request) {
       userId: session.user.id,
       ...(typeof prefersDarkMode === "boolean" && { prefersDarkMode }),
       ...(typeof languagePref === "string" && { languagePref }),
+      ...(typeof fontScale === "number" && { fontScale }),
     },
     update: {
       ...(typeof prefersDarkMode === "boolean" && { prefersDarkMode }),
       ...(typeof languagePref === "string" && { languagePref }),
+      ...(typeof fontScale === "number" && { fontScale }),
     },
   });
 

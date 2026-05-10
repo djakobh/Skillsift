@@ -135,6 +135,7 @@ export function buildPythonHarness(
   const hasListNodeParam = meta.params.some((p) => p.type === "list_node" || p.type === "list_node_array");
   const hasListNodeOutput = meta.outputType === "list_node";
 
+
   // For 2D array problems, sort the output before comparing (same logic as normalizeExpected above)
   // For everything else, return the value as-is
   const normalizeFunction =
@@ -271,6 +272,7 @@ def _serialize_list(head):
     : hasListNodeOutput
     ? `        normalized_output = _serialize_list(actual_output)`
     : `        normalized_output = normalize_output(actual_output)`;
+
 
   // Build the final Python script: user's code + test runner appended at the bottom
   return `${userCode}

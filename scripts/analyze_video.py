@@ -12,7 +12,6 @@ from mediapipe.tasks.python import vision
 
 
 
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MODELS_DIR = PROJECT_ROOT / "models"
 

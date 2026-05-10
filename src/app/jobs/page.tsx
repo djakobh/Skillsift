@@ -422,9 +422,6 @@ function StatusBadge({
   );
 }
 
-// ─── Stats Bar ──────────────────────────────────────────────────────
-
-
 // ─── Main Page ──────────────────────────────────────────────────────
 
 export default function JobsPage() {

@@ -38,4 +38,3 @@ export async function POST(
 
     return NextResponse.json({ success: false, session: null }, { status: 500 });
 }
-    

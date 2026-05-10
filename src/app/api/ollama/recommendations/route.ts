@@ -55,9 +55,11 @@ ${resumeText}`;
 }
 
 function extractJson(raw: string): string {
+  // Strip markdown code fences if the LLM wrapped output
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (fenced?.[1]) return fenced[1].trim();
 
+  // Find outermost { ... }
   const start = raw.indexOf("{");
   const end = raw.lastIndexOf("}");
   if (start !== -1 && end > start) return raw.slice(start, end + 1);

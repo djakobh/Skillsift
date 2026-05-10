@@ -94,7 +94,6 @@ export function BIStart({ changeState, changePrompt, audioRef, setSessionId, sto
 
             CheckForResumeSession();
 
-
         }, []
     );
 

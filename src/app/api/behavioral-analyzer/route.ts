@@ -44,7 +44,7 @@ export async function POST(req: Request) {
 
     if (!file.type.startsWith("video/")) {
       return NextResponse.json(
-        { error: "File must be a video." },
+        { error: `Not a video. Received type: ${file.type}` },
         { status: 400 }
       );
     }
@@ -78,15 +78,31 @@ export async function POST(req: Request) {
         mimeType: file.type,
         sizeBytes: file.size,
         storageKey,
-        analysis,
+        analyzedAt: new Date(),
+        analysis: analysis.summary ?? analysis,
       },
     });
+
+    if (Array.isArray(analysis.segments) && analysis.segments.length > 0) {
+      await db.videoAnalysisSegment.createMany({
+        data: analysis.segments.map((segment: any) => ({
+          videoUploadId: row.id,
+          category: segment.category,
+          startSec: typeof segment.startSec === "number" ? segment.startSec : 0,
+          endSec: typeof segment.endSec === "number" ? segment.endSec : 0,
+          isGood: Boolean(segment.isGood),
+          scoreAvg: typeof segment.scoreAvg === "number" ? segment.scoreAvg : null,
+          note: typeof segment.note === "string" ? segment.note : null,
+        })),
+      });
+    }
 
     return NextResponse.json({
       ok: true,
       videoId: row.id,
       playbackUrl: `/api/videos/${row.id}`,
       analysis: row.analysis,
+      segmentsSaved: Array.isArray(analysis.segments) ? analysis.segments.length : 0,
     });
   } catch (err) {
     console.error("behavioral-analyzer error:", err);

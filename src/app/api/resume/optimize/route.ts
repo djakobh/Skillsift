@@ -140,7 +140,7 @@ export async function POST(req: Request): Promise<NextResponse<OptimizeResponse 
     try {
       parsed = JSON.parse(cleaned);
     } catch {
-      console.error("Ollama returned non-JSON:", raw);
+      console.error("Groq returned non-JSON:", raw);
       return NextResponse.json({ success: false, error: "Model returned invalid JSON. Try again." }, { status: 500 });
     }
 

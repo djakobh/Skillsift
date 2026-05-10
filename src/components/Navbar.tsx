@@ -16,6 +16,7 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -34,11 +35,11 @@ export default function Navbar() {
   };
 
   const leftNavLinks = [
-    { href: "/resume", label: "Resume Scanner" },
-    { href: "/interview/behavioral", label: "Behavioral" },
-    { href: "/technical", label: "Technical" },
-    { href: "/jobs", label: "Job Tracker" },
-    { href: "/history", label: "History" },
+    { href: "/resume", label: "Resume Scanner", id: "nav-resume" },
+    { href: "/interview/behavioral", label: "Behavioral", id: "nav-behavioral" },
+    { href: "/technical", label: "Technical", id: "nav-technical" },
+    { href: "/jobs", label: "Job Tracker", id: "nav-jobs" },
+    { href: "/history", label: "History", id: "nav-history" },
   ];
 
   const rightNavLinks = [
@@ -81,6 +82,7 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={href}
+                  id={link.id}
                   className={`relative rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
                     isActive
                       ? "bg-orange-500 text-white shadow-sm"
@@ -101,6 +103,7 @@ export default function Navbar() {
             {session?.user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
+                  id="nav-account"
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className={`flex items-center justify-center rounded-full w-9 h-9 border-2 transition-all duration-200 ${
                     dropdownOpen

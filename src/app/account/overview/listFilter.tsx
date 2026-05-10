@@ -1,4 +1,4 @@
-﻿//Author: Brandon Christian
+//Author: Brandon Christian
 //Date: 3/16/2026
 
 import { useState } from "react";

@@ -15,7 +15,7 @@ import { PauseSession } from "./pauseSession";
 
 export async function POST(
     req: NextRequest
-) { 
+) {
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -24,9 +24,3 @@ export async function POST(
 
     return PauseSession(req, session.user.id);
 }
-
-
-
-
-
-

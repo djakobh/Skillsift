@@ -76,5 +76,3 @@ async function StopRecording(mediaRecorder: MediaRecorder, chunks: Blob[], isAud
         mediaRecorder.stop();
     });
 }
-
-

@@ -166,7 +166,7 @@ function UploadBox({ changeState, changeResumeText, changeResumeFileName, change
     };
 
     return (
-        <div className="w-1/2 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
+        <div id="tour-upload-box" className="w-1/2 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
             {/* Header */}
             <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
                 <h3 className="text-gray-900 m-0">Upload Your Resume</h3>
@@ -182,6 +182,7 @@ function UploadBox({ changeState, changeResumeText, changeResumeFileName, change
                     <>
                         {/* Clickable upload zone */}
                         <button
+                            id="tour-upload-btn"
                             onClick={UploadResumeButton}
                             className="flex flex-col items-center gap-4 w-full py-8 px-6 rounded-xl cursor-pointer transition-all duration-200"
                             style={{
