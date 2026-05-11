@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { User, Settings, LogOut } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import Tutorial from "~/components/tutorial-tour/Tutorial";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -101,6 +102,8 @@ export default function Navbar() {
           {/* Auth - right */}
           <div className="flex items-center gap-2">
             {session?.user ? (
+              <>
+              <Tutorial />
               <div className="relative" ref={dropdownRef}>
                 <button
                   id="nav-account"
@@ -141,6 +144,7 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
+              </>
             ) : (
               rightNavLinks.map((link) => (
                 <Link

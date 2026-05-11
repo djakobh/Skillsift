@@ -20,6 +20,7 @@ import {
   Lock,
   Unlock,
 } from "lucide-react";
+import TechnicalTour from "~/components/tutorial-tour/TechnicalTour";
 
 type SolutionsMap = Record<string, Record<string, string>>;
 
@@ -310,6 +311,7 @@ export default function TechnicalInterviewViewSwitcher({
     case TIPageState.START:
       return (
         <main className="page-blob-bg pt-12 pb-16 min-h-screen">
+          <TechnicalTour />
           <div className="max-w-3xl mx-auto px-6 flex flex-col gap-6">
 
             {/* Page title */}
@@ -328,7 +330,7 @@ export default function TechnicalInterviewViewSwitcher({
                   <p className="text-xs text-gray-500 m-0 mt-0.5">60 minutes to complete all three questions</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+                  <div id="tour-timer" className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
                     <Clock size={14} className="text-gray-400" />
                     {formatTime(timeLeft)}
                   </div>
@@ -350,7 +352,7 @@ export default function TechnicalInterviewViewSwitcher({
               )}
 
               {/* Question list */}
-              <div className="divide-y divide-gray-100">
+              <div id="tour-question-list" className="divide-y divide-gray-100">
                 {questions.length === 0 && (
                   <div className="px-6 py-8 text-gray-400 text-sm text-center">Loading questions...</div>
                 )}

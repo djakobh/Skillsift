@@ -6,6 +6,7 @@ import { auth } from "~/server/auth";
 import Link from "next/link";
 import { db } from "~/server/db";
 import { FileText, Brain, MessageSquare, ArrowRight, Clock, Plus } from "lucide-react";
+import HistoryTour from "~/components/tutorial-tour/HistoryTour";
 import type { ATSScoreResult } from "~/server/utils/ats-scorer";
 import {
   getCategories,
@@ -43,6 +44,7 @@ export default async function HistoryPage() {
 
   return (
     <main className="page-blob-bg pt-12 pb-16 min-h-screen">
+      <HistoryTour />
       <div className="mx-auto max-w-[1600px] px-6 flex flex-col gap-6">
 
         {/* Header */}

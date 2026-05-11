@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { Briefcase, Plus, Search, ChevronDown, Trash2, ExternalLink, ArrowUpDown, Pencil } from "lucide-react";
 import JobSuggestions from "./_components/JobSuggestions";
 import { LocationInput } from "./_components/LocationInput";
+import JobsTour from "~/components/tutorial-tour/JobsTour";
 
 type JobApplication = {
   id: string;
@@ -484,6 +485,7 @@ export default function JobsPage() {
 
   return (
     <main className="page-blob-bg pt-12 pb-16 min-h-screen">
+      <JobsTour />
       <div className="mx-auto max-w-7xl px-6 flex flex-col gap-6">
 
         {/* Header */}
@@ -513,7 +515,7 @@ export default function JobsPage() {
                   <span className="font-bold text-gray-800">{stat.value}</span> {stat.label}
                 </span>
               ))}
-              <button onClick={() => setShowAddModal(true)} className="btn-primary btn-sm">
+              <button id="tour-add-job" onClick={() => setShowAddModal(true)} className="btn-primary btn-sm">
                 <Plus className="h-4 w-4" />
                 Add Job
               </button>
@@ -642,7 +644,7 @@ export default function JobsPage() {
         </div>
 
         {/* Job Suggestions */}
-        <div className="page-animate" style={{ animationDelay: "0.35s" }} id="suggestions">
+        <div className="page-animate" style={{ animationDelay: "0.35s" }} id="tour-suggestions">
           <JobSuggestions onJobAdded={fetchJobs} />
         </div>
 

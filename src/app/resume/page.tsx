@@ -28,6 +28,7 @@ import {
     Sparkles,
     RotateCcw,
 } from "lucide-react"
+import ResumeTour from "~/components/tutorial-tour/ResumeTour";
 
 const PdfViewer = lazy(() => import("./PdfViewer"));
 
@@ -42,6 +43,7 @@ function OnFailedUpload() {
 export default function ResumeUpload() {
     return (
         <main className={`${styles.centered_column} page-blob-bg pt-12 pb-16`}>
+            <ResumeTour />
             <div className="page-animate" style={{ animationDelay: "0.05s" }}>
                 <h1 className="text-center">Resume Scanning</h1>
             </div>

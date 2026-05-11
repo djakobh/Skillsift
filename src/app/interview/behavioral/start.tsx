@@ -16,6 +16,7 @@ import { AudioMeterAndCameraBox } from "./userInput";
 import { BIPageState, OnStartInterviewClicked, OnFailedStartInterview } from "./main";
 import { useState, useEffect, useRef } from "react";
 import { AbandonSession, ResumeSession, FindPausedSession } from "./behavioralService";
+import BehavioralTour from "~/components/tutorial-tour/BehavioralTour";
 
 
 
@@ -99,6 +100,7 @@ export function BIStart({ changeState, changePrompt, audioRef, setSessionId, sto
 
     return (
         <main className="page-blob-bg min-h-screen pt-12 pb-16">
+            <BehavioralTour />
             <div className="mx-auto max-w-2xl px-6 flex flex-col gap-6">
 
                 {/* Page header */}
@@ -110,7 +112,7 @@ export function BIStart({ changeState, changePrompt, audioRef, setSessionId, sto
                 </div>
 
                 {/* Camera & mic check card */}
-                <div className="page-animate border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm" style={{ animationDelay: "0.15s" }}>
+                <div id="tour-camera-box" className="page-animate border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm" style={{ animationDelay: "0.15s" }}>
                     <div className="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center gap-3">
                         <Video className="h-4 w-4 text-gray-400" />
                         <div>
@@ -132,7 +134,7 @@ export function BIStart({ changeState, changePrompt, audioRef, setSessionId, sto
                                 Checking for existing sessions...
                             </div>
                         ) : (
-                            <button className="btn-primary" onClick={StartInterviewButton}>
+                            <button id="tour-start-interview" className="btn-primary" onClick={StartInterviewButton}>
                                 Start Interview
                             </button>
                         )}
