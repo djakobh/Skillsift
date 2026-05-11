@@ -1,8 +1,8 @@
 # SkillSift
 
-**The all-in-one job prep tool that actually works.**
+## What is SkillSift?
 
-> Live site: [https://www.skillsift.xyz](https://www.skillsift.xyz)
+SkillSift is an AI-powered interview and job application prep platform built for students and early-career candidates. It gives every user the same quality of coaching and feedback that was previously only available to those with expensive resources or insider connections.
 
 ---
 
@@ -13,12 +13,6 @@
 The app depends on several external APIs and services (authentication, database, AI providers, cloud storage) that require private environment variables. Setting these up locally is non-trivial, and the live deployment on Vercel is always up to date.
 
 👉 **[https://www.skillsift.xyz](https://www.skillsift.xyz)**
-
----
-
-## What is SkillSift?
-
-SkillSift is an AI-powered interview and job application prep platform built for students and early-career candidates. It gives every user the same quality of coaching and feedback that was previously only available to those with expensive resources or insider connections.
 
 ---
 
@@ -43,11 +37,11 @@ Review every resume scan and interview session you've completed. All results are
 
 ## Tech Stack
 
-- **Framework:** Next.js 15 (App Router)
-- **Language:** TypeScript
-- **Database:** PostgreSQL via Prisma (hosted on Railway)
+- **Framework:** Next.js 15 
+- **Language:** TypeScript + Javascript
+- **Database:** PostgreSQL via Prisma (hosted on NeonDB)
 - **Auth:** NextAuth v5
-- **AI:** Groq (LLaMA), Google Gemini
+- **AI:** Groq (LLaMA)
 - **Styling:** Tailwind CSS v4
 - **Deployment:** Vercel
 
