@@ -50,9 +50,9 @@ export default function Navbar() {
   return (
     <nav
       style={{
-        background: "rgba(255, 255, 255, 0.85)",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
+        background: pathname === "/" ? "#ffffff" : "rgba(255, 255, 255, 0.85)",
+        backdropFilter: pathname === "/" ? undefined : "blur(16px)",
+        WebkitBackdropFilter: pathname === "/" ? undefined : "blur(16px)",
         boxShadow: "0 1px 0 0 rgba(0,0,0,0.06), 0 4px 24px rgba(0,0,0,0.06)",
         position: pathname === "/" ? "relative" : "sticky",
         top: pathname === "/" ? undefined : 0,
