@@ -14,6 +14,9 @@ import Navbar from "~/components/Navbar";
 import SessionProvider from "~/components/SessionProvider";
 import ChatWidget from "~/components/ChatWidget";
 import { ThemeProvider } from "~/components/ThemeProvider";
+import dynamic from "next/dynamic";
+
+const Tutorial = dynamic(() => import("~/components/tutorial-tour/Tutorial"), { ssr: false });
 
 export const metadata: Metadata = {
   title: "SkillSift",
@@ -46,6 +49,7 @@ export default function RootLayout({
           <SessionProvider>
             <ThemeProvider>
               <Navbar />
+              <Tutorial />
               {children}
               <ChatWidget />
             </ThemeProvider>

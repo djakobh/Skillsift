@@ -38,19 +38,8 @@ export default function Tutorial() {
     setIsWelcomeOpen(false);
   }
 
-  function openTour() {
-    localStorage.setItem(TOUR_ACTIVE_KEY, "true");
-    localStorage.setItem(TOUR_STEP_KEY, "0");
-    router.push("/resume");
-  }
-
   return (
     <>
-      {/* Take the Tour button — sits in the Navbar next to the user avatar */}
-      <button onClick={openTour} className="btn-outline btn-sm">
-        Take the Tour
-      </button>
-
       {/* First visit welcome modal */}
       {isWelcomeOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
