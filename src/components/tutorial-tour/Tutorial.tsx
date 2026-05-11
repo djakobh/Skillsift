@@ -15,17 +15,6 @@ export default function Tutorial() {
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
   const router = useRouter();
 
-  // Load Driver.js CSS from CDN on mount
-  useEffect(() => {
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css";
-    document.head.appendChild(link);
-    return () => {
-      document.head.removeChild(link);
-    };
-  }, []);
-
   // Show welcome modal on first visit
   useEffect(() => {
     const seen = localStorage.getItem(STORAGE_KEY);
