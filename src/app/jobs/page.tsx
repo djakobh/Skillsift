@@ -594,8 +594,7 @@ export default function JobsPage() {
                 {jobs.map((job) => (
                   <div
                     key={job.id}
-                    onClick={() => router.push(`/jobs/${job.id}`)}
-                    className="grid cursor-pointer grid-cols-[2fr_2fr_140px_140px_140px_80px] gap-2 border-b border-gray-100 last:border-0 px-4 py-3 transition-colors hover:bg-gray-50"
+                    className="grid grid-cols-[2fr_2fr_140px_140px_140px_80px] gap-2 border-b border-gray-100 last:border-0 px-4 py-3 transition-colors hover:bg-gray-50"
                   >
                     <div>
                       <p className="text-sm font-medium text-gray-900 m-0">{job.company}</p>
