@@ -38,7 +38,7 @@ Review every resume scan and interview session you've completed. All results are
 ## Tech Stack
 
 - **Framework:** Next.js 15 
-- **Language:** TypeScript
+- **Language:** TypeScript + Javascript
 - **Database:** PostgreSQL via Prisma (hosted on NeonDB)
 - **Auth:** NextAuth v5
 - **AI:** Groq (LLaMA)
