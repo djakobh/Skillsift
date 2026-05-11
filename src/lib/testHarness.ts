@@ -59,6 +59,11 @@ export function normalizeExpected(expected: unknown, outputType: string): string
     return JSON.stringify(sorted);
   }
 
+  // For string lists (e.g. word-search-ii): sort alphabetically so return order doesn't matter
+  if (outputType === "string_list" && Array.isArray(value)) {
+    return JSON.stringify([...(value as string[])].sort());
+  }
+
   return JSON.stringify(value);
 }
 
@@ -144,6 +149,12 @@ export function buildPythonHarness(
 def normalize_output(val):
     if isinstance(val, list):
         return sorted([sorted(x) if isinstance(x, list) else [x] for x in val])
+    return val`
+      : meta.outputType === "string_list"
+      ? `
+def normalize_output(val):
+    if isinstance(val, list):
+        return sorted(val)
     return val`
       : `
 def normalize_output(val):

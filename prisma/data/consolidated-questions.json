@@ -1352,10 +1352,60 @@
     "testCases": [
       {
         "input": {
-          "board": "[[a,b,c,e],[s,f,c,s],[a,d,e,e]]",
-          "words": "[see,abcced,abcb]"
+          "board": [
+            [
+              "a",
+              "b",
+              "c",
+              "e"
+            ],
+            [
+              "s",
+              "f",
+              "c",
+              "s"
+            ],
+            [
+              "a",
+              "d",
+              "e",
+              "e"
+            ]
+          ],
+          "words": [
+            "see",
+            "abcced",
+            "abcb"
+          ]
         },
-        "expectedOutput": "[see,abcced]",
+        "expectedOutput": [
+          "see",
+          "abcced"
+        ],
+        "isHidden": false
+      },
+      {
+        "input": {
+          "board": [
+            [
+              "a",
+              "b"
+            ],
+            [
+              "c",
+              "d"
+            ]
+          ],
+          "words": [
+            "abdc",
+            "abcd",
+            "ac"
+          ]
+        },
+        "expectedOutput": [
+          "abdc",
+          "abcd"
+        ],
         "isHidden": false
       }
     ]
