@@ -4,6 +4,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -411,7 +412,7 @@ function StatusBadge({
         <ChevronDown className="h-3 w-3" />
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
           ref={dropdownRef}
           style={dropdownStyle}
@@ -426,7 +427,8 @@ function StatusBadge({
               {formatStatus(s)}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
