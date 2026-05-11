@@ -73,3 +73,6 @@ venv310/
 
 #context of project
 usecases.md
+
+# test case files 
+test-resume.ts
