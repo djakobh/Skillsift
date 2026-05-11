@@ -46,8 +46,8 @@ export default function RootLayout({
         <TRPCReactProvider>
           <SessionProvider>
             <ThemeProvider>
-              <Navbar />
-              <TutorialLoader />
+              {/* <Navbar /> */}
+              {/* <TutorialLoader /> */}
               {children}
               <ChatWidget />
             </ThemeProvider>
