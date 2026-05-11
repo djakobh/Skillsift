@@ -1,11 +1,9 @@
-﻿//Author: Brandon Christian
+//Author: Brandon Christian
 //Date: 12/12/2025
 //Initial Creation
 
 //Date: 1/29/2026
 //Modified to record audio input
-//Add functions StartRecording, StopRecording, SendAudioToServer, SetupAudioAsync
-//Modify functions AudioMeter
 
 //Date: 1/31/2026
 //send audio back with useState
@@ -25,16 +23,11 @@ export function AudioMeter({ recordAudio, audioRef }: {
     const [level, setLevel] = useState(0);
     const [error, setError] = useState<string | null>(null);
 
-    //console.log("setup audio meter");
-
     useEffect(() => {
         console.log("call use effect");
 
-        //Either the cleanup effect or undefined if it never finished
         let Cleanup: (() => void) | undefined;
 
-        //Run SetupAudioAsync
-        //Wrap in async so it can be run synchronously within useEffect
         (async () => {
             Cleanup = await SetupAudioAsync(
                 setError,
@@ -44,24 +37,34 @@ export function AudioMeter({ recordAudio, audioRef }: {
             );
         })();
 
-        //Run cleanup
         return () => {
             if (Cleanup)
                 Cleanup();
         };
-    }, []); //array empty so it runs automatically on render
-     
-    if (error) return <p>{error}</p>
+    }, []);
+
+    if (error) {
+        return (
+            <div className="w-full max-w-xs rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+                {error}
+            </div>
+        );
+    }
+
+    const barColor = level > 70 ? "#ef4444" : level > 30 ? "#FF6900" : "#22c55e";
 
     return (
-        <div className="w-48">
-            <div className="h-3 bg-gray-300 rounded">
+        <div className="w-full max-w-xs">
+            <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Mic Level</span>
+                <span className="text-xs text-gray-400">{level}%</span>
+            </div>
+            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                 <div
-                    className="h-3 bg-green-500 rounded transition-all"
-                    style={{ width: `${level}%` }}
+                    className="h-2 rounded-full transition-all duration-75"
+                    style={{ width: `${level}%`, backgroundColor: barColor }}
                 />
             </div>
-            <p className="text-sm mt-1">Level: {level}%</p>
         </div>
     )
 }
@@ -77,33 +80,30 @@ async function SetupAudioAsync(
     console.log("setup audio async");
 
     try {
-        const stream: MediaStream = await StartStream(true, false); //create audio stream
-        const StopMeter = await StartAudioMeter(stream, setLevel); //start meter and return cleanup func
+        const stream: MediaStream = await StartStream(true, false);
+        const StopMeter = await StartAudioMeter(stream, setLevel);
 
         const cleanup = async () => {
             stream?.getTracks().forEach(track => track.stop());
             StopMeter();
         }
 
-        //if not recordAudio, then only cleanup audio meter
         if (recordAudio)
         {
             console.log("Start audio recording")
 
-            const options = { mimeType: 'audio/webm' };  //Ensure webm format of audio
+            const options = { mimeType: 'audio/webm' };
             let mediaRecorder: MediaRecorder = new MediaRecorder(stream, options);
             let chunks: Blob[] = StartRecording(mediaRecorder);
 
-            //return cleanup function that stops the audio and sends it to the server
             return async () => {
-                
+
                 console.log("About to stop recording");
 
                 const data: Blob = await StopRecordingAudio(mediaRecorder, chunks);
 
                 cleanup();
 
-                //triggers await in BIEnd for audio data to end
                 if (audioRef)
                     audioRef.current = data;
             }
@@ -114,7 +114,7 @@ async function SetupAudioAsync(
 
             return cleanup;
         }
-            
+
     }
     catch (err)
     {
@@ -128,7 +128,6 @@ async function StartAudioMeter(
     setLevel: React.Dispatch<React.SetStateAction<number>>
 )
 {
-    //Update the audio meter visuals
     const audioContext = new AudioContext();
     const source = audioContext.createMediaStreamSource(stream);
     const analyser = audioContext.createAnalyser();
@@ -143,7 +142,6 @@ async function StartAudioMeter(
     const updateMeter = () => {
         analyser.getByteTimeDomainData(dataArray);
 
-        // RMS (volume)
         let sumSquares = 0;
         for (let i = 0; i < dataArray.length; i++) {
 
@@ -171,5 +169,3 @@ async function StartAudioMeter(
 
     return stopMeter;
 }
-
-

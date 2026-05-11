@@ -15,23 +15,12 @@ import { PauseSession } from "./pauseSession";
 
 export async function POST(
     req: NextRequest
-) { 
+) {
     const session = await auth();
 
-    if (session && session.user) {
-        return PauseSession(req, session.user.id);
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    //Failed to authenticate user
-    return NextResponse.json(
-        {
-            success: false
-        }
-    );
+    return PauseSession(req, session.user.id);
 }
-
-
-
-
-
-

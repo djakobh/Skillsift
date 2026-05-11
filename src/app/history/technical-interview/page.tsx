@@ -5,8 +5,30 @@ import { redirect } from "next/navigation";
 import { auth } from "~/server/auth";
 import Link from "next/link";
 import { db } from "~/server/db";
+import { ArrowLeft, Plus, Clock, Brain } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+function formatDuration(startedAt: Date, completedAt: Date | null, totalPausedMs: number | null, status?: string) {
+  if (!completedAt) return status === "ABANDONED" ? "not recorded" : "-";
+  const pausedMs = totalPausedMs ?? 0;
+  const activeMs = completedAt.getTime() - startedAt.getTime() - pausedMs;
+  if (activeMs <= 0) return "< 1m";
+  const totalSeconds = Math.floor(activeMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return minutes + "m " + seconds + "s";
+}
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 export default async function TechnicalInterviewHistoryPage() {
   const session = await auth();
@@ -15,148 +37,119 @@ export default async function TechnicalInterviewHistoryPage() {
     redirect("/login");
   }
 
-  // Fetch all technical sessions for this user, newest first
   const sessions = await db.interviewSession.findMany({
-    where: {
-      userId: session.user.id,
-      type: "TECHNICAL",
-    },
-    orderBy: {
-      startedAt: "desc",
-    },
-    include: {
-      responses: true,
-    },
+    where: { userId: session.user.id, type: "TECHNICAL" },
+    orderBy: { startedAt: "desc" },
+    include: { responses: true },
   });
 
-  // Format milliseconds into a readable duration string
-  function formatDuration(startedAt: Date, completedAt: Date | null, totalPausedMs: number | null) {
-    const endTime = completedAt ? completedAt.getTime() : Date.now();
-    const pausedMs = totalPausedMs ?? 0;
-    const activeMs = endTime - startedAt.getTime() - pausedMs;
-    const totalSeconds = Math.floor(activeMs / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return minutes + "m " + seconds + "s";
-  }
-
-  // Format date into a readable string
-  function formatDate(date: Date) {
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
-
   return (
-    <main className="min-h-screen bg-white p-8">
-      {/* Header */}
-      <div className="mx-auto max-w-7xl">
-        <Link
-          href="/history"
-          className="mb-6 inline-block text-sm text-gray-600 hover:text-black"
-        >
-          ← Back to History
-        </Link>
-        <h1 className="mb-4 text-3xl font-bold">Technical Interview History</h1>
-        <p className="mb-12 text-sm text-gray-600">
-          Review all your technical interview sessions and track your coding progress.
-        </p>
-      </div>
+    <main className="page-blob-bg pt-12 pb-16 min-h-screen">
+      <div className="mx-auto max-w-4xl px-6 flex flex-col gap-6">
 
-      {/* Results Container */}
-      <div className="mx-auto max-w-7xl">
-        <div className="rounded-lg border-2 border-black bg-white p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold">All Technical Interviews</h2>
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium">
+        {/* Back link */}
+        <div className="page-animate" style={{ animationDelay: "0.05s" }}>
+          <Link href="/history" className="btn-ghost btn-sm inline-flex">
+            <ArrowLeft className="h-4 w-4" />
+            Back to History
+          </Link>
+        </div>
+
+        {/* Header */}
+        <div className="page-animate text-center" style={{ animationDelay: "0.1s" }}>
+          <h1 className="m-0">Technical Interview History</h1>
+          <p className="description m-0 mt-1">
+            Review all your technical interview sessions and track your coding progress.
+          </p>
+        </div>
+
+        {/* Main card */}
+        <div className="page-animate border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden" style={{ animationDelay: "0.2s" }}>
+          <div className="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <h3 className="text-gray-900 m-0">All Technical Interviews</h3>
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
               {sessions.length} Total
             </span>
           </div>
-          <hr className="-mx-6 mb-6 border-t-2 border-black" />
 
-          {sessions.length === 0 ? (
-            // Empty state
-            <div className="space-y-6 py-12 text-center text-gray-500">
-              <p className="text-sm">No technical interviews yet</p>
-              <p className="text-xs">Start a technical interview to see your results here!</p>
-              <Link
-                href="/technical"
-                className="inline-block rounded-full bg-orange-500 px-6 py-2 text-sm text-white hover:bg-orange-600"
-              >
-                Start Interview
-              </Link>
-            </div>
-          ) : (
-            // Session list
-            <div className="space-y-4">
-              {sessions.map((s) => {
+          <div className="p-6">
+            {sessions.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 py-12 text-center">
+                <Brain className="h-10 w-10 text-gray-300" />
+                <p className="text-sm font-medium text-gray-700 m-0">No technical interviews yet</p>
+                <p className="text-xs text-gray-400 m-0">Start a technical interview to see your results here</p>
+                <Link href="/technical" className="btn-primary btn-sm mt-1">
+                  <Plus className="h-3.5 w-3.5" />
+                  Start Interview
+                </Link>
+              </div>
+            ) : (
+              <>
+              <div className="flex flex-col gap-3">
+                {sessions.map((s) => {
+                  let statusColor = "bg-yellow-100 text-yellow-700";
+                  let statusLabel = "In Progress";
 
-                // Determine status badge color and label
-                let statusColor = "bg-yellow-100 text-yellow-700";
-                let statusLabel = "In Progress";
+                  if (s.status === "COMPLETED") {
+                    statusColor = "bg-green-100 text-green-700";
+                    statusLabel = "Completed";
+                  } else if (s.status === "ABANDONED") {
+                    statusColor = "bg-red-100 text-red-600";
+                    statusLabel = "Abandoned";
+                  }
 
-                if (s.status === "COMPLETED") {
-                  statusColor = "bg-green-100 text-green-700";
-                  statusLabel = "Completed";
-                } else if (s.status === "ABANDONED") {
-                  statusColor = "bg-red-100 text-red-600";
-                  statusLabel = "Abandoned";
-                }
-
-                return (
-                  <div
-                    key={s.id}
-                    className="flex items-center justify-between rounded-lg border border-gray-200 p-4"
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">
-                          {formatDate(s.startedAt)}
-                        </span>
-                        <span className={"rounded-full px-2 py-0.5 text-xs font-medium " + statusColor}>
-                          {statusLabel}
-                        </span>
+                  return (
+                    <div
+                      key={s.id}
+                      className="flex items-center justify-between rounded-xl border border-gray-200 px-5 py-4"
+                    >
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-800 flex items-center gap-1.5">
+                            <Clock className="h-3.5 w-3.5 text-gray-400" />
+                            {formatDate(s.startedAt)}
+                          </span>
+                          <span className={"rounded-full px-2 py-0.5 text-xs font-medium " + statusColor}>
+                            {statusLabel}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 m-0">
+                          Time spent: {formatDuration(s.startedAt, s.completedAt, s.totalPausedMs, s.status)}
+                        </p>
+                        {s.responses.length > 0 && (
+                          <p className="text-xs text-gray-500 m-0">
+                            {s.responses.length} question{s.responses.length !== 1 ? "s" : ""} attempted
+                          </p>
+                        )}
                       </div>
 
-                      <p className="text-xs text-gray-500">
-                        Time spent: {formatDuration(s.startedAt, s.completedAt, s.totalPausedMs)}
-                      </p>
-
-                      {s.responses.length > 0 && (
-                        <p className="text-xs text-gray-500">
-                          {s.responses.length} question{s.responses.length !== 1 ? "s" : ""} attempted
-                        </p>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {s.status === "IN_PROGRESS" && (
+                          <Link href={"/technical?sessionId=" + s.id} className="btn-primary btn-sm">
+                            Resume
+                          </Link>
+                        )}
+                        {s.status === "COMPLETED" && (
+                          <Link href={"/history/technical-interview/" + s.id} className="btn-ghost btn-sm">
+                            View Results
+                          </Link>
+                        )}
+                      </div>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      {s.status === "IN_PROGRESS" && (
-                        <Link
-                          href={"/technical?sessionId=" + s.id}
-                          className="rounded-full bg-orange-500 px-4 py-1 text-xs text-white hover:bg-orange-600"
-                        >
-                          Resume
-                        </Link>
-                      )}
-                      {s.status === "COMPLETED" && (
-                        <Link
-                          href={"/history/technical-interview/" + s.id}
-                          className="rounded-full bg-gray-800 px-4 py-1 text-xs text-white hover:bg-gray-900"
-                        >
-                          View Results
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+              <div className="flex justify-center pt-2">
+                <Link href="/technical" className="btn-primary btn-sm">
+                  <Plus className="h-4 w-4" />
+                  New Interview
+                </Link>
+              </div>
+              </>
+            )}
+          </div>
         </div>
+
       </div>
     </main>
   );

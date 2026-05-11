@@ -1,21 +1,14 @@
 //Alexander Tu
 
 import { NextResponse } from "next/server";
-import path from "path";
-import fs from "fs/promises";
 import { randomUUID } from "crypto";
-import { execFile } from "child_process";
-import { promisify } from "util";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 
 export const runtime = "nodejs";
 
-const execFileAsync = promisify(execFile);
-const UPLOAD_DIR =
-  process.env.UPLOAD_DIR
-    ? path.join(process.cwd(), process.env.UPLOAD_DIR)
-    : path.join(process.cwd(), "tmp_uploads");
+const ANALYZER_URL = process.env.ANALYZER_URL;
+const ANALYZER_SECRET = process.env.ANALYZER_SECRET ?? "";
 
 export async function POST(req: Request) {
   try {
@@ -30,6 +23,13 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!ANALYZER_URL) {
+      return NextResponse.json(
+        { error: "Analyzer service not configured." },
+        { status: 503 }
+      );
     }
 
     const form = await req.formData();
@@ -49,54 +49,27 @@ export async function POST(req: Request) {
       );
     }
 
-    await fs.mkdir(UPLOAD_DIR, { recursive: true });
+    // Forward the video to the Railway analyzer service
+    const forwardForm = new FormData();
+    forwardForm.append("video", file);
 
-    const uuid = randomUUID();
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const storageKey = `${uuid}-${safeName}`;
-    const videoPath = path.join(UPLOAD_DIR, storageKey);
+    const analyzerRes = await fetch(`${ANALYZER_URL}/analyze-video`, {
+      method: "POST",
+      headers: { "X-Analyzer-Secret": ANALYZER_SECRET },
+      body: forwardForm,
+    });
 
-    const buf = Buffer.from(await file.arrayBuffer());
-    await fs.writeFile(videoPath, buf);
-
-    const scriptPath = path.join(process.cwd(), "scripts", "analyze_video.py");
-
-    const PYTHON_CMD =
-      process.env.PYTHON_PATH ||
-      (process.platform === "win32"
-        ? path.join(process.cwd(), "venv310", "Scripts", "python.exe")
-        : path.join(process.cwd(), "venv310", "bin", "python"));
-
-    let analysis: any = null;
-
-    try {
-      const { stdout, stderr } = await execFileAsync(
-        PYTHON_CMD,
-        [scriptPath, videoPath],
-        { maxBuffer: 20 * 1024 * 1024 }
-      );
-
-      if (stderr?.trim()) {
-        console.error("Python stderr:", stderr);
-      }
-
-      analysis = JSON.parse(stdout);
-    } catch (e: any) {
-      console.error("Python analysis failed:", e);
-
+    if (!analyzerRes.ok) {
+      console.error("Analyzer service returned:", analyzerRes.status);
       return NextResponse.json(
-        {
-          error: "analysis_failed",
-          detail: e?.message ?? String(e),
-          stderr: e?.stderr ?? null,
-          stdout: e?.stdout ?? null,
-          scriptPath,
-          pythonCmd: PYTHON_CMD,
-          videoPath,
-        },
+        { error: "Analysis failed. Please try again." },
         { status: 500 }
       );
     }
+
+    const analysis = await analyzerRes.json();
+
+    const storageKey = `${randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
 
     const row = await db.videoUpload.create({
       data: {
@@ -118,8 +91,7 @@ export async function POST(req: Request) {
           startSec: typeof segment.startSec === "number" ? segment.startSec : 0,
           endSec: typeof segment.endSec === "number" ? segment.endSec : 0,
           isGood: Boolean(segment.isGood),
-          scoreAvg:
-            typeof segment.scoreAvg === "number" ? segment.scoreAvg : null,
+          scoreAvg: typeof segment.scoreAvg === "number" ? segment.scoreAvg : null,
           note: typeof segment.note === "string" ? segment.note : null,
         })),
       });
@@ -130,14 +102,12 @@ export async function POST(req: Request) {
       videoId: row.id,
       playbackUrl: `/api/videos/${row.id}`,
       analysis: row.analysis,
-      segmentsSaved: Array.isArray(analysis.segments)
-        ? analysis.segments.length
-        : 0,
+      segmentsSaved: Array.isArray(analysis.segments) ? analysis.segments.length : 0,
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error("behavioral-analyzer error:", err);
     return NextResponse.json(
-      { error: err?.message ?? String(err) },
+      { error: "Internal server error." },
       { status: 500 }
     );
   }

@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const keyword = searchParams.get("keyword")?.trim() || undefined;
+  const experienceLevel = searchParams.get("experienceLevel")?.trim() || undefined;
   const location = searchParams.get("location")?.trim() || undefined;
   const salaryMin = parseIntOrNull(searchParams.get("salaryMin"));
   const salaryMax = parseIntOrNull(searchParams.get("salaryMax"));
@@ -54,19 +55,43 @@ export async function GET(req: NextRequest) {
   // user has not typed one yet (first-load experience).
   let profile = null as ReturnType<typeof buildJobSearchProfile> | null;
   if (includeProfile || !keyword) {
-    const trackedJobs = await db.jobApplication.findMany({
-      where: { userId: session.user.id },
-      select: {
-        position: true,
-        jobDescription: true,
-        location: true,
-        salaryMin: true,
-        salaryMax: true,
-      },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    });
-    profile = buildJobSearchProfile(trackedJobs);
+    const [trackedJobs, latestAnalysis] = await Promise.all([
+      db.jobApplication.findMany({
+        where: { userId: session.user.id },
+        select: {
+          position: true,
+          jobDescription: true,
+          location: true,
+          salaryMin: true,
+          salaryMax: true,
+        },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      }),
+      db.resumeAnalysis.findFirst({
+        where: { userId: session.user.id },
+        orderBy: { analyzedAt: "desc" },
+        select: { feedback: true },
+      }),
+    ]);
+
+    // Extract keywords from the most recent ATS analysis (matched + missing
+    // keywords come from the job description the user scored against, so they
+    // are directly relevant for job searching).
+    let atsKeywords: string[] = [];
+    if (latestAnalysis?.feedback) {
+      const feedback = latestAnalysis.feedback as {
+        keywordResult?: {
+          matchedKeywords?: string[];
+          missingKeywords?: string[];
+        };
+      };
+      const matched = feedback.keywordResult?.matchedKeywords ?? [];
+      const missing = feedback.keywordResult?.missingKeywords ?? [];
+      atsKeywords = [...matched, ...missing];
+    }
+
+    profile = buildJobSearchProfile(trackedJobs, atsKeywords);
   }
 
   const effectiveKeyword =
@@ -84,6 +109,7 @@ export async function GET(req: NextRequest) {
 
   const adzunaParams: AdzunaSearchParams = {
     keyword: effectiveKeyword || undefined,
+    experienceLevelPhrase: experienceLevel,
     location,
     salaryMin: salaryMin ?? undefined,
     salaryMax: salaryMax ?? undefined,

@@ -3,7 +3,6 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "~/server/auth";
-import { env } from "~/env";
 
 interface OptimizeRequest {
   resumeText: string;
@@ -33,6 +32,10 @@ interface OptimizeErrorResponse {
   success: false;
   error: string;
 }
+
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_BASE = "https://api.groq.com/openai/v1";
+const MODEL = "llama-3.1-8b-instant";
 
 const SYSTEM_PROMPT = `You are a resume coach. Given a resume and job description, output JSON only. No extra text.`;
 
@@ -73,7 +76,11 @@ Rules:
 - replacementText must be a concrete, specific improvement — never use vague filler or generic placeholders
 - Only suggest changes where the improvement is clear and specific; if you cannot make a meaningful improvement to a line, skip it and pick a different line
 - Each originalText must be unique across all suggestions — never use the same resume line more than once
-- For experience bullet points, rewrite them using the X-Y-Z format: "Accomplished [X] as measured by [Y], by doing [Z]" — make the impact and method explicit`;
+- For experience bullet points, rewrite them using the X-Y-Z format: "Accomplished [X] as measured by [Y], by doing [Z]" — make the impact and method explicit
+- NEVER invent specific percentages, numbers, or metrics that are not already in the resume — use placeholders like "XX%" or "[N]x" instead
+- NEVER suggest adding a keyword or technology to a section unless that keyword is clearly relevant to the work described in that section — do not force missing keywords into unrelated projects or experience
+- NEVER suggest adding a degree, GPA, or education details if they are already present anywhere in the resume. Ensure you read through the entire resume before making any suggestions.
+`;
 }
 
 export async function POST(req: Request): Promise<NextResponse<OptimizeResponse | OptimizeErrorResponse>> {
@@ -98,14 +105,20 @@ export async function POST(req: Request): Promise<NextResponse<OptimizeResponse 
     return NextResponse.json({ success: false, error: "jobDescription is required" }, { status: 400 });
   }
 
+  if (!GROQ_API_KEY) {
+    return NextResponse.json({ success: false, error: "Groq API key not configured" }, { status: 503 });
+  }
+
   try {
-    const ollamaRes = await fetch(`${env.OLLAMA_BASE}/api/chat`, {
+    const groqRes = await fetch(`${GROQ_BASE}/chat/completions`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+      },
       body: JSON.stringify({
-        model: env.OLLAMA_MODEL,
+        model: MODEL,
         stream: false,
-        format: "json",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: buildUserPrompt(resumeText, jobDescription, missingKeywords, atsScore) },
@@ -113,12 +126,12 @@ export async function POST(req: Request): Promise<NextResponse<OptimizeResponse 
       }),
     });
 
-    if (!ollamaRes.ok) {
-      return NextResponse.json({ success: false, error: "Ollama service unavailable" }, { status: 503 });
+    if (!groqRes.ok) {
+      return NextResponse.json({ success: false, error: "Groq service unavailable" }, { status: 503 });
     }
 
-    const ollamaData = await ollamaRes.json() as { message?: { content?: string } };
-    const raw = ollamaData?.message?.content ?? "";
+    const groqData = await groqRes.json() as { choices?: { message: { content: string } }[] };
+    const raw = groqData?.choices?.[0]?.message?.content ?? "";
 
     // Strip potential markdown fences before parsing
     const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
@@ -127,7 +140,7 @@ export async function POST(req: Request): Promise<NextResponse<OptimizeResponse 
     try {
       parsed = JSON.parse(cleaned);
     } catch {
-      console.error("Ollama returned non-JSON:", raw);
+      console.error("Groq returned non-JSON:", raw);
       return NextResponse.json({ success: false, error: "Model returned invalid JSON. Try again." }, { status: 500 });
     }
 

@@ -1,4 +1,4 @@
-﻿//Author: Brandon Christian
+//Author: Brandon Christian
 //Date: 12/12/2025
 
 //Date: 1/31/2026
@@ -10,12 +10,13 @@
 //Date: 3/17/2026
 //implement resume feature
 
-import styles from "./test.module.css";
 import React from "react";
+import { Video } from "lucide-react";
 import { AudioMeterAndCameraBox } from "./userInput";
 import { BIPageState, OnStartInterviewClicked, OnFailedStartInterview } from "./main";
 import { useState, useEffect, useRef } from "react";
 import { AbandonSession, ResumeSession, FindPausedSession } from "./behavioralService";
+import BehavioralTour from "~/components/tutorial-tour/BehavioralTour";
 
 
 
@@ -30,16 +31,12 @@ export function BIStart({ changeState, changePrompt, audioRef, setSessionId, sto
 
     const StartInterviewButton = async () => {
         try {
-            //Try and Wait For Upload
             setLoading(true);
             const result = await OnStartInterviewClicked();
 
-            //Set response as prompt
-            //and set used session id
             changePrompt(result.prompt);
             setSessionId(result.session.id)
 
-            //Change state if successful
             changeState(BIPageState.ACTIVE);
         } catch (error) {
 
@@ -56,7 +53,6 @@ export function BIStart({ changeState, changePrompt, audioRef, setSessionId, sto
     useEffect(
         () => {
 
-            //Check guard to ensure useEffect only ever runs once
             if (hasRun.current) return;
             hasRun.current = true;
 
@@ -69,17 +65,14 @@ export function BIStart({ changeState, changePrompt, audioRef, setSessionId, sto
 
                     if (!findResp.canResume) {
 
-                        //Abandon if previously resumed
                         AbandonSession(findResp.session.id);
                         setLoading(false);
                     }
                     else {
                         function ContinueToActivePage() {
 
-                            //Set resume date
                             ResumeSession(findResp.session.id);
 
-                            //tell other components we are resuming a session
                             setResume(true);
 
                             changePrompt(findResp.session.prompt);
@@ -92,37 +85,64 @@ export function BIStart({ changeState, changePrompt, audioRef, setSessionId, sto
                             setLoading(false);
                         }
 
-                        //Wait for user input to confirm or deny this session
-                        //load is set to true to prevent clicking new session during this time
                         PromptToResume(findResp.session, ContinueToActivePage, AllowNewSession);
                     }
                 }
                 else {
-                    //no session to resume, allow new session
                     setLoading(false);
                 }
             }
 
             CheckForResumeSession();
-            
 
         }, []
     );
 
     return (
-        <div className={`${styles.centered_column} w-full`}>
-            <div id="tour-camera-box">
-                <AudioMeterAndCameraBox recordAudio={false} audioRef={audioRef} recordVideo={false} storeVideoRef={storeVideoRef} />
-            </div>
-            {!loading && (
-                <button id="tour-start-interview" className="orange_button" onClick={StartInterviewButton}>Start Interview</button>
-            )}
+        <main className="page-blob-bg min-h-screen pt-12 pb-16">
+            <BehavioralTour />
+            <div className="mx-auto max-w-2xl px-6 flex flex-col gap-6">
 
-            {loading && (
-                <div>loading...</div>
-            ) }
-            
-        </div>
+                {/* Page header */}
+                <div className="page-animate text-center" style={{ animationDelay: "0.05s" }}>
+                    <h1>Behavioral Interview</h1>
+                    <p className="description">
+                        Simulate an authentic interview experience. Your responses will be evaluated for clarity, tone, and professionalism.
+                    </p>
+                </div>
+
+                {/* Camera & mic check card */}
+                <div id="tour-camera-box" className="page-animate border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm" style={{ animationDelay: "0.15s" }}>
+                    <div className="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center gap-3">
+                        <Video className="h-4 w-4 text-gray-400" />
+                        <div>
+                            <p className="text-sm font-semibold text-gray-800 m-0">Camera & Microphone Check</p>
+                            <p className="text-xs text-gray-500 m-0 mt-0.5">Make sure your camera and microphone are working before you begin.</p>
+                        </div>
+                    </div>
+                    <div className="p-6 flex flex-col items-center gap-5">
+                        <AudioMeterAndCameraBox
+                            recordAudio={false}
+                            audioRef={audioRef}
+                            recordVideo={false}
+                            storeVideoRef={storeVideoRef}
+                        />
+
+                        {loading ? (
+                            <div className="flex items-center gap-2 text-sm text-gray-500 py-2">
+                                <div className="w-4 h-4 border-2 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
+                                Checking for existing sessions...
+                            </div>
+                        ) : (
+                            <button id="tour-start-interview" className="btn-primary" onClick={StartInterviewButton}>
+                                Start Interview
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+            </div>
+        </main>
     );
 }
 

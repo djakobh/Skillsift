@@ -56,10 +56,10 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-200 via-orange-300 to-orange-400">
+    <main className="page-blob-bg flex items-center justify-center min-h-screen">
       <form
         onSubmit={handleLogin}
-        className="flex flex-col gap-4 w-full max-w-sm bg-white p-8 rounded shadow"
+        className="page-animate flex flex-col gap-4 w-full max-w-sm bg-white p-8 rounded-xl shadow-sm border border-gray-200"
       >
         <div className="flex flex-col items-center gap-3 mb-2">
           <img
@@ -93,7 +93,7 @@ export default function LoginPage() {
         />
 
         <button
-          className="orange_button w-full disabled:opacity-60"
+          className="btn-primary w-full justify-center disabled:opacity-60"
           type="submit"
           disabled={loading}
         >
@@ -111,14 +111,14 @@ export default function LoginPage() {
             Remember me?
           </label>
 
-          <Link href="/forgot-password" title="Recover password" className="text-blue-600 hover:underline">
+          <Link href="/forgot-password" title="Recover password" className="text-orange-500 hover:text-orange-600 hover:underline">
             Forgot password?
           </Link>
         </div>
 
         <p className="text-sm text-center mt-2">
           Don't have an account?{" "}
-          <Link href="/signup" className="text-blue-600 underline">
+          <Link href="/signup" className="text-orange-500 hover:text-orange-600 underline">
             Sign Up
           </Link>
         </p>

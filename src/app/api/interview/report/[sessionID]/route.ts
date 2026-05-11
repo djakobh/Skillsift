@@ -4,25 +4,31 @@
 
 import { NextResponse } from "next/server";
 import { db } from "~/server/db";
+import { auth } from "~/server/auth";
 
 export async function GET(
     request: Request,
-    { params }: { params: { sessionID: string } }
+    { params }: { params: Promise<{ sessionID: string }> }
 ) {
-    const { sessionID } = params;
+    const session = await auth();
 
-    //TODO: match by user ID also
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { sessionID } = await params;
+
     const report = await db.interviewReport.findFirst({
-        where: {
-            sessionId: sessionID,
-        },
+        where: { sessionId: sessionID },
     });
 
-    if (report)
-        return NextResponse.json(report);
+    if (!report) {
+        return NextResponse.json({ error: "No report found" }, { status: 404 });
+    }
 
-    return NextResponse.json(
-        { error: "No report found" },
-        { status: 404 }
-    );
+    if (report.userId !== session.user.id) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    return NextResponse.json(report);
 }

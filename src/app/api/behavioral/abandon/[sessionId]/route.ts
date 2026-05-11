@@ -9,21 +9,14 @@ import { AbandonSession } from "./abandonSession";
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { sessionId: string } }
+    { params }: { params: Promise<{ sessionId: string }> }
 ) {
-    const { sessionId } = params;
+    const { sessionId } = await params;
     const session = await auth();
 
-
-    if (session && session.user) {
-        return AbandonSession(sessionId, session.user.id);
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    //Failed to authenticate the user
-    return NextResponse.json(
-        {
-            success: false,
-            session: null
-        }
-    );
+    return AbandonSession(sessionId, session.user.id);
 }

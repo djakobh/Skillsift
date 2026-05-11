@@ -1,12 +1,9 @@
 //Author: Brandon Christian
 //Date: 3/20/2026 separate into own file
-
 //Alexander Tu
-//Date: 4/17/2026 
-//Updated 
+//Date: 4/17/2026 Updated
 
 //import { DownloadVideoData } from "../pause/manageVideoStorage"
-
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "~/server/db";
@@ -16,7 +13,6 @@ import fs from "fs/promises";
 import { randomUUID } from "crypto";
 import { execFile } from "child_process";
 import { promisify } from "util";
-import { unlink } from "fs";
 
 const execFileAsync = promisify(execFile);
 
@@ -115,55 +111,54 @@ export async function GetVideoFeedback(videoPath: string) {
 
   return {
     feedbackItems: test_items,
-    rawAnalysis: parsed,
+    rawAnalysis: parsed as RawVideoAnalysis,
   };
 }
 
 export async function UploadVideo(req: NextRequest) {
     let filePath: string | null = null;
     try {
-        //extract the audio from the formData sent
+        //extract the video from the formData sent
         const formData = await req.formData();
         const video = formData.get("video") as Blob | null;
 
         if (!video || !(video instanceof Blob)) {
             return NextResponse.json(
-            { error: "No video file received" },
-            { status: 400 }
+              { error: "No video file received" },
+              { status: 400 }
             );
         }
 
         const sessionId: string = formData.get("sessionId") as string;
         if (!sessionId) {
             return NextResponse.json(
-                {error: "Missing sessionID"},
+                { error: "Missing sessionID" },
                 { status: 400 }
-            )
+            );
         }
 
-        await fs.mkdir(UPLOAD_DIR, { recursive: true});
+        await fs.mkdir(UPLOAD_DIR, { recursive: true });
 
         const fileName = `${randomUUID()}.webm`;
         filePath = path.join(UPLOAD_DIR, fileName);
 
         const bytes = Buffer.from(await video.arrayBuffer());
         await fs.writeFile(filePath, bytes);
-        
+
         const { feedbackItems, rawAnalysis } = await GetVideoFeedback(filePath);
         const averaged_items = await AverageFeedbackItems(feedbackItems, sessionId);
 
-        
         //send to behavioralService.tsx
         return NextResponse.json({
             feedback: averaged_items,
             rawAnalysis,
         });
-        
+
     } catch (err: any) {
         console.error("UploadVideo error:", err);
         return NextResponse.json(
-            { error: err?.message ?? "Upload/analyze failed"},
-            { status: 500}
+            { error: err?.message ?? "Upload/analyze failed" },
+            { status: 500 }
         );
     } finally {
         if (filePath) {
@@ -172,15 +167,9 @@ export async function UploadVideo(req: NextRequest) {
             });
         }
     }
-    
-    //Get analysis of video from service
-    //const feedback_items: any[] = await GetVideoFeedback(video);
-    //const averaged_items: any[] = await AverageFeedbackItems(feedback_items, sessionId);
-
 }
 
 async function AverageFeedbackItems(base_items: FeedbackItem[], sessionId: string) {
-    
     //collect all feedback items arrays into one array
     const feedback_sets: FeedbackItem[][] = [base_items];
 
@@ -197,76 +186,36 @@ async function AverageFeedbackItems(base_items: FeedbackItem[], sessionId: strin
         }
     );
 
-    //total all values and average them, then set each as the score for final_items;
+    //total all values and average them, then set each as the score for final_items
     const totals: Record<string, number> = {};
     const counts: Record<string, number> = {};
 
     feedback_sets.forEach(
-        //for every set of feedback
         (feedback_items) => {
-
-            //for every item in that set
             feedback_items.forEach(
                 (item: FeedbackItem) => {
-
                     if (item.category && typeof item.score === "number") {
-
                         const key = item.category;
                         const value = item.score;
-
-                        //add to or create if it doesnt exist
                         totals[key] = (totals[key] || 0) + value;
                         counts[key] = (counts[key] || 0) + 1;
-
                     }
-
                 }
             );
-
         }
     );
-
 
     //set the average values as the true scores of the final items
     const final_items: FeedbackItem[] = base_items.map((item) => ({ ...item }));
 
     final_items.forEach(
         (item) => {
-
             const key = item.category;
-
             if (totals[key] != null && counts[key] != null) {
                 item.score = totals[key] / counts[key];
             }
         }
-    )
+    );
 
-    return base_items;
+    return final_items;
 }
-
-/*
-async function DownloadAllVideos(baseVideo: Blob, sessionId: string) {
-
-    const storedSessions = await db.storedBehavioralSession.findMany({
-        where: {
-            sessionId: sessionId,
-        }
-    });
-
-    const videos: Blob[] = [baseVideo];
-
-    storedSessions.forEach(
-        async (session) => {
-            if (session.videoURL) {
-                //labled as videoURL but actually storage key
-                const videoData: Blob | null = await DownloadVideoData(session.videoURL);
-
-                if (videoData) {
-                    videos.push(videoData);
-                }
-            }
-        }
-    )
-
-    return videos;
-}*/

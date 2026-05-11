@@ -1,18 +1,9 @@
-﻿//Author: Brandon Christian
+//Author: Brandon Christian
 //Date: 12/12/2025
 //Initial creation
 //Date: 1/31/2026
 //Separate into own file, conversion functions
 
-export enum FeedbackCategory {
-    NONE = "None",
-    NOTES = "Notes",
-    EYE_CONTACT = "Eye Contact",
-    CONFIDENCE = "Confidence",
-    QUALITY_OF_ANSWERS = "Quality of Answers",
-    SOCIABILITY = "Sociability",
-    CLEAR_SPEECH = "Clear Speech"
-}
 import type { AnalysisItem } from "../../api/behavioral/analyze/analysisItem";
 
 export type FeedbackItem = {
@@ -28,7 +19,7 @@ export function AnalysisResultToFBItems(analysisJSON: string)
 {
     const parsed = JSON.parse(analysisJSON);
 
-    // NEW: handle both formats safely
+    // Handle both formats safely
     let analysisItems: any[];
 
     if (Array.isArray(parsed)) {
@@ -42,7 +33,6 @@ export function AnalysisResultToFBItems(analysisJSON: string)
         return [];
     }
 
-    // FIX: don't pre-size array + push (that creates empty slots)
     const fbItems: FeedbackItem[] = [];
 
     analysisItems.forEach((element) => {
@@ -65,9 +55,9 @@ export function CreateFeedbackItem(acategory: string, acontent?: string, ascore?
 
     const fbItem: FeedbackItem = { key: category, content: acontent, score: ascore, graph: agraph };
 
-    return fbItem   
+    return fbItem
 }
 
 export function CombineFeedback(a: FeedbackItem[], b: FeedbackItem[]) {
-    return [...b, ...a]; // cleaner + avoids mutation bugs
+    return [...b, ...a];
 }

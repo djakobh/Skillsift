@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { auth } from "~/server/auth";
 import type { FeedbackItem } from "~/app/resume/feedbackItem";
 
-const OLLAMA_BASE = process.env.OLLAMA_BASE ?? "http://localhost:11434";
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_BASE = "https://api.groq.com/openai/v1";
+const MODEL = "llama-3.1-8b-instant";
 
 function buildPrompt(
   resumeText: string,
@@ -71,6 +73,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  if (!GROQ_API_KEY) {
+    return NextResponse.json({ error: "Groq API key not configured" }, { status: 503 });
+  }
+
   const body = await req.json() as {
     resumeText: string;
     feedbackItems: FeedbackItem[];
@@ -85,30 +91,30 @@ export async function POST(req: Request) {
 
   const prompt = buildPrompt(resumeText, feedbackItems, jobDescription ?? "");
 
-  let ollamaRes: Response;
+  let groqRes: Response;
   try {
-    ollamaRes = await fetch(`${OLLAMA_BASE}/api/chat`, {
+    groqRes = await fetch(`${GROQ_BASE}/chat/completions`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+      },
       body: JSON.stringify({
-        model: "llama3.2:1b",
+        model: MODEL,
         stream: false,
         messages: [{ role: "user", content: prompt }],
       }),
     });
   } catch {
-    return NextResponse.json(
-      { error: "Could not reach Ollama. Make sure it is running on " + OLLAMA_BASE },
-      { status: 502 }
-    );
+    return NextResponse.json({ error: "Could not reach Groq API" }, { status: 502 });
   }
 
-  if (!ollamaRes.ok) {
-    return NextResponse.json({ error: "Ollama returned an error" }, { status: 502 });
+  if (!groqRes.ok) {
+    return NextResponse.json({ error: "Groq API returned an error" }, { status: 502 });
   }
 
-  const ollamaData = await ollamaRes.json() as { message?: { content: string }; response?: string };
-  const rawContent = ollamaData?.message?.content ?? ollamaData?.response ?? "";
+  const groqData = await groqRes.json() as { choices?: { message: { content: string } }[] };
+  const rawContent = groqData?.choices?.[0]?.message?.content ?? "";
 
   try {
     const jsonStr = extractJson(rawContent);
@@ -116,7 +122,7 @@ export async function POST(req: Request) {
     return NextResponse.json(parsed);
   } catch {
     return NextResponse.json(
-      { error: "Failed to parse Ollama response as JSON", raw: rawContent },
+      { error: "Failed to parse Groq response as JSON", raw: rawContent },
       { status: 500 }
     );
   }

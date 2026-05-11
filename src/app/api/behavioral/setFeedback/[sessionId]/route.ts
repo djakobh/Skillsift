@@ -9,51 +9,40 @@ import { auth } from "src/server/auth"
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { sessionId: string } }
+    { params }: { params: Promise<{ sessionId: string }> }
 ) {
-    const { sessionId } = params;
-
-    const formData = await req.formData();
-    const rawFeedback = formData.get("feedback") as string;
-    const feedback = JSON.parse(rawFeedback);
+    const { sessionId } = await params;
 
     const session = await auth();
 
-    console.log("interiew session id: " + sessionId)
-
-    if (session && session.user) {
-        //Update the first session whose ID matches the one we
-        //created at session start for this user
-        const interviewSession = await db.interviewSession.update({
-            where: {
-                userId: session.user.id,
-                id: sessionId,
-            },
-            data: {
-                feedback: feedback
-            }
-        });
-
-        //Return if successful
-        if (interviewSession) {
-
-            return NextResponse.json(
-                {
-                    success: true
-                }
-            );
-        }
-        else {
-            console.log("failed to find session. id: " + sessionId)
-        }
-        
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    //Failed to update session for some reason
-    return NextResponse.json(
-        {
-            success: false
+    const formData = await req.formData();
+    const rawFeedback = formData.get("feedback") as string;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let feedback: any;
+    try {
+        feedback = JSON.parse(rawFeedback);
+    } catch {
+        return NextResponse.json({ error: "Invalid feedback format" }, { status: 400 });
+    }
+
+    const interviewSession = await db.interviewSession.update({
+        where: {
+            userId: session.user.id,
+            id: sessionId,
+        },
+        data: {
+            feedback: feedback
         }
-    );
+    });
+
+    if (interviewSession) {
+        return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ success: false }, { status: 500 });
 }
-    

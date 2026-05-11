@@ -10,7 +10,7 @@ const UPLOAD_DIR = path.join(process.cwd(), "tmp_uploads");
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.email) {
@@ -20,7 +20,8 @@ export async function GET(
   const user = await db.user.findUnique({ where: { email: session.user.email } });
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const row = await db.videoUpload.findUnique({ where: { id: params.id } });
+  const { id } = await params;
+  const row = await db.videoUpload.findUnique({ where: { id } });
   if (!row || row.userId !== user.id) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

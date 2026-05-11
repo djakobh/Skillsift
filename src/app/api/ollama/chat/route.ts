@@ -4,7 +4,9 @@ import { db } from "~/server/db";
 import { APP_KNOWLEDGE } from "~/lib/chatbot/knowledge";
 import { APP_ROUTES } from "~/lib/chatbot/appRoutes";
 
-const OLLAMA_BASE = process.env.OLLAMA_BASE ?? "http://localhost:11434";
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_BASE = "https://api.groq.com/openai/v1";
+const DEFAULT_MODEL = "llama-3.1-8b-instant";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -22,7 +24,7 @@ export async function POST(req: Request) {
 
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  const { messages, model = "llama3.1" } = await req.json();
+  const { messages } = await req.json();
   if (!Array.isArray(messages)) {
     return NextResponse.json({ error: "messages must be an array" }, { status: 400 });
   }
@@ -50,19 +52,34 @@ export async function POST(req: Request) {
       `USER_CONTEXT:\n${JSON.stringify(USER_CONTEXT, null, 2)}`,
   };
 
-  const r = await fetch(`${OLLAMA_BASE}/api/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model,
-      stream: false,
-      messages: [systemMessage, ...messages],
-    }),
-  });
+  if (!GROQ_API_KEY) {
+    return NextResponse.json({ error: "Groq API key not configured" }, { status: 503 });
+  }
 
-  const text = await r.text();
-  return new NextResponse(text, {
-    status: r.status,
-    headers: { "Content-Type": "application/json" },
-  });
+  let r: Response;
+  try {
+    r = await fetch(`${GROQ_BASE}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: DEFAULT_MODEL,
+        stream: false,
+        messages: [systemMessage, ...messages],
+      }),
+    });
+  } catch {
+    return NextResponse.json({ error: "Could not reach Groq API" }, { status: 502 });
+  }
+
+  if (!r.ok) {
+    return NextResponse.json({ error: "Groq API returned an error" }, { status: 502 });
+  }
+
+  const data = await r.json() as { choices?: { message: { content: string } }[] };
+  const content = data?.choices?.[0]?.message?.content ?? "";
+
+  return NextResponse.json({ message: { role: "assistant", content } });
 }

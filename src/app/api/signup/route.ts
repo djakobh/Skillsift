@@ -7,11 +7,18 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
-    const { email, password } = await req.json();
+    const { email, password, username } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json(
         { error: "Please enter email and password." },
+        { status: 400 }
+      );
+    }
+
+    if (typeof password !== "string" || password.length < 8) {
+      return NextResponse.json(
+        { error: "Password must be at least 8 characters." },
         { status: 400 }
       );
     }
@@ -35,6 +42,7 @@ export async function POST(req: Request) {
       data: {
         email,
         password: hashed,
+        name: username || null,
       },
       select: {
         id: true,

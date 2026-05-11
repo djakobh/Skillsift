@@ -101,8 +101,8 @@ model UserSettings {
   prefersDarkMode Boolean @default(false)
   languagePref    String? @default("JavaScript")
   user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fontScale       Float    @default(1.0)
-  
+  fontScale       Float   @default(1.0)
+
   @@index([userId])
 }
 
@@ -207,23 +207,40 @@ model BehavioralPrompt {
 }
 
 model VideoUpload {
-  id           String                 @id @default(cuid())
+  id           String   @id @default(cuid())
   userId       String
-  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   originalName String
   mimeType     String
   sizeBytes    Int
-  storageKey   String                 @unique
+  storageKey   String   @unique
 
-  createdAt    DateTime               @default(now())
+  createdAt    DateTime @default(now())
   analyzedAt   DateTime?
 
   analysis     Json?
-
+  marks        VideoAnalysisMark[]
   segments     VideoAnalysisSegment[]
 
   @@index([userId])
+}
+
+model VideoAnalysisMark {
+  id            String      @id @default(cuid())
+  videoUploadId String
+  videoUpload   VideoUpload @relation(fields: [videoUploadId], references: [id], onDelete: Cascade)
+
+  category      String   // "posture" | "eye_contact" | "facial_expression"
+  timestampSec  Float
+  score         Float?
+  isGood        Boolean?
+  note          String?
+
+  createdAt     DateTime @default(now())
+
+  @@index([videoUploadId])
+  @@index([category])
 }
 
 model VideoAnalysisSegment {
@@ -238,7 +255,7 @@ model VideoAnalysisSegment {
   scoreAvg      Float?
   note          String?
 
-  createdAt     DateTime    @default(now())
+  createdAt     DateTime @default(now())
 
   @@index([videoUploadId])
   @@index([category])
@@ -267,8 +284,9 @@ model JobApplication {
   jobUrl         String?
   salaryMin      Int?
   salaryMax      Int?
-  location       String?
-  status         ApplicationStatus @default(SAVED)
+  location        String?
+  experienceLevel String?
+  status          ApplicationStatus @default(SAVED)
   notes          String?           @db.Text
   appliedAt      DateTime?
   createdAt      DateTime          @default(now())
@@ -302,7 +320,6 @@ model DismissedJob {
   @@unique([userId, adzunaJobId])
   @@index([userId])
 }
-
 
 // ============================================
 // Enums

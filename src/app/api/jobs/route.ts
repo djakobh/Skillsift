@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status");
   const search = searchParams.get("search");
+  const experienceLevel = searchParams.get("experienceLevel");
   const sortBy = searchParams.get("sortBy") || "createdAt";
   const sortOrder = searchParams.get("sortOrder") || "desc";
 
@@ -28,6 +29,10 @@ export async function GET(req: NextRequest) {
 
   if (status) {
     where.status = status;
+  }
+
+  if (experienceLevel) {
+    where.experienceLevel = experienceLevel;
   }
 
   // Case-insensitive search across company and position fields
@@ -69,7 +74,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { company, position, jobDescription, jobUrl, salaryMin, salaryMax, location, status, notes, appliedAt } = body;
+  const { company, position, jobDescription, jobUrl, salaryMin, salaryMax, location, experienceLevel, status, notes, appliedAt } = body;
 
   // Validate required fields
   if (!company || !position) {
@@ -98,6 +103,7 @@ export async function POST(req: NextRequest) {
         salaryMin: salaryMin != null && salaryMin !== "" ? Number(salaryMin) : null,
         salaryMax: salaryMax != null && salaryMax !== "" ? Number(salaryMax) : null,
         location: location || null,
+        experienceLevel: experienceLevel || null,
         status: status || "SAVED",
         notes: notes || null,
         appliedAt: appliedAt ? new Date(appliedAt) : null,

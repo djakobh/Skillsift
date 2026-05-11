@@ -20,6 +20,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import { LocationInput } from "./LocationInput";
 
 type AdzunaJob = {
   id: string;
@@ -81,6 +82,7 @@ export default function JobSuggestions({
 }) {
   const [keyword, setKeyword] = useState("");
   const [location, setLocation] = useState("");
+  const [experienceLevel, setExperienceLevel] = useState("");
   const [salaryMin, setSalaryMin] = useState<number>(0);
   const [salaryMax, setSalaryMax] = useState<number>(250_000);
   const [jobType, setJobType] = useState<string>("");
@@ -104,6 +106,7 @@ export default function JobSuggestions({
 
       const params = new URLSearchParams();
       if (keyword.trim()) params.set("keyword", keyword.trim());
+      if (experienceLevel) params.set("experienceLevel", experienceLevel);
       if (location.trim()) params.set("location", location.trim());
       if (salaryMin > 0) params.set("salaryMin", String(salaryMin));
       if (salaryMax > 0 && salaryMax < 1_000_000)
@@ -153,7 +156,7 @@ export default function JobSuggestions({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [keyword, location, salaryMin, salaryMax, jobType, autoPopulated],
+    [keyword, location, experienceLevel, salaryMin, salaryMax, jobType, autoPopulated],
   );
 
   // Initial load: ask for the search profile
@@ -238,40 +241,41 @@ export default function JobSuggestions({
   return (
     <section id="suggestions" className="mt-10">
       {/* Section header */}
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h2 className="mb-1 flex items-center gap-2 text-2xl font-bold">
-            <Sparkles className="h-6 w-6 text-orange-500" />
-            Suggested Jobs
-          </h2>
-          <p className="text-sm text-gray-600">
-            Personalized listings from Adzuna based on your tracked applications.
-          </p>
-        </div>
-        <button
-          onClick={handleRefresh}
-          disabled={loading}
-          className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-60"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
+      <div className="text-center mt-12 mb-6">
+        <h2 className="mb-1 flex items-center justify-center gap-2 text-2xl font-bold">
+          <Sparkles className="h-6 w-6 text-orange-500" />
+          Suggested Jobs
+        </h2>
+        <p className="text-sm text-gray-600">
+          Personalized listings from Adzuna based on your tracked applications and resume analyses.
+        </p>
       </div>
 
       {/* Filters */}
       <form
         onSubmit={handleSearch}
-        className="mb-6 rounded-lg border-2 border-black bg-white p-6"
+        className="mb-6 rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden"
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-semibold">Filters</h3>
-          {totalCount > 0 && (
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium">
-              {totalCount.toLocaleString()} Matches
-            </span>
-          )}
+        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          <h3 className="text-gray-900 m-0">Filters</h3>
+          <div className="flex items-center gap-2">
+            {totalCount > 0 && (
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+                {totalCount.toLocaleString()} Matches
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={loading}
+              className="btn-ghost btn-sm"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </button>
+          </div>
         </div>
-        <hr className="-mx-6 mb-6 border-t-2 border-black" />
+        <div className="p-6">
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
@@ -294,21 +298,34 @@ export default function JobSuggestions({
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
               Location
             </label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. San Francisco, Remote"
-                className="w-full rounded-md border border-gray-300 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              />
-            </div>
+            <LocationInput
+              value={location}
+              onChange={setLocation}
+              placeholder="e.g. San Francisco, Remote"
+            />
           </div>
 
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Salary range (${salaryMin.toLocaleString()} – $
+              Experience level
+            </label>
+            <select
+              value={experienceLevel}
+              onChange={(e) => setExperienceLevel(e.target.value)}
+              className="w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            >
+              <option value="">Any level</option>
+              <option value="internship">Internship</option>
+              <option value="entry level">Entry Level</option>
+              <option value="mid level">Mid Level</option>
+              <option value="senior">Senior Level</option>
+              <option value="lead">Lead / Principal</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+              Salary range (${salaryMin.toLocaleString()} - $
               {salaryMax.toLocaleString()})
             </label>
             <div className="flex items-center gap-3">
@@ -363,11 +380,13 @@ export default function JobSuggestions({
           <button
             type="submit"
             disabled={loading}
-            className="rounded-full bg-orange-500 px-6 py-2 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-60"
+            className="btn-primary btn-sm"
           >
+            <Search className="h-4 w-4" />
             Search
           </button>
         </div>
+        </div>{/* end p-6 */}
       </form>
 
       {loading ? (
@@ -424,7 +443,7 @@ function JobCard({
   const salary = formatSalary(job.salaryMin, job.salaryMax);
   const snippet = stripHtml(job.description).slice(0, 220);
   return (
-    <div className="flex flex-col rounded-lg border-2 border-black bg-white p-5 transition hover:shadow-md">
+    <div className="flex flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md">
       <div className="mb-3 flex items-start justify-between gap-2">
         <h3 className="text-base font-bold leading-snug">{job.title}</h3>
         <button
@@ -461,7 +480,7 @@ function JobCard({
           href={job.redirectUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex flex-1 items-center justify-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50"
+          className="btn-outline btn-sm flex-1 justify-center"
         >
           <ExternalLink className="h-3.5 w-3.5" />
           View Posting
@@ -469,11 +488,7 @@ function JobCard({
         <button
           onClick={onAdd}
           disabled={adding || added}
-          className={`flex flex-1 items-center justify-center gap-1 rounded-md px-3 py-2 text-xs font-medium text-white ${
-            added
-              ? "bg-green-600"
-              : "bg-orange-500 hover:bg-orange-600 disabled:opacity-60"
-          }`}
+          className={`btn-sm flex-1 justify-center ${added ? "inline-flex items-center gap-1 rounded-full bg-green-600 px-3 py-1.5 text-xs font-medium text-white" : "btn-primary"}`}
         >
           <Plus className="h-3.5 w-3.5" />
           {added ? "Added" : adding ? "Adding..." : "Add to Tracker"}
@@ -489,7 +504,7 @@ function SkeletonGrid() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="flex flex-col rounded-lg border-2 border-black bg-white p-5"
+          className="flex flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
         >
           <div className="mb-3 h-5 w-3/4 animate-pulse rounded bg-gray-200" />
           <div className="mb-2 h-4 w-1/2 animate-pulse rounded bg-gray-200" />
@@ -510,7 +525,7 @@ function SkeletonGrid() {
 
 function EmptyState() {
   return (
-    <div className="rounded-lg border-2 border-dashed border-gray-300 bg-white py-16 text-center">
+    <div className="rounded-xl border border-gray-200 bg-white shadow-sm py-16 text-center">
       <Sparkles className="mx-auto mb-4 h-10 w-10 text-gray-300" />
       <p className="mb-1 text-sm font-medium text-gray-700">
         No matching jobs found
@@ -530,14 +545,14 @@ function ErrorState({
   onRetry: () => void;
 }) {
   return (
-    <div className="rounded-lg border-2 border-red-200 bg-red-50 py-12 text-center">
+    <div className="rounded-xl border border-red-200 bg-red-50 shadow-sm py-12 text-center">
       <p className="mb-2 text-sm font-semibold text-red-700">
         Couldn&rsquo;t load suggestions
       </p>
       <p className="mb-4 text-xs text-red-600">{message}</p>
       <button
         onClick={onRetry}
-        className="rounded-full bg-red-600 px-5 py-2 text-xs font-medium text-white hover:bg-red-700"
+        className="btn-sm inline-flex items-center gap-2 rounded-full bg-red-600 px-5 py-2 text-xs font-medium text-white hover:bg-red-700"
       >
         Try again
       </button>
@@ -561,7 +576,7 @@ function Pagination({
       <button
         onClick={() => onChange(page - 1)}
         disabled={disabled || page <= 1}
-        className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+        className="btn-ghost btn-sm"
       >
         Previous
       </button>
@@ -572,7 +587,7 @@ function Pagination({
       <button
         onClick={() => onChange(page + 1)}
         disabled={disabled || page >= totalPages}
-        className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+        className="btn-ghost btn-sm"
       >
         Next
       </button>

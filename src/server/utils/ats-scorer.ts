@@ -91,12 +91,13 @@ export function extractRequiredYears(jobDescription: string): number {
   const text = jobDescription.toLowerCase();
 
   const patterns = [
-    // "5+ years", "3+ yrs"
-    /(\d{1,2})\+?\s*(?:years?|yrs?)(?:\s+of\s+(?:professional\s+)?experience)?/g,
+    // "5+ years of experience", "3+ years experience" — require experience context to avoid
+    // false matches on things like "established 30 years ago" or "30 years in business"
+    /(\d{1,2})\+?\s*(?:years?|yrs?)\s+of\s+(?:professional\s+|relevant\s+|industry\s+)?experience/g,
     // "minimum 3 years", "at least 5 years"
     /(?:minimum|at\s+least|min\.?)\s*(\d{1,2})\s*(?:years?|yrs?)/g,
-    // "3-5 years", "5 to 7 years"
-    /(\d{1,2})\s*[-–to]+\s*(\d{1,2})\s*(?:years?|yrs?)/g,
+    // "3-5 years", "5 to 7 years" experience ranges
+    /(\d{1,2})\s*[-–to]+\s*(\d{1,2})\s*(?:years?|yrs?)\s+(?:of\s+)?experience/g,
   ];
 
   let maxYears = 0;
@@ -106,7 +107,8 @@ export function extractRequiredYears(jobDescription: string): number {
     while ((match = pattern.exec(text)) !== null) {
       // For range patterns (3-5 years) use the lower bound
       const years = parseInt(match[1]!, 10);
-      if (!isNaN(years) && years > maxYears && years <= 30) {
+      // Cap at 15 — no legitimate tech job requires more than 15 years stated experience
+      if (!isNaN(years) && years > maxYears && years <= 15) {
         maxYears = years;
       }
     }
@@ -193,22 +195,45 @@ function scoreExperience(requiredYears: number, resumeYears: number): number {
 // Education scoring
 // ============================================
 
-/** Degree levels ordered by seniority */
-const DEGREE_LEVELS: { pattern: RegExp; level: number }[] = [
-  { pattern: /\b(?:ph\.?d|doctorate|doctoral)\b/i, level: 4 },
-  { pattern: /\b(?:master'?s?|m\.?s\.?|m\.?a\.?|mba|m\.?eng)\b/i, level: 3 },
-  { pattern: /\b(?:bachelor'?s?|b\.?s\.?|b\.?a\.?|b\.?eng|undergraduate)\b/i, level: 2 },
-  { pattern: /\b(?:associate'?s?|a\.?s\.?|a\.?a\.?)\b/i, level: 1 },
-];
-
+/**
+ * Detects the highest degree level mentioned in a block of text.
+ *
+ * Uses word-prefix matching (e.g. /\bbachelor/ catches "bachelor",
+ * "bachelors", "bachelor's", "bachelor of science", "bachelors degree", etc.)
+ * so variations in phrasing are all recognised without relying on word-end
+ * boundaries that break on trailing punctuation like "B.S.".
+ *
+ * Returns: 4=PhD, 3=Master's, 2=Bachelor's, 1=Associate's, 0=none
+ */
 function detectDegreeLevel(text: string): number {
-  let highest = 0;
-  for (const { pattern, level } of DEGREE_LEVELS) {
-    if (pattern.test(text)) {
-      highest = Math.max(highest, level);
-    }
-  }
-  return highest;
+  const t = text.toLowerCase();
+
+  // PhD / doctorate
+  if (/\bph\.?d\b|\bdoctor(?:ate|al)\b/.test(t)) return 4;
+
+  // Master's — word prefix covers masters / master's / master of ...
+  // also catches m.s., m.a., mba, m.eng abbreviations
+  if (
+    /\bmaster/.test(t) ||
+    /\bmba\b/.test(t) ||
+    /(?<![a-z])m\.?(?:s|a|eng)\.?(?![a-z])/.test(t)
+  ) return 3;
+
+  // Bachelor's — word prefix covers bachelor / bachelors / bachelor's /
+  // bachelor of science / bachelors degree / etc.
+  // Also catches b.s., b.a., b.eng abbreviations.
+  if (
+    /\bbachelor/.test(t) ||
+    /(?<![a-z])b\.?(?:s|a|eng)\.?(?![a-z])/.test(t)
+  ) return 2;
+
+  // Associate's
+  if (
+    /\bassociate/.test(t) ||
+    /(?<![a-z])a\.?[sa]\.?(?![a-z])/.test(t)
+  ) return 1;
+
+  return 0;
 }
 
 /** Common field-of-study terms to match between JD and resume */

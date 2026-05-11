@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
@@ -23,18 +23,15 @@ export default async function AccountLayout({
     redirect("/login");
   }
 
-  // Ensure settings row exists
-  const settings = await db.userSettings.upsert({
+  // Ensure settings row exists so API calls never fail
+  await db.userSettings.upsert({
     where: { userId: user.id },
-    create: { userId: user.id }, // defaults
+    create: { userId: user.id },
     update: {},
   });
 
   return (
-    <AccountShell
-      initialDarkMode={settings.prefersDarkMode}
-      initialLanguage={settings.languagePref ?? "JavaScript"}
-    >
+    <AccountShell>
       {children}
     </AccountShell>
   );
