@@ -183,9 +183,9 @@ h3 {
 .hero-section {
   min-height: calc(100vh - 64px); /* 64px = navbar h-16 */
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: 11rem var(--section-padding-x) 4rem;
+  padding: clamp(3rem, 8vh, 7rem) var(--section-padding-x);
   position: relative;
   overflow: hidden;
   background: #FFFFFF;
@@ -265,7 +265,7 @@ h3 {
   font-family: var(--font-geist-sans, ui-sans-serif, sans-serif);
   font-weight: 800;
   font-style: italic;
-  font-size: clamp(5.5rem, 11vw, 9.5rem);
+  font-size: clamp(4rem, 9vw, 9.5rem);
   line-height: 0.88;
   letter-spacing: -0.02rem;
   text-transform: uppercase;
@@ -512,6 +512,13 @@ h3 {
 /* ============================================================
    RESPONSIVE
    ============================================================ */
+@media (max-width: 1280px) {
+  .hero-brand img {
+    width: 200px;
+    height: 200px;
+  }
+}
+
 @media (max-width: 900px) {
   .split-layout {
     grid-template-columns: 1fr;
@@ -524,9 +531,14 @@ h3 {
   }
 
   .hero-section {
-    min-height: auto;
-    padding: 3.5rem 1.5rem;
-    align-items: flex-start;
+    min-height: calc(100vh - 64px);
+    padding: clamp(2rem, 6vh, 4rem) 1.5rem;
+    align-items: center;
+  }
+
+  .hero-brand img {
+    width: 160px;
+    height: 160px;
   }
 
   .feature-section {
@@ -534,13 +546,18 @@ h3 {
   }
 
   .hero-brand-text {
-    font-size: clamp(3.5rem, 12vw, 5.5rem);
+    font-size: clamp(3rem, 12vw, 5rem);
   }
 }
 
 @media (max-width: 640px) {
   .hero-brand {
     gap: 1.25rem;
+  }
+
+  .hero-brand img {
+    width: 120px;
+    height: 120px;
   }
 
   .hero-cta {

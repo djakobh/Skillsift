@@ -101,8 +101,6 @@ model UserSettings {
   prefersDarkMode Boolean @default(false)
   languagePref    String? @default("JavaScript")
   user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fontScale       Float   @default(1.0)
-
   @@index([userId])
 }
 

@@ -4,6 +4,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -346,7 +347,7 @@ function StatusBadge({
 }) {
   const [open, setOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [openUpward, setOpenUpward] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -371,7 +372,15 @@ function StatusBadge({
     if (!open && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
-      setOpenUpward(spaceBelow < 280);
+      const openUpward = spaceBelow < 280;
+      setDropdownStyle({
+        position: "fixed",
+        top: openUpward ? undefined : rect.bottom + 4,
+        bottom: openUpward ? window.innerHeight - rect.top + 4 : undefined,
+        left: rect.left,
+        width: 160,
+        zIndex: 9999,
+      });
     }
     setOpen(!open);
   };
@@ -403,10 +412,11 @@ function StatusBadge({
         <ChevronDown className="h-3 w-3" />
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
           ref={dropdownRef}
-          className={`absolute left-0 z-50 w-40 rounded-lg bg-white shadow-lg border border-gray-200 ${openUpward ? "bottom-full mb-1" : "top-full mt-1"}`}
+          style={dropdownStyle}
+          className="rounded-lg bg-white shadow-lg border border-gray-200"
         >
           {STATUS_OPTIONS.map((s) => (
             <button
@@ -417,7 +427,8 @@ function StatusBadge({
               {formatStatus(s)}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -585,8 +596,7 @@ export default function JobsPage() {
                 {jobs.map((job) => (
                   <div
                     key={job.id}
-                    onClick={() => router.push(`/jobs/${job.id}`)}
-                    className="grid cursor-pointer grid-cols-[2fr_2fr_140px_140px_140px_80px] gap-2 border-b border-gray-100 last:border-0 px-4 py-3 transition-colors hover:bg-gray-50"
+                    className="grid grid-cols-[2fr_2fr_140px_140px_140px_80px] gap-2 border-b border-gray-100 last:border-0 px-4 py-3 transition-colors hover:bg-gray-50"
                   >
                     <div>
                       <p className="text-sm font-medium text-gray-900 m-0">{job.company}</p>
