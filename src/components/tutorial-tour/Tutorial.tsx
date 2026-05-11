@@ -39,7 +39,6 @@ export default function Tutorial() {
     localStorage.setItem(STORAGE_KEY, "true");
     localStorage.setItem(TOUR_ACTIVE_KEY, "true");
     localStorage.setItem(TOUR_STEP_KEY, "0");
-    // Start on Resume Scanner — first page of the tour
     router.push("/resume");
   }
 
@@ -58,39 +57,43 @@ export default function Tutorial() {
 
   return (
     <>
-      {/* Take the Tour button */}
-      <button
-        onClick={openTour}
-        className="inline-block rounded-full border border-orange-500 px-6 py-2 text-sm text-orange-500 hover:bg-orange-50 transition-colors"
-      >
+      {/* Take the Tour button — sits in the Navbar next to the user avatar */}
+      <button onClick={openTour} className="btn-outline btn-sm">
         Take the Tour
       </button>
 
       {/* First visit welcome modal */}
       {isWelcomeOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="relative mx-4 w-full max-w-md rounded-xl bg-white p-8 shadow-2xl">
-            <div className="text-center">
-              <h2 className="mb-2 text-2xl font-bold">Welcome to SkillSift!</h2>
-              <p className="mb-8 text-sm text-gray-600">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="mx-4 w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden">
+
+            {/* Header — matches every card in the app */}
+            <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+              <h3 className="text-gray-900 m-0">Welcome to SkillSift!</h3>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-6 flex flex-col gap-5">
+              <p className="description m-0">
                 SkillSift helps you prepare for job interviews with AI-powered
                 tools. Would you like a quick tour of what you can do here?
               </p>
               <div className="flex flex-col gap-3">
                 <button
                   onClick={startTour}
-                  className="rounded-full bg-orange-500 px-6 py-3 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+                  className="btn-primary w-full justify-center"
                 >
                   Yes, show me around
                 </button>
                 <button
                   onClick={skipTutorial}
-                  className="text-sm text-gray-400 hover:text-gray-600"
+                  className="btn-ghost w-full justify-center"
                 >
-                  No thanks, I will explore on my own
+                  No thanks, I&apos;ll explore on my own
                 </button>
               </div>
             </div>
+
           </div>
         </div>
       )}
