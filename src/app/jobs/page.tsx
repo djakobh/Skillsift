@@ -346,7 +346,7 @@ function StatusBadge({
 }) {
   const [open, setOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [openUpward, setOpenUpward] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -371,7 +371,15 @@ function StatusBadge({
     if (!open && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
-      setOpenUpward(spaceBelow < 280);
+      const openUpward = spaceBelow < 280;
+      setDropdownStyle({
+        position: "fixed",
+        top: openUpward ? undefined : rect.bottom + 4,
+        bottom: openUpward ? window.innerHeight - rect.top + 4 : undefined,
+        left: rect.left,
+        width: 160,
+        zIndex: 9999,
+      });
     }
     setOpen(!open);
   };
@@ -406,7 +414,8 @@ function StatusBadge({
       {open && (
         <div
           ref={dropdownRef}
-          className={`absolute left-0 z-50 w-40 rounded-lg bg-white shadow-lg border border-gray-200 ${openUpward ? "bottom-full mb-1" : "top-full mt-1"}`}
+          style={dropdownStyle}
+          className="rounded-lg bg-white shadow-lg border border-gray-200"
         >
           {STATUS_OPTIONS.map((s) => (
             <button
