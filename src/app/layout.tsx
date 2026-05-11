@@ -14,7 +14,6 @@ import Navbar from "~/components/Navbar";
 import SessionProvider from "~/components/SessionProvider";
 import ChatWidget from "~/components/ChatWidget";
 import { ThemeProvider } from "~/components/ThemeProvider";
-import TutorialLoader from "~/components/tutorial-tour/TutorialLoader";
 
 export const metadata: Metadata = {
   title: "SkillSift",
@@ -47,7 +46,6 @@ export default function RootLayout({
           <SessionProvider>
             <ThemeProvider>
               <Navbar />
-              {/* <TutorialLoader /> */}
               {children}
               <ChatWidget />
             </ThemeProvider>

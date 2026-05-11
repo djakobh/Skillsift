@@ -38,14 +38,25 @@ export default function Tutorial() {
     setIsWelcomeOpen(false);
   }
 
+  function openTour() {
+    localStorage.setItem(TOUR_ACTIVE_KEY, "true");
+    localStorage.setItem(TOUR_STEP_KEY, "0");
+    router.push("/resume");
+  }
+
   return (
     <>
+      {/* Take the Tour button — sits in the Navbar next to the user avatar */}
+      <button onClick={openTour} className="btn-outline btn-sm">
+        Take the Tour
+      </button>
+
       {/* First visit welcome modal */}
       {isWelcomeOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="mx-4 w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden">
 
-            {/* Header — matches every card in the app */}
+            {/* Header */}
             <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
               <h3 className="text-gray-900 m-0">Welcome to SkillSift!</h3>
             </div>

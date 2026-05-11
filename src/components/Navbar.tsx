@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { User, Settings, LogOut } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import Tutorial from "~/components/tutorial-tour/Tutorial";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -50,9 +51,9 @@ export default function Navbar() {
   return (
     <nav
       style={{
-        background: pathname === "/" ? "#ffffff" : "rgba(255, 255, 255, 0.85)",
-        backdropFilter: pathname === "/" ? undefined : "blur(16px)",
-        WebkitBackdropFilter: pathname === "/" ? undefined : "blur(16px)",
+        background: "rgba(255, 255, 255, 0.85)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
         boxShadow: "0 1px 0 0 rgba(0,0,0,0.06), 0 4px 24px rgba(0,0,0,0.06)",
         position: pathname === "/" ? "relative" : "sticky",
         top: pathname === "/" ? undefined : 0,
@@ -102,6 +103,7 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             {session?.user ? (
               <>
+              <Tutorial />
               <div className="relative" ref={dropdownRef}>
                 <button
                   id="nav-account"
