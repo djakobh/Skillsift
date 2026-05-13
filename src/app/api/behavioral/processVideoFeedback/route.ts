@@ -24,18 +24,27 @@ export async function POST(req: NextRequest) {
         }
 
         const summary = rawAnalysis.summary ?? {};
-        const segments: Array<{ category: string; scoreAvg?: number | null; isGood?: boolean }> =
+        const segments: Array<{ category: string; startSec?: number; endSec?: number; scoreAvg?: number | null; isGood?: boolean }> =
             rawAnalysis.segments ?? [];
 
-        // Prefer summary.good_percent; fall back to averaging scoreAvg across segments per category
+        // Prefer summary.good_percent; fall back to duration-weighted isGood ratio from segments
         function scoreForCategory(cat: string): number {
             const fromSummary = summary[cat]?.good_percent;
             if (typeof fromSummary === "number" && fromSummary > 0) return fromSummary;
 
-            const catSegments = segments.filter((s) => s.category === cat && typeof s.scoreAvg === "number");
+            const catSegments = segments.filter((s) => s.category === cat);
             if (catSegments.length === 0) return 0;
-            const total = catSegments.reduce((sum, s) => sum + (s.scoreAvg ?? 0), 0);
-            return total / catSegments.length;
+
+            const totalDuration = catSegments.reduce((sum, s) => sum + ((s.endSec ?? 0) - (s.startSec ?? 0)), 0);
+            if (totalDuration > 0) {
+                const goodDuration = catSegments
+                    .filter((s) => s.isGood)
+                    .reduce((sum, s) => sum + ((s.endSec ?? 0) - (s.startSec ?? 0)), 0);
+                return goodDuration / totalDuration;
+            }
+
+            // final fallback: count-based
+            return catSegments.filter((s) => s.isGood).length / catSegments.length;
         }
 
         const baseItems: FeedbackItem[] = [

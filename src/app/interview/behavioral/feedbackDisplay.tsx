@@ -53,10 +53,20 @@ function SortFeedbackItems(items: FeedbackItem[]) {
     return itemsByType;
 }
 
-function scoreDescriptor(score: number): string {
-    if (score >= 0.7) return "Good";
-    if (score >= 0.4) return "Needs Attention";
-    return "Needs Improvement";
+const DEFAULT_DESCRIPTIONS: Record<string, string> = {
+    "Word Count":        "Total number of words spoken during the interview.",
+    "Repitition":        "Frequency of repeated words or phrases.",
+    "Word Choice":       "Variety and appropriateness of vocabulary used.",
+    "Volume":            "Consistency and clarity of speaking volume.",
+    "Posture":           "Estimated from body position over time.",
+    "Eye Contact":       "Estimated from face orientation over time.",
+    "Facial Expression": "Estimated from facial engagement over time.",
+};
+
+function scoreDescriptor(score: number): { label: string; color: string } {
+    if (score >= 0.7) return { label: "Good",             color: "text-green-600" };
+    if (score >= 0.4) return { label: "Needs Attention",  color: "text-orange-500" };
+    return              { label: "Needs Improvement",     color: "text-red-500" };
 }
 
 function DisplayScoreFeedback({ items }: { items: FeedbackItem[] }) {
@@ -67,20 +77,26 @@ function DisplayScoreFeedback({ items }: { items: FeedbackItem[] }) {
     return (
         <DisplayBox title="Statistics">
             <div className="flex flex-col gap-2">
-                {items.map((item: FeedbackItem, i) => (
-                    <div key={i} className="rounded-lg bg-gray-50 border border-gray-100 px-4 py-3">
-                        <div className="flex items-center gap-1.5 mb-1">
-                            <span className="text-sm font-semibold text-gray-800">{item.key}:</span>
-                            <span className="text-sm text-gray-600">{scoreDescriptor(item.score ?? 0)}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">{item.content ?? ""}</span>
-                            <span className="text-sm font-bold text-gray-900 ml-4 shrink-0">
+                {items.map((item: FeedbackItem, i) => {
+                    const { label, color } = scoreDescriptor(item.score ?? 0);
+                    const description = item.content ?? DEFAULT_DESCRIPTIONS[item.key] ?? "";
+                    return (
+                        <div key={i} className="flex items-center gap-4 rounded-lg bg-gray-50 border border-gray-100 px-4 py-3">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-sm font-semibold text-gray-800">{item.key}:</span>
+                                    <span className={`text-sm font-medium ${color}`}>{label}</span>
+                                </div>
+                                {description && (
+                                    <p className="text-xs text-gray-500 m-0 mt-0.5">{description}</p>
+                                )}
+                            </div>
+                            <span className="text-sm font-bold text-orange-500 shrink-0">
                                 {(item.score ?? 0).toFixed(2)}
                             </span>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </DisplayBox>
     );
