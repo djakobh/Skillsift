@@ -89,6 +89,23 @@ async function AudioAnalysisToFBItem(audioAnalysisResponse: Response) {
     return CombineFeedback(CombineFeedback(volumeFBItems, fillerFBItems), wordCountFBItems);
 }
 
+function scoreFromSegments(rawAnalysis: RawVideoAnalysis, category: string): number {
+    const summary = (rawAnalysis as any).summary ?? {};
+    const fromSummary = summary[category]?.good_percent;
+    if (typeof fromSummary === "number" && fromSummary > 0) return fromSummary;
+
+    const segments: any[] = (rawAnalysis as any).segments ?? [];
+    const cat = segments.filter((s: any) => s.category === category);
+    if (cat.length === 0) return 0;
+
+    const totalDur = cat.reduce((sum: number, s: any) => sum + ((s.endSec ?? 0) - (s.startSec ?? 0)), 0);
+    if (totalDur > 0) {
+        const goodDur = cat.filter((s: any) => s.isGood).reduce((sum: number, s: any) => sum + ((s.endSec ?? 0) - (s.startSec ?? 0)), 0);
+        return goodDur / totalDur;
+    }
+    return cat.filter((s: any) => s.isGood).length / cat.length;
+}
+
 // Step 1: Fetch Railway URL + secret from auth-gated Vercel endpoint (stays server-side)
 // Step 2: POST video blob directly to Railway (bypasses Vercel payload limit)
 // Step 3: POST raw JSON to thin Vercel route for DB averaging + transformation
@@ -113,12 +130,19 @@ async function AnalyzeVideo(sessionId: string, videoData: Blob) {
         throw new Error(`Video analysis failed: ${railwayResponse.status}`);
     }
 
-    const rawAnalysis = await railwayResponse.json();
+    const rawAnalysis: RawVideoAnalysis = await railwayResponse.json();
+
+    // Compute scores client-side directly from the segments we know are present
+    const baseItems = [
+        { category: "Posture",            content: "Estimated from body position over time.",       score: scoreFromSegments(rawAnalysis, "posture") },
+        { category: "Eye Contact",        content: "Estimated from face orientation over time.",    score: scoreFromSegments(rawAnalysis, "eye_contact") },
+        { category: "Facial Expression",  content: "Estimated from facial engagement over time.",   score: scoreFromSegments(rawAnalysis, "facial_expression") },
+    ];
 
     const processResponse = await fetch("/api/behavioral/processVideoFeedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rawAnalysis, sessionId }),
+        body: JSON.stringify({ baseItems, sessionId }),
     });
 
     if (!processResponse.ok) {
@@ -130,7 +154,7 @@ async function AnalyzeVideo(sessionId: string, videoData: Blob) {
 
     return {
         feedback: fbItems,
-        rawAnalysis: processed.rawAnalysis as RawVideoAnalysis,
+        rawAnalysis,
     };
 }
 

@@ -14,63 +14,18 @@ type FeedbackItem = {
 
 export async function POST(req: NextRequest) {
     try {
-        const { rawAnalysis, sessionId } = await req.json() as {
-            rawAnalysis: any;
+        const { baseItems, sessionId } = await req.json() as {
+            baseItems: FeedbackItem[];
             sessionId: string;
         };
 
-        if (!rawAnalysis || !sessionId) {
-            return NextResponse.json({ error: "Missing rawAnalysis or sessionId" }, { status: 400 });
+        if (!baseItems || !sessionId) {
+            return NextResponse.json({ error: "Missing baseItems or sessionId" }, { status: 400 });
         }
-
-        const summary = rawAnalysis.summary ?? {};
-        const segments: Array<{ category: string; startSec?: number; endSec?: number; scoreAvg?: number | null; isGood?: boolean }> =
-            rawAnalysis.segments ?? [];
-
-        // Prefer summary.good_percent; fall back to duration-weighted isGood ratio from segments
-        function scoreForCategory(cat: string): number {
-            const fromSummary = summary[cat]?.good_percent;
-            if (typeof fromSummary === "number" && fromSummary > 0) return fromSummary;
-
-            const catSegments = segments.filter((s) => s.category === cat);
-            if (catSegments.length === 0) return 0;
-
-            const totalDuration = catSegments.reduce((sum, s) => sum + ((s.endSec ?? 0) - (s.startSec ?? 0)), 0);
-            if (totalDuration > 0) {
-                const goodDuration = catSegments
-                    .filter((s) => s.isGood)
-                    .reduce((sum, s) => sum + ((s.endSec ?? 0) - (s.startSec ?? 0)), 0);
-                return goodDuration / totalDuration;
-            }
-
-            // final fallback: count-based
-            return catSegments.filter((s) => s.isGood).length / catSegments.length;
-        }
-
-        const baseItems: FeedbackItem[] = [
-            {
-                category: "Posture",
-                content: "Estimated from body position over time.",
-                score: scoreForCategory("posture"),
-            },
-            {
-                category: "Eye Contact",
-                content: "Estimated from face orientation over time.",
-                score: scoreForCategory("eye_contact"),
-            },
-            {
-                category: "Facial Expression",
-                content: "Estimated from facial engagement over time.",
-                score: scoreForCategory("facial_expression"),
-            },
-        ];
 
         const averagedItems = await averageFeedbackItems(baseItems, sessionId);
 
-        return NextResponse.json({
-            feedback: averagedItems,
-            rawAnalysis,
-        });
+        return NextResponse.json({ feedback: averagedItems });
     } catch (err: any) {
         console.error("processVideoFeedback error:", err);
         return NextResponse.json({ error: err?.message ?? "Processing failed" }, { status: 500 });
