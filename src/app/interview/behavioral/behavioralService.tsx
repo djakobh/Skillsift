@@ -17,15 +17,35 @@ import { CombineFeedback } from "./feedbackItem";
 import { AnalysisResultToFBItems, CreateFeedbackItem } from "./feedbackItem";
 import type { AnalysisResponse, VolumeAnalysisResponse, FillerAnalysisResponse, BasicAnalysisResponse } from "../../api/behavioral/analyze/analysisResponse";
 
+type RawVideoAnalysis = {
+    summary?: {
+        video?: { sample_fps?: number; sampled_frames?: number };
+        posture?: { valid_frames?: number; good_frames?: number; good_percent?: number };
+        eye_contact?: { valid_frames?: number; good_frames?: number; good_percent?: number };
+        facial_expression?: { valid_frames?: number; good_frames?: number; good_percent?: number };
+    };
+    segments?: Array<{
+        id?: string;
+        category: string;
+        startSec: number;
+        endSec: number;
+        isGood: boolean;
+        scoreAvg?: number | null;
+        note?: string | null;
+        createdAt?: string;
+    }>;
+    error?: string;
+};
+
 //Wrapper function to simplify calls to behavioral service
 export async function SendAudioVideoToServer(sessionId: string, audioData: Blob, videoData: Blob) {
 
-    const audioAnalysisResponse = await SendToServer(sessionId, audioData, "/api/behavioral/uploadAudio", "audio");
-    const videoAnalysisResponse = await SendVideoSessionId(sessionId, "/api/behavioral/uploadVideo");
+    const audioAnalysisResponse = await SendBlobToServer(sessionId, audioData, "/api/behavioral/uploadAudio", "audio");
+    const videoAnalysisResponse = await SendBlobToServer(sessionId, videoData, "/api/behavioral/uploadVideo", "video");
 
     const audioFeedback = await AudioAnalysisToFBItem(audioAnalysisResponse);
     const videoFeedback = await VideoAnalysisToFBItem(videoAnalysisResponse);
-    const allFeedback = CombineFeedback(audioFeedback, videoFeedback);
+    const allFeedback = CombineFeedback(audioFeedback, videoFeedback.feedback);
 
     const formData = new FormData();
 
@@ -41,9 +61,13 @@ export async function SendAudioVideoToServer(sessionId: string, audioData: Blob,
     });
 
     //return the data to the user
-    return allFeedback;
+    return {
+        allFeedback,
+        rawVideoAnalysis: videoFeedback.rawAnalysis ?? null
+    };
 }
 
+// Audio API returns { volumeAnalysis, fillerAnalysis, wordCountAnalysis } — parse each sub-array explicitly
 async function AudioAnalysisToFBItem(audioAnalysisResponse: Response) {
     const audioAnalysisData: AnalysisResponse = await audioAnalysisResponse.json();
 
@@ -63,29 +87,20 @@ async function AudioAnalysisToFBItem(audioAnalysisResponse: Response) {
         JSON.stringify(wordcountData.feedbackItems)
     );
 
-    const ab = CombineFeedback(volumeFBItems, fillerFBItems);
-    const bc = CombineFeedback(ab, wordCountFBItems);
-
-    return bc;
+    return CombineFeedback(CombineFeedback(volumeFBItems, fillerFBItems), wordCountFBItems);
 }
 
+// Video API returns { feedback, rawAnalysis } — extract both
 async function VideoAnalysisToFBItem(videoAnalysisResponse: Response) {
-    const videoResponseData = await videoAnalysisResponse.json();
-    const fbItems: FeedbackItem[] = AnalysisResultToFBItems(JSON.stringify(videoResponseData));
-
-    return fbItems;
+    const responseData = await videoAnalysisResponse.json();
+    const fbItems: FeedbackItem[] = AnalysisResultToFBItems(JSON.stringify(responseData.feedback ?? responseData));
+    return {
+        feedback: fbItems,
+        rawAnalysis: responseData.rawAnalysis as RawVideoAnalysis | undefined
+    };
 }
 
-async function SendVideoSessionId(sessionId: string, apiURL: string) {
-    const formData = new FormData();
-    formData.append("sessionId", sessionId);
-    const response = await fetch(apiURL, { method: "POST", body: formData });
-    return response;
-}
-
-async function SendToServer(sessionId: string, data: Blob, apiURL: string, formDataKey: string) {
-    //Attach data to form data
-    //in order to send it to the api
+async function SendBlobToServer(sessionId: string, data: Blob, apiURL: string, formDataKey: string) {
     console.log("Send blob to " + apiURL);
 
     const formData = new FormData();
@@ -100,7 +115,6 @@ async function SendToServer(sessionId: string, data: Blob, apiURL: string, formD
         sessionId
     );
 
-    //obtain json analysis of the feedback data
     const response = await fetch(apiURL, {
         method: "POST",
         body: formData

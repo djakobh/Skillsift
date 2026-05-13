@@ -13,6 +13,7 @@ import type { FeedbackItem } from "./feedbackItem";
 import { BIPageState } from "./main";
 import { SendAudioVideoToServer, EndSession, PauseSession } from "./behavioralService";
 import { DisplayFeedbackItems } from "./feedbackDisplay";
+import VideoPlayerWithOverlay from "~/components/VideoPlayerWithOverlay";
 
 
 export function BIEnd({ changeState, waitForAudio, waitForVideo, sessionId, usePause }: {
@@ -32,8 +33,16 @@ export function BIEnd({ changeState, waitForAudio, waitForVideo, sessionId, useP
     const [error, setError] = useState(false);
     const [video, setVideo] = useState<Blob | null>(null);
     const [audio, setAudio] = useState<Blob | null>(null);
+    const [rawVideoAnalysis, setRawVideoAnalysis] = useState<any>(null);
+    const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
     const effectHasRun = useRef(false);
+
+    useEffect(() => {
+        return () => {
+            if (videoUrl) URL.revokeObjectURL(videoUrl);
+        };
+    }, [videoUrl]);
 
     useEffect(() => {
 
@@ -70,7 +79,9 @@ export function BIEnd({ changeState, waitForAudio, waitForVideo, sessionId, useP
 
                     console.log("Completed audio upload and session end.")
 
-                    setFeedbackData(result);
+                    setFeedbackData(result.allFeedback);
+                    setRawVideoAnalysis(result.rawVideoAnalysis);
+                    setVideoUrl(URL.createObjectURL(videoData));
                     setVideo(videoData);
                     setAudio(audioData);
                 }
@@ -149,6 +160,23 @@ export function BIEnd({ changeState, waitForAudio, waitForVideo, sessionId, useP
                 {!loading && !error && (
                     <div className="page-animate" style={{ animationDelay: "0.2s" }}>
                         <DisplayFeedbackItems items={data} />
+                    </div>
+                )}
+
+                {/* Detailed Video Analysis */}
+                {!loading && !error && videoUrl && rawVideoAnalysis?.segments && (
+                    <div className="page-animate border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm" style={{ animationDelay: "0.25s" }}>
+                        <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
+                            <p className="text-sm font-semibold text-gray-800 m-0">Detailed Video Analysis</p>
+                            <p className="text-xs text-gray-500 m-0 mt-0.5">Posture, eye contact, and facial expression over time.</p>
+                        </div>
+                        <div className="p-6">
+                            <VideoPlayerWithOverlay
+                                videoSrc={videoUrl}
+                                segments={rawVideoAnalysis.segments}
+                                title=""
+                            />
+                        </div>
                     </div>
                 )}
 
