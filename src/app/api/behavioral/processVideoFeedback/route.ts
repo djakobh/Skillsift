@@ -24,22 +24,35 @@ export async function POST(req: NextRequest) {
         }
 
         const summary = rawAnalysis.summary ?? {};
+        const segments: Array<{ category: string; scoreAvg?: number | null; isGood?: boolean }> =
+            rawAnalysis.segments ?? [];
+
+        // Prefer summary.good_percent; fall back to averaging scoreAvg across segments per category
+        function scoreForCategory(cat: string): number {
+            const fromSummary = summary[cat]?.good_percent;
+            if (typeof fromSummary === "number" && fromSummary > 0) return fromSummary;
+
+            const catSegments = segments.filter((s) => s.category === cat && typeof s.scoreAvg === "number");
+            if (catSegments.length === 0) return 0;
+            const total = catSegments.reduce((sum, s) => sum + (s.scoreAvg ?? 0), 0);
+            return total / catSegments.length;
+        }
 
         const baseItems: FeedbackItem[] = [
             {
                 category: "Posture",
                 content: "Estimated from body position over time.",
-                score: summary.posture?.good_percent ?? 0,
+                score: scoreForCategory("posture"),
             },
             {
                 category: "Eye Contact",
                 content: "Estimated from face orientation over time.",
-                score: summary.eye_contact?.good_percent ?? 0,
+                score: scoreForCategory("eye_contact"),
             },
             {
                 category: "Facial Expression",
                 content: "Estimated from facial engagement over time.",
-                score: summary.facial_expression?.good_percent ?? 0,
+                score: scoreForCategory("facial_expression"),
             },
         ];
 
