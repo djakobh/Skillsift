@@ -34,7 +34,7 @@ export function GetFillerAnalysis(tokens: Record<string, number>) {
     analysisItems.push(scoreItem);
 
     //leave notes about filler words used if any
-    if (scoreItem.score) {
+    if (scoreItem.score !== undefined) {
         const notesItem: AnalysisItem = GetNotesItem(scoreItem.score, fillerData.fillerWords)
         analysisItems.push(notesItem);
     }
@@ -53,33 +53,29 @@ function GetScoreItem(fillerAmount: number, nonFillerAmount: number) {
 
     //avoid divide by zero
     if (total == 0)
-        return CreateAnalysisItemScore(AnalysisType.WordChoice, 0);
+        return CreateAnalysisItemScore(AnalysisType.WordChoice, 1);
 
-    const ratio = fillerAmount / (nonFillerAmount + fillerAmount);
+    const ratio = fillerAmount / total;
 
-    //10% filler words = 0 score
-    //0% filler words = 1 score
-    //keep within 0 to 5
+    //0% filler words = 1 score (best)
+    //10%+ filler words = 0 score (worst)
     const scoreThreshold = 0.1;
-    const score = Math.max(0, Math.min(1, ratio / scoreThreshold)) * 5;
+    const score = Math.max(0, 1 - (ratio / scoreThreshold));
 
     return CreateAnalysisItemScore(AnalysisType.WordChoice, score);
 }
 
 function GetNotesItem(score: number, fillerWords: string[]) {
-    if (score >= 4) {
+    // score is 0–1: 1 = no filler (best), 0 = 10%+ filler (worst)
+    if (score >= 0.9) {
         return CreateAnalysisItemContent(AnalysisType.Notes, FeedbackMessage.NoUse);
     }
-    else if (score >= 2.5) {
-        //append word list to message
+    else if (score >= 0.5) {
         const message = ConstructMessage(FeedbackMessage.SomeUse, fillerWords);
-
         return CreateAnalysisItemContent(AnalysisType.Notes, message);
     }
     else {
-        //append word list to message
         const message = ConstructMessage(FeedbackMessage.TooMuchUse, fillerWords);
-
         return CreateAnalysisItemContent(AnalysisType.Notes, message);
     }
 }
