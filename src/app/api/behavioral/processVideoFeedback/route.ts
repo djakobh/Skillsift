@@ -27,18 +27,18 @@ export async function POST(req: NextRequest) {
 
         const baseItems: FeedbackItem[] = [
             {
+                category: "Posture",
+                content: "Estimated from body position over time.",
+                score: summary.posture?.good_percent ?? 0,
+            },
+            {
                 category: "Eye Contact",
                 content: "Estimated from face orientation over time.",
                 score: summary.eye_contact?.good_percent ?? 0,
             },
             {
-                category: "Confidence",
-                content: "Estimated from posture and facial engagement.",
-                score: ((summary.posture?.good_percent ?? 0) + (summary.facial_expression?.good_percent ?? 0)) / 2,
-            },
-            {
-                category: "Sociability",
-                content: "Estimated from facial engagement.",
+                category: "Facial Expression",
+                content: "Estimated from facial engagement over time.",
                 score: summary.facial_expression?.good_percent ?? 0,
             },
         ];

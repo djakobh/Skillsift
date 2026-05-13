@@ -124,35 +124,30 @@ export default function VideoPlayerWithOverlay({
 
   return (
     <div className="w-full max-w-5xl space-y-4">
-      <h2 className="text-2xl font-bold">{title}</h2>
+      {title && <h2 className="text-2xl font-bold">{title}</h2>}
 
-      <div className="relative">
-        <video
-          ref={videoRef}
-          controls
-          className="w-full rounded-xl border bg-black"
-          src={videoSrc}
-        />
-
-        {/* Active overlays */}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute top-4 right-4 flex max-w-sm flex-col gap-3">
-            {groupedActiveSegments.facial_expression && (
-              <OverlayCard segment={groupedActiveSegments.facial_expression} />
-            )}
-            {groupedActiveSegments.posture && (
-              <OverlayCard segment={groupedActiveSegments.posture} />
-            )}
-            {groupedActiveSegments.eye_contact && (
-              <OverlayCard segment={groupedActiveSegments.eye_contact} />
-            )}
+      {/* Video + side cards */}
+      <div className="flex gap-4 items-start">
+        <div className="flex-1 min-w-0">
+          <video
+            ref={videoRef}
+            controls
+            className="w-full rounded-xl border bg-black"
+            src={videoSrc}
+          />
+          {/* Current time */}
+          <div className="mt-1 text-sm text-gray-500">
+            Current Time: {formatTime(currentTime)} / {formatTime(duration || 0)}
           </div>
         </div>
-      </div>
 
-      {/* Current time */}
-      <div className="text-sm text-gray-600">
-        Current Time: {formatTime(currentTime)} / {formatTime(duration || 0)}
+        {/* Active segment cards to the right */}
+        <div className="flex w-48 flex-shrink-0 flex-col gap-3">
+          {(["facial_expression", "posture", "eye_contact"] as const).map((cat) => {
+            const seg = groupedActiveSegments[cat];
+            return seg ? <OverlayCard key={cat} segment={seg} /> : null;
+          })}
+        </div>
       </div>
 
       {/* Timeline */}
