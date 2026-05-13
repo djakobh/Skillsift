@@ -18,12 +18,11 @@ import { AnalysisResultToFBItems, CreateFeedbackItem } from "./feedbackItem";
 import type { AnalysisResponse, VolumeAnalysisResponse, FillerAnalysisResponse, BasicAnalysisResponse } from "../../api/behavioral/analyze/analysisResponse";
 
 type RawVideoAnalysis = {
-    summary?: {
-        video?: { sample_fps?: number; sampled_frames?: number };
-        posture?: { valid_frames?: number; good_frames?: number; good_percent?: number };
-        eye_contact?: { valid_frames?: number; good_frames?: number; good_percent?: number };
-        facial_expression?: { valid_frames?: number; good_frames?: number; good_percent?: number };
-    };
+    video?: { sample_fps?: number; sampled_frames?: number };
+    posture?: { valid_frames?: number; good_frames?: number; good_percent?: number | null };
+    eye_contact?: { valid_frames?: number; good_frames?: number; good_percent?: number | null };
+    facial_expression?: { valid_frames?: number; good_frames?: number; good_percent?: number | null };
+    summary?: { notes?: string[] };
     segments?: Array<{
         id?: string;
         category: string;
@@ -90,9 +89,11 @@ async function AudioAnalysisToFBItem(audioAnalysisResponse: Response) {
 }
 
 function scoreFromSegments(rawAnalysis: RawVideoAnalysis, category: string): number {
-    const summary = (rawAnalysis as any).summary ?? {};
-    const fromSummary = summary[category]?.good_percent;
-    if (typeof fromSummary === "number" && fromSummary > 0) return fromSummary;
+    // Categories are top-level keys (posture, eye_contact, facial_expression), NOT under summary.
+    // good_percent is 0–100; divide by 100 for the 0–1 scale scoreDescriptor expects.
+    const catData = (rawAnalysis as any)[category];
+    const goodPercent = catData?.good_percent;
+    if (typeof goodPercent === "number") return goodPercent / 100;
 
     const segments: any[] = (rawAnalysis as any).segments ?? [];
     const cat = segments.filter((s: any) => s.category === category);
