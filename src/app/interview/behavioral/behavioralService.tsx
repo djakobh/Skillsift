@@ -41,10 +41,9 @@ type RawVideoAnalysis = {
 export async function SendAudioVideoToServer(sessionId: string, audioData: Blob, videoData: Blob) {
 
     const audioAnalysisResponse = await SendBlobToServer(sessionId, audioData, "/api/behavioral/uploadAudio", "audio");
-    const videoAnalysisResponse = await SendBlobToServer(sessionId, videoData, "/api/behavioral/uploadVideo", "video");
+    const videoFeedback = await AnalyzeVideo(sessionId, videoData);
 
     const audioFeedback = await AudioAnalysisToFBItem(audioAnalysisResponse);
-    const videoFeedback = await VideoAnalysisToFBItem(videoAnalysisResponse);
     const allFeedback = CombineFeedback(audioFeedback, videoFeedback.feedback);
 
     const formData = new FormData();
@@ -90,13 +89,48 @@ async function AudioAnalysisToFBItem(audioAnalysisResponse: Response) {
     return CombineFeedback(CombineFeedback(volumeFBItems, fillerFBItems), wordCountFBItems);
 }
 
-// Video API returns { feedback, rawAnalysis } — extract both
-async function VideoAnalysisToFBItem(videoAnalysisResponse: Response) {
-    const responseData = await videoAnalysisResponse.json();
-    const fbItems: FeedbackItem[] = AnalysisResultToFBItems(JSON.stringify(responseData.feedback ?? responseData));
+// Step 1: Fetch Railway URL + secret from auth-gated Vercel endpoint (stays server-side)
+// Step 2: POST video blob directly to Railway (bypasses Vercel payload limit)
+// Step 3: POST raw JSON to thin Vercel route for DB averaging + transformation
+async function AnalyzeVideo(sessionId: string, videoData: Blob) {
+    const configResponse = await fetch("/api/behavioral/videoAnalysisConfig");
+    if (!configResponse.ok) throw new Error("Could not fetch video analyzer config");
+    const { url: analyzerUrl, secret } = await configResponse.json() as { url: string; secret: string };
+
+    const videoForm = new FormData();
+    videoForm.append("video", videoData);
+
+    const headers: Record<string, string> = {};
+    if (secret) headers["X-Analyzer-Secret"] = secret;
+
+    const railwayResponse = await fetch(`${analyzerUrl}/analyze-video`, {
+        method: "POST",
+        body: videoForm,
+        headers,
+    });
+
+    if (!railwayResponse.ok) {
+        throw new Error(`Video analysis failed: ${railwayResponse.status}`);
+    }
+
+    const rawAnalysis = await railwayResponse.json();
+
+    const processResponse = await fetch("/api/behavioral/processVideoFeedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rawAnalysis, sessionId }),
+    });
+
+    if (!processResponse.ok) {
+        throw new Error(`Video feedback processing failed: ${processResponse.status}`);
+    }
+
+    const processed = await processResponse.json();
+    const fbItems: FeedbackItem[] = AnalysisResultToFBItems(JSON.stringify(processed.feedback));
+
     return {
         feedback: fbItems,
-        rawAnalysis: responseData.rawAnalysis as RawVideoAnalysis | undefined
+        rawAnalysis: processed.rawAnalysis as RawVideoAnalysis,
     };
 }
 
