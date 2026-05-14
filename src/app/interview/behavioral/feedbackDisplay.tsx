@@ -74,12 +74,10 @@ function DisplayScoreFeedback({ items }: { items: FeedbackItem[] }) {
     if (items.length == 0)
         return null;
 
-    const visibleItems = items.filter((item) => item.key !== "Volume");
-
     return (
         <DisplayBox title="Statistics">
             <div className="flex flex-col gap-2">
-                {visibleItems.map((item: FeedbackItem, i) => {
+                {items.map((item: FeedbackItem, i) => {
                     const { label, color } = scoreDescriptor(item.score ?? 0);
                     const description = item.content ?? DEFAULT_DESCRIPTIONS[item.key] ?? "";
                     return (
