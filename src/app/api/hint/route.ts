@@ -42,6 +42,7 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         model: MODEL,
         stream: false,
+        reasoning_effort: "low",
         messages: [{ role: "user", content: prompt }],
       }),
     });

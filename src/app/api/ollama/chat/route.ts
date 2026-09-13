@@ -67,6 +67,7 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         model: DEFAULT_MODEL,
         stream: false,
+        reasoning_effort: "low",
         messages: [systemMessage, ...messages],
       }),
     });

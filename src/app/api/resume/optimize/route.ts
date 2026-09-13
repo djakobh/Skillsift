@@ -119,6 +119,7 @@ export async function POST(req: Request): Promise<NextResponse<OptimizeResponse 
       body: JSON.stringify({
         model: MODEL,
         stream: false,
+        reasoning_effort: "low",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: buildUserPrompt(resumeText, jobDescription, missingKeywords, atsScore) },
