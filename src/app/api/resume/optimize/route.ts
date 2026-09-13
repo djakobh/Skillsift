@@ -119,7 +119,6 @@ export async function POST(req: Request): Promise<NextResponse<OptimizeResponse 
       body: JSON.stringify({
         model: MODEL,
         stream: false,
-        response_format: { type: "json_object" },
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: buildUserPrompt(resumeText, jobDescription, missingKeywords, atsScore) },
@@ -128,14 +127,24 @@ export async function POST(req: Request): Promise<NextResponse<OptimizeResponse 
     });
 
     if (!groqRes.ok) {
+      const errBody = await groqRes.text();
+      console.error("Groq error:", groqRes.status, errBody);
       return NextResponse.json({ success: false, error: "Groq service unavailable" }, { status: 503 });
     }
 
     const groqData = await groqRes.json() as { choices?: { message: { content: string } }[] };
     const raw = groqData?.choices?.[0]?.message?.content ?? "";
 
-    // Strip potential markdown fences before parsing
-    const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+    // Extract JSON from response — handle markdown fences or extra text from reasoning models
+    const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+    let cleaned: string;
+    if (fenced?.[1]) {
+      cleaned = fenced[1].trim();
+    } else {
+      const start = raw.indexOf("{");
+      const end = raw.lastIndexOf("}");
+      cleaned = start !== -1 && end > start ? raw.slice(start, end + 1) : raw.trim();
+    }
 
     let parsed: { suggestions?: Partial<OptimizeSuggestion>[]; summary?: string };
     try {
