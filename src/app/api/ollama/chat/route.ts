@@ -6,7 +6,7 @@ import { APP_ROUTES } from "~/lib/chatbot/appRoutes";
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_BASE = "https://api.groq.com/openai/v1";
-const DEFAULT_MODEL = "llama-3.3-70b-versatile";
+const DEFAULT_MODEL = "openai/gpt-oss-20b";
 
 export async function POST(req: Request) {
   const session = await auth();
