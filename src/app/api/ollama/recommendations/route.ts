@@ -4,7 +4,7 @@ import type { FeedbackItem } from "~/app/resume/feedbackItem";
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_BASE = "https://api.groq.com/openai/v1";
-const MODEL = "llama-3.1-8b-instant";
+const MODEL = "llama-3.3-70b-versatile";
 
 function buildPrompt(
   resumeText: string,
