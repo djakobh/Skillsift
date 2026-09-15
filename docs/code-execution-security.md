@@ -130,8 +130,8 @@ Rollout status and remaining steps:
 
 1. **Complete:** apply the additive `add_judge_limits` Prisma migration to the existing Neon database.
 2. **Complete:** run the sandbox and PostgreSQL live acceptance suites with disposable resources and dummy data.
-3. Configure Preview with `CODE_EXECUTION_BACKEND=vercel-sandbox`, `JUDGE_LIMITER_MODE=postgres`, and `CODE_EXECUTION_ENABLED=true`, then deploy the branch.
-4. Verify the protected Preview route and authenticated technical-interview UI.
+3. **Complete:** configure the branch-scoped Preview with `CODE_EXECUTION_BACKEND=vercel-sandbox`, `JUDGE_LIMITER_MODE=postgres`, and `CODE_EXECUTION_ENABLED=true`, then deploy the branch.
+4. **Complete:** verify the protected Preview authentication boundary and an authenticated valid submission through the deployed `/api/judge` route. The submission passed every test, and its disposable test account was removed.
 5. Merge and deploy with production initially fail-closed, then configure the same three variables and redeploy the reviewed artifact.
 6. Verify production authentication and a valid submission. If the Vercel Sandbox free allowance is exhausted, execution must become unavailable rather than switching to a paid plan.
 
@@ -139,7 +139,7 @@ Rollout status and remaining steps:
 
 Application-level controls and the sandbox adapter are implemented and locally unit-tested. The managed host controls have also been exercised with this Vercel project: fresh microVMs, deny-all network behavior, bounded output, timeouts, secret/file separation, concurrent filesystem isolation, and cleanup all passed. The existing Neon database passed the shared limiter acceptance test.
 
-Public execution must remain disabled until the reviewed deployment is configured and its Preview integration smoke test passes. There is no required purchase, new database, or Railway migration.
+The Preview integration gate has passed. Public production execution must remain disabled until the reviewed branch is merged, deployed fail-closed, configured with the three required server settings, and smoke-tested. There is no required purchase, new database, or Railway migration.
 
 ## Interview summary
 
