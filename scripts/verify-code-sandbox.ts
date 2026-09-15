@@ -47,6 +47,7 @@ import json
 import os
 import pathlib
 import socket
+import ssl
 
 try:
     pathlib.Path("/vercel/path0/.env").read_text()
@@ -55,8 +56,13 @@ except Exception:
     protected_file_visible = False
 
 try:
-    connection = socket.create_connection(("1.1.1.1", 443), timeout=1)
-    connection.close()
+    connection = socket.create_connection(("1.1.1.1", 443), timeout=2)
+    with ssl.create_default_context().wrap_socket(
+        connection,
+        server_hostname="one.one.one.one",
+    ) as tls_connection:
+        tls_connection.sendall(b"GET / HTTP/1.0\\r\\nHost: one.one.one.one\\r\\n\\r\\n")
+        tls_connection.recv(1)
     network_available = True
 except Exception:
     network_available = False

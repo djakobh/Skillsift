@@ -3,7 +3,6 @@ import { before, test } from "node:test";
 
 import {
   InMemoryJudgeLimiter,
-  UpstashJudgeLimiter,
   getExecutionConfigError,
   getJudgeConfig,
   isExecutionAvailable,
@@ -126,6 +125,15 @@ test("the UI only advertises execution when the full server configuration is val
     }),
     false,
   );
+  assert.equal(
+    isExecutionAvailable({
+      NODE_ENV: "production",
+      CODE_EXECUTION_ENABLED: "true",
+      CODE_EXECUTION_BACKEND: "vercel-sandbox",
+      JUDGE_LIMITER_MODE: "postgres",
+    }),
+    true,
+  );
 });
 
 test("request parsing rejects unknown fields, unsupported languages, and byte oversize", async () => {
@@ -247,28 +255,6 @@ test("rate-limited requests never reach the sandbox", async () => {
   assert.equal(response.status, 429);
   assert.equal(response.headers.get("retry-after"), "12");
   assert.equal(executionCalls, 0);
-});
-
-test("the shared limiter uses an atomic script and hashes user identifiers", async () => {
-  const commands: unknown[][] = [];
-  const limiter = new UpstashJudgeLimiter(
-    "https://redis.test",
-    "redis-secret",
-    "test:judge",
-    limits,
-    async (_input, init) => {
-      const command = JSON.parse(String(init?.body)) as unknown[];
-      commands.push(command);
-      return Response.json({ result: commands.length === 1 ? [1, 1000] : 1 });
-    },
-  );
-
-  const decision = await limiter.acquire("person@example.com");
-  assert.equal(decision.allowed, true);
-  assert.equal(commands[0]?.[0], "EVAL");
-  assert.doesNotMatch(JSON.stringify(commands[0]), /person@example\.com/);
-  if (decision.allowed) await decision.lease.release();
-  assert.equal(commands.length, 2);
 });
 
 test("valid sandbox results retain grading without exposing expected answers", async () => {

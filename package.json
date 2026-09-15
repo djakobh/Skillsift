@@ -19,8 +19,9 @@
     "preview": "next build && next start",
     "start": "next start",
     "test:code-execution": "npm run test:judge && npm run test:runner",
-    "test:judge": "tsx --test tests/judge-security.test.ts tests/vercel-sandbox-backend.test.ts",
+    "test:judge": "tsx --test tests/judge-security.test.ts tests/postgres-judge-limiter.test.ts tests/vercel-sandbox-backend.test.ts",
     "test:runner": "python -m unittest discover -s docker/code-runner/tests",
+    "test:judge:postgres:live": "tsx scripts/verify-postgres-judge-limiter.ts",
     "test:sandbox:live": "tsx scripts/verify-code-sandbox.ts",
     "typecheck": "tsc --noEmit"
   },

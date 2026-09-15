@@ -13,6 +13,7 @@ import {
   type JudgeConfig,
   type JudgeLimiter,
 } from "~/lib/judgeSecurity";
+import { PostgresJudgeLimiter } from "~/lib/postgresJudgeLimiter";
 import {
   buildPythonHarness,
   parseTestOutput,
@@ -106,11 +107,16 @@ function getLimiter(config: JudgeConfig): JudgeLimiter {
   const key = JSON.stringify({
     mode: config.limiterMode,
     namespace: config.limiterNamespace,
-    upstashUrl: config.upstashUrl,
     limits: config.limits,
   });
   if (limiterCache?.key !== key) {
-    limiterCache = { key, limiter: createJudgeLimiter(config) };
+    limiterCache = {
+      key,
+      limiter:
+        config.limiterMode === "postgres"
+          ? new PostgresJudgeLimiter(config.limits, config.limiterNamespace)
+          : createJudgeLimiter(config),
+    };
   }
   return limiterCache.limiter;
 }

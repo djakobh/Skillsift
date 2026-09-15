@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { z } from "zod";
 
 export const EXECUTION_DISABLED_RESPONSE = {
@@ -39,9 +38,7 @@ export interface JudgeConfig {
   enabled: boolean;
   nodeEnv: "development" | "test" | "production";
   executionBackend: "disabled" | "vercel-sandbox";
-  limiterMode: "memory" | "upstash";
-  upstashUrl?: string;
-  upstashToken?: string;
+  limiterMode: "memory" | "postgres";
   limiterNamespace: string;
   limits: JudgeLimits;
 }
@@ -93,7 +90,7 @@ export function getJudgeConfig(
       ? env.NODE_ENV
       : "development";
   const limiterMode =
-    env.JUDGE_LIMITER_MODE === "upstash" ? "upstash" : "memory";
+    env.JUDGE_LIMITER_MODE === "postgres" ? "postgres" : "memory";
   const configuredNamespace = env.JUDGE_LIMITER_NAMESPACE?.trim();
 
   return {
@@ -104,8 +101,6 @@ export function getJudgeConfig(
         ? "vercel-sandbox"
         : "disabled",
     limiterMode,
-    upstashUrl: env.UPSTASH_REDIS_REST_URL,
-    upstashToken: env.UPSTASH_REDIS_REST_TOKEN,
     limiterNamespace:
       configuredNamespace && configuredNamespace.length > 0
         ? configuredNamespace
@@ -201,21 +196,8 @@ export function getExecutionConfigError(config: JudgeConfig): string | null {
     return "The isolated execution backend is not configured.";
   }
 
-  if (config.nodeEnv === "production" && config.limiterMode !== "upstash") {
+  if (config.nodeEnv === "production" && config.limiterMode !== "postgres") {
     return "A shared judge limiter is required in production.";
-  }
-
-  if (config.limiterMode === "upstash") {
-    if (!config.upstashUrl || !config.upstashToken) {
-      return "The shared judge limiter is not configured.";
-    }
-    try {
-      if (new URL(config.upstashUrl).protocol !== "https:") {
-        return "The shared judge limiter URL must use HTTPS.";
-      }
-    } catch {
-      return "The shared judge limiter URL is invalid.";
-    }
   }
 
   return null;
@@ -445,158 +427,8 @@ export class InMemoryJudgeLimiter implements JudgeLimiter {
   }
 }
 
-const ACQUIRE_SCRIPT = `
-local rate = redis.call('INCR', KEYS[1])
-if rate == 1 then redis.call('PEXPIRE', KEYS[1], ARGV[2]) end
-local retry_ms = redis.call('PTTL', KEYS[1])
-if rate > tonumber(ARGV[1]) then return {2, retry_ms} end
-local user_active = tonumber(redis.call('GET', KEYS[2]) or '0')
-if user_active >= tonumber(ARGV[3]) then return {3, 1000} end
-local global_active = tonumber(redis.call('GET', KEYS[3]) or '0')
-if global_active >= tonumber(ARGV[4]) then return {4, 1000} end
-redis.call('INCR', KEYS[2])
-redis.call('PEXPIRE', KEYS[2], ARGV[5])
-redis.call('INCR', KEYS[3])
-redis.call('PEXPIRE', KEYS[3], ARGV[5])
-return {1, retry_ms}
-`;
-
-const RELEASE_SCRIPT = `
-local user_active = tonumber(redis.call('GET', KEYS[1]) or '0')
-if user_active > 1 then redis.call('DECR', KEYS[1]) else redis.call('DEL', KEYS[1]) end
-local global_active = tonumber(redis.call('GET', KEYS[2]) or '0')
-if global_active > 1 then redis.call('DECR', KEYS[2]) else redis.call('DEL', KEYS[2]) end
-return 1
-`;
-
-export class UpstashJudgeLimiter implements JudgeLimiter {
-  constructor(
-    private readonly url: string,
-    private readonly token: string,
-    private readonly namespace: string,
-    private readonly limits: Pick<
-      JudgeLimits,
-      | "rateLimitMax"
-      | "rateLimitWindowMs"
-      | "maxConcurrentPerUser"
-      | "maxConcurrentGlobal"
-      | "requestTimeoutMs"
-    >,
-    private readonly fetchImpl: typeof fetch = fetch,
-  ) {}
-
-  private async command(command: unknown[]): Promise<unknown> {
-    const controller = new AbortController();
-    const timeout = setTimeout(
-      () => controller.abort(),
-      Math.min(1_500, this.limits.requestTimeoutMs),
-    );
-    try {
-      const response = await this.fetchImpl(this.url, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(command),
-        signal: controller.signal,
-        cache: "no-store",
-      });
-      if (!response.ok) throw new Error("Shared limiter rejected the command.");
-      const body = (await response.json()) as {
-        result?: unknown;
-        error?: unknown;
-      };
-      if (body.error !== undefined || body.result === undefined) {
-        throw new Error("Shared limiter returned an invalid response.");
-      }
-      return body.result;
-    } finally {
-      clearTimeout(timeout);
-    }
-  }
-
-  async acquire(userId: string): Promise<LimiterDecision> {
-    const userKey = createHash("sha256")
-      .update(userId)
-      .digest("hex")
-      .slice(0, 32);
-    const bucket = Math.floor(Date.now() / this.limits.rateLimitWindowMs);
-    const rateKey = `${this.namespace}:rate:${userKey}:${bucket}`;
-    const activeKey = `${this.namespace}:active:user:${userKey}`;
-    const globalKey = `${this.namespace}:active:global`;
-    const leaseTtlMs = this.limits.requestTimeoutMs + 10_000;
-
-    try {
-      const result = await this.command([
-        "EVAL",
-        ACQUIRE_SCRIPT,
-        3,
-        rateKey,
-        activeKey,
-        globalKey,
-        this.limits.rateLimitMax,
-        this.limits.rateLimitWindowMs,
-        this.limits.maxConcurrentPerUser,
-        this.limits.maxConcurrentGlobal,
-        leaseTtlMs,
-      ]);
-      if (!Array.isArray(result) || typeof result[0] !== "number") {
-        throw new Error("Shared limiter returned an invalid result.");
-      }
-
-      const retryAfterSeconds = Math.max(
-        1,
-        Math.ceil((typeof result[1] === "number" ? result[1] : 1000) / 1000),
-      );
-      if (result[0] === 2)
-        return { allowed: false, reason: "rate_limited", retryAfterSeconds };
-      if (result[0] === 3)
-        return { allowed: false, reason: "user_busy", retryAfterSeconds };
-      if (result[0] === 4)
-        return { allowed: false, reason: "server_busy", retryAfterSeconds };
-      if (result[0] !== 1)
-        throw new Error("Shared limiter returned an unknown result.");
-
-      let released = false;
-      return {
-        allowed: true,
-        lease: {
-          release: async () => {
-            if (released) return;
-            released = true;
-            await this.command([
-              "EVAL",
-              RELEASE_SCRIPT,
-              2,
-              activeKey,
-              globalKey,
-            ]);
-          },
-        },
-      };
-    } catch {
-      return { allowed: false, reason: "unavailable", retryAfterSeconds: 1 };
-    }
-  }
-}
-
 export function createJudgeLimiter(
   config: JudgeConfig,
-  fetchImpl: typeof fetch = fetch,
 ): JudgeLimiter {
-  if (
-    config.limiterMode === "upstash" &&
-    config.upstashUrl &&
-    config.upstashToken
-  ) {
-    return new UpstashJudgeLimiter(
-      config.upstashUrl,
-      config.upstashToken,
-      config.limiterNamespace,
-      config.limits,
-      fetchImpl,
-    );
-  }
   return new InMemoryJudgeLimiter(config.limits);
 }

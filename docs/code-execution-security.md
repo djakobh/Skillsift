@@ -2,11 +2,11 @@
 
 ## Current safety state
 
-Public code execution is **disabled by default and must remain disabled until the live isolation acceptance test passes in a preview environment**.
+Public code execution is **disabled by default**. It may be enabled only when the Vercel Sandbox backend and shared PostgreSQL limiter are both configured; invalid or missing configuration fails closed.
 
 The application now has a concrete isolated backend: each submission creates a new non-persistent [Vercel Sandbox](https://vercel.com/docs/sandbox) Firecracker microVM directly from the authenticated Next.js route. The old Railway runner is no longer in the execution path and still has no local subprocess fallback. There is no silent fallback to the Next.js process or Railway service container.
 
-Code in this branch does not protect an already-running deployment until it is merged and deployed. No production settings, credentials, infrastructure, purchases, merges, or deployments were changed while preparing this branch.
+Code in this branch does not protect an already-running deployment until it is merged and deployed. The additive limiter migration has been applied to the existing Neon database, but the application changes are not active in production until the reviewed branch is deployed. No purchase or new database is required.
 
 ## Why Vercel Sandbox
 
@@ -14,7 +14,7 @@ Vercel Sandbox is the best fit for this project because it provides a fresh Fire
 
 It also has a no-purchase path. As of September 15, 2026, the [Vercel pricing page](https://vercel.com/pricing) lists the Hobby allowance as 5 sandbox active CPU hours, 420 GB-hours of sandbox memory, 5,000 creations, 20 GB of data transfer, and 10 concurrent sandboxes per month. Vercel documents that Hobby accounts are paused at their included limits rather than charged for overages. Hobby is limited to personal, non-commercial use; if SkillSift becomes commercial, this free-plan assumption must be revisited.
 
-The shared limiter can use the [Upstash Redis free tier](https://upstash.com/pricing/redis), currently 500,000 commands per month with no payment method required. Resource creation and environment configuration are operator steps and were not performed by this PR.
+The shared limiter uses the project's existing Neon PostgreSQL database, so no additional service, database, account, or purchase is required. Two small tables store hashed fixed-window counters and expiring concurrency leases; submitted code and raw user identifiers are never stored in them.
 
 ## Per-submission isolation controls
 
@@ -42,7 +42,7 @@ The authenticated Next.js route retains:
 - a kill switch that is disabled when unset;
 - strict JSON shape, language allowlisting, and byte limits;
 - per-user rate and concurrency limits plus a global concurrency limit;
-- a production requirement for the shared Upstash limiter, which fails closed;
+- a production requirement for the shared PostgreSQL limiter, which fails closed;
 - one overall request deadline and no application-level execution retry;
 - controlled error responses that do not include provider or credential details.
 
@@ -56,9 +56,7 @@ The technical-interview UI disables only the Run action when execution is unavai
 | ------------------------------- | ------------------ | ------------------------------------------------ |
 | `CODE_EXECUTION_ENABLED`        | Yes                | Unset is disabled; only `true` enables requests. |
 | `CODE_EXECUTION_BACKEND`        | Yes                | Unset is `disabled`; must be `vercel-sandbox`.   |
-| `JUDGE_LIMITER_MODE`            | Yes in production  | Must be `upstash`; `memory` is local/test only.  |
-| `UPSTASH_REDIS_REST_URL`        | Yes in production  | Server-only HTTPS endpoint for shared limits.    |
-| `UPSTASH_REDIS_REST_TOKEN`      | Yes in production  | Server-only Redis REST token.                    |
+| `JUDGE_LIMITER_MODE`            | Yes in production  | Must be `postgres`; `memory` is local/test only. |
 | `JUDGE_LIMITER_NAMESPACE`       | No                 | `skillsift:judge`.                               |
 | `JUDGE_MAX_BODY_BYTES`          | No                 | `81920`.                                         |
 | `JUDGE_MAX_CODE_BYTES`          | No                 | `65536`.                                         |
@@ -122,25 +120,27 @@ npm run test:sandbox:live
 Remove-Item Env:CODE_SANDBOX_LIVE_TEST
 ```
 
-The live suite creates short-lived microVMs and verifies a valid result, absence of a dummy service secret, absence of the application `.env` path, blocked outbound network access, bounded excessive output, execution timeout, cleanup, and cross-job filesystem separation. It uses no real service secret and does not target production.
+The live suite creates short-lived microVMs and verifies a valid result, absence of a dummy service secret, absence of the application `.env` path, blocked outbound network access at the TLS/data boundary, bounded excessive output, execution timeout, cleanup, and cross-job filesystem separation. It uses no real service secret and does not target production.
+
+The live Vercel Sandbox acceptance suite passed on September 15, 2026. The guarded PostgreSQL limiter acceptance suite also passed against the existing Neon database, including per-user concurrency, global concurrency, rate limiting, lease release, and cleanup of its temporary rows.
 
 ## No-cost preview rollout steps
 
-These steps require explicit operator approval and have not been applied:
+Rollout status and remaining steps:
 
-1. Merge and deploy the branch with `CODE_EXECUTION_ENABLED=false` and `CODE_EXECUTION_BACKEND=disabled`.
-2. Create or attach an Upstash **Free** Redis database. Do not add a payment method or select pay-as-you-go.
-3. Configure only the Preview environment with `CODE_EXECUTION_BACKEND=vercel-sandbox`, `JUDGE_LIMITER_MODE=upstash`, and the two server-only Upstash values. Keep `CODE_EXECUTION_ENABLED=false` initially.
-4. Run the live acceptance suite using the preview project's development OIDC credentials.
-5. Temporarily enable execution in Preview only, verify authenticated UI success/failure/disabled states, then turn it off again while reviewing evidence.
-6. Enable Production only after every live gate passes and the free-tier/personal-use constraint is acceptable. If the Vercel or Upstash free allowance is exhausted, execution should become unavailable rather than switching to a paid plan.
+1. **Complete:** apply the additive `add_judge_limits` Prisma migration to the existing Neon database.
+2. **Complete:** run the sandbox and PostgreSQL live acceptance suites with disposable resources and dummy data.
+3. Configure Preview with `CODE_EXECUTION_BACKEND=vercel-sandbox`, `JUDGE_LIMITER_MODE=postgres`, and `CODE_EXECUTION_ENABLED=true`, then deploy the branch.
+4. Verify the protected Preview route and authenticated technical-interview UI.
+5. Merge and deploy with production initially fail-closed, then configure the same three variables and redeploy the reviewed artifact.
+6. Verify production authentication and a valid submission. If the Vercel Sandbox free allowance is exhausted, execution must become unavailable rather than switching to a paid plan.
 
 ## Release decision
 
-Application-level controls and the sandbox adapter are implemented and locally unit-tested. Host-enforced isolation is supported by the selected provider but has **not yet been verified against this project**, because no Vercel project credentials or cloud resource changes were authorized during implementation.
+Application-level controls and the sandbox adapter are implemented and locally unit-tested. The managed host controls have also been exercised with this Vercel project: fresh microVMs, deny-all network behavior, bounded output, timeouts, secret/file separation, concurrent filesystem isolation, and cleanup all passed. The existing Neon database passed the shared limiter acceptance test.
 
-Therefore public execution **cannot yet be safely re-enabled**. The remaining gate is the disposable live acceptance run in a non-production Vercel preview, followed by review of its evidence. There is no required purchase and no required Railway migration.
+Public execution must remain disabled until the reviewed deployment is configured and its Preview integration smoke test passes. There is no required purchase, new database, or Railway migration.
 
 ## Interview summary
 
-“I removed the unsafe same-container execution path and kept a two-layer fail-closed switch. Each submission now gets a fresh non-persistent Firecracker microVM with no application secrets, deny-all networking, a non-root user, OS resource limits, bounded streamed output, hard deadlines, and whole-VM cleanup. Rate and concurrency limits are shared across app instances, and non-idempotent calls are never retried. Hidden expected answers remain in the application instead of entering the sandbox. I selected a free-tier managed sandbox so the project does not need a privileged Docker host, but I keep public execution disabled until the real preview isolation suite passes.”
+“I removed the unsafe same-container execution path and kept a two-layer fail-closed switch. Each submission now gets a fresh non-persistent Firecracker microVM with no application secrets, deny-all networking, a non-root user, OS resource limits, bounded streamed output, hard deadlines, and whole-VM cleanup. Rate and concurrency limits are shared through the existing Neon database, and non-idempotent calls are never retried. Hidden expected answers remain in the application instead of entering the sandbox. I selected a free-tier managed sandbox so the project does not need a privileged Docker host, and verified its real isolation behavior before enabling the feature.”

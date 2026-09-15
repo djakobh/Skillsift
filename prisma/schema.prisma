@@ -319,6 +319,30 @@ model DismissedJob {
   @@index([userId])
 }
 
+// Shared code-execution limits for all serverless application instances.
+// IDs and user keys are one-way hashes; no submitted source is stored here.
+model JudgeRateBucket {
+  id        String   @id
+  namespace String
+  userKey   String
+  count     Int      @default(0)
+  expiresAt DateTime
+
+  @@index([namespace, expiresAt])
+  @@index([expiresAt])
+}
+
+model JudgeExecutionLease {
+  id        String   @id
+  namespace String
+  userKey   String
+  expiresAt DateTime
+
+  @@index([namespace, userKey, expiresAt])
+  @@index([namespace, expiresAt])
+  @@index([expiresAt])
+}
+
 // ============================================
 // Enums
 // ============================================

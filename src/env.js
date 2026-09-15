@@ -28,7 +28,7 @@ export const env = createEnv({
     CODE_EXECUTION_BACKEND: z
       .enum(["disabled", "vercel-sandbox"])
       .default("disabled"),
-    JUDGE_LIMITER_MODE: z.enum(["memory", "upstash"]).default("memory"),
+    JUDGE_LIMITER_MODE: z.enum(["memory", "postgres"]).default("memory"),
     JUDGE_LIMITER_NAMESPACE: z.string().optional(),
     JUDGE_MAX_BODY_BYTES: z.string().regex(/^\d+$/).optional(),
     JUDGE_MAX_CODE_BYTES: z.string().regex(/^\d+$/).optional(),
@@ -44,8 +44,6 @@ export const env = createEnv({
     JUDGE_SANDBOX_MEMORY_BYTES: z.string().regex(/^\d+$/).optional(),
     JUDGE_SANDBOX_MAX_PROCESSES: z.string().regex(/^\d+$/).optional(),
     JUDGE_SANDBOX_MAX_FILE_BYTES: z.string().regex(/^\d+$/).optional(),
-    UPSTASH_REDIS_REST_URL: z.string().url().optional(),
-    UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
     ANALYZER_URL: z.string().url().optional(),
     ANALYZER_SECRET: z.string().optional(),
     OLLAMA_BASE: z.string().url().default("http://localhost:11434"),
@@ -96,8 +94,6 @@ export const env = createEnv({
     JUDGE_SANDBOX_MEMORY_BYTES: process.env.JUDGE_SANDBOX_MEMORY_BYTES,
     JUDGE_SANDBOX_MAX_PROCESSES: process.env.JUDGE_SANDBOX_MAX_PROCESSES,
     JUDGE_SANDBOX_MAX_FILE_BYTES: process.env.JUDGE_SANDBOX_MAX_FILE_BYTES,
-    UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
-    UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
     ANALYZER_URL: process.env.ANALYZER_URL,
     ANALYZER_SECRET: process.env.ANALYZER_SECRET,
     OLLAMA_BASE: process.env.OLLAMA_BASE,
