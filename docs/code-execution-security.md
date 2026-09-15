@@ -2,100 +2,145 @@
 
 ## Current safety state
 
-Public code execution is **disabled by default and must not be re-enabled yet**.
+Public code execution is **disabled by default and must remain disabled until the live isolation acceptance test passes in a preview environment**.
 
-The old runner executed submitted Python and C++ directly as child processes of the Flask service. That path has been removed. The deployed runner image is now an authenticated broker with no compiler and no local subprocess fallback. Until a separately deployed per-submission isolation backend implements `ExecutionBackend`, an enabled broker still returns `503 SANDBOX_UNAVAILABLE`.
+The application now has a concrete isolated backend: each submission creates a new non-persistent [Vercel Sandbox](https://vercel.com/docs/sandbox) Firecracker microVM directly from the authenticated Next.js route. The old Railway runner is no longer in the execution path and still has no local subprocess fallback. There is no silent fallback to the Next.js process or Railway service container.
 
-This is intentional fail-closed behavior. A temporary directory, timeout, import blacklist, container-level non-root user, or service-level CPU/memory limit would not make arbitrary code safe to run in the API service container.
+Code in this branch does not protect an already-running deployment until it is merged and deployed. No production settings, credentials, infrastructure, purchases, merges, or deployments were changed while preparing this branch.
 
-Code in this branch does not protect any already-running deployment until the branch is reviewed, merged, and deployed.
+## Why Vercel Sandbox
 
-## Immediate containment for the existing deployment
+Vercel Sandbox is the best fit for this project because it provides a fresh Firecracker microVM, separate filesystem and network, automatic Vercel OIDC authentication, and a deny-all egress policy through the SDK. It avoids exposing a Docker socket or operating a privileged worker cluster.
 
-These are deployment actions for an authorized operator; this branch does not make them automatically.
+It also has a no-purchase path. As of September 15, 2026, the [Vercel pricing page](https://vercel.com/pricing) lists the Hobby allowance as 5 sandbox active CPU hours, 420 GB-hours of sandbox memory, 5,000 creations, 20 GB of data transfer, and 10 concurrent sandboxes per month. Vercel documents that Hobby accounts are paused at their included limits rather than charged for overages. Hobby is limited to personal, non-commercial use; if SkillSift becomes commercial, this free-plan assumption must be revisited.
 
-1. In Vercel, set `CODE_EXECUTION_ENABLED=false` for Production, Preview, and Development, then redeploy the application. Confirm an authenticated `POST /api/judge` returns `503` with code `EXECUTION_DISABLED`.
-2. In Railway, set `CODE_EXECUTION_ENABLED=false` on the code-runner service and restart/redeploy it. Confirm an authenticated `POST /submissions` returns the same controlled `503` code.
-3. Stop the old runner replica if it is not needed. Otherwise remove its public domain under **Settings → Networking**. Railway documents that public domains can be deleted and sibling services can use `<service>.railway.internal`; note that a Vercel deployment cannot reach a Railway-private hostname, so do not point Vercel at that hostname without an approved network/hosting change.
-4. If the old runner must remain temporarily reachable during migration, keep execution disabled and require the new shared secret before any request parsing. Remove public exposure as soon as the caller has a private route.
+The shared limiter can use the [Upstash Redis free tier](https://upstash.com/pricing/redis), currently 500,000 commands per month with no payment method required. Resource creation and environment configuration are operator steps and were not performed by this PR.
 
-Do not rotate a live secret or change production networking without an approved maintenance action. After approval, generate a new random value of at least 32 bytes and set the same value as `CODE_RUNNER_TOKEN` in Vercel and `RUNNER_SHARED_SECRET` in Railway. Never use a `NEXT_PUBLIC_` variable for it.
+## Per-submission isolation controls
 
-Railway references:
+`src/lib/vercelSandboxBackend.ts` creates one sandbox per request with:
 
-- [Lock down a production project](https://docs.railway.com/guides/lock-down-production-project)
-- [Private and public domains](https://docs.railway.com/networking/domains/working-with-domains)
-- [Replica resource limits](https://docs.railway.com/pricing/cost-control)
+- `persistent: false`, no mounts, no exposed ports, and unconditional `sandbox.stop()` in `finally`;
+- `networkPolicy: "deny-all"` from sandbox creation;
+- no application environment variables passed to the sandbox;
+- a new `runner` Linux user for the submission and `sudo: false`;
+- one vCPU, a 12-second VM lifetime, and a 5-second command deadline by default;
+- process, address-space, file-size, open-file, CPU, and core-dump limits applied before Python starts;
+- a 64 KiB combined stdout/stderr limit enforced while logs stream;
+- SIGKILL on output overflow or request cancellation, followed by destruction of the whole microVM;
+- a single-attempt transport for non-idempotent provider calls so SDK retries cannot execute a submission twice.
 
-The checked-in `docker/code-runner/railway.toml` still applies to an existing legacy service and now sets a short deploy healthcheck plus a bounded restart policy. Railway has [deprecated Config as Code](https://docs.railway.com/config-as-code) and documents a hard cutoff of December 1, 2026. Before that date, an authorized operator should run `railway config pull`, review the generated `.railway/railway.ts`, and use `railway config plan`; do not apply the infrastructure migration from this PR.
+The provider supplies the host-enforced microVM, vCPU, and 2 GB VM-memory boundary. The in-guest 512 MiB address-space, 64-process, and 1 MiB per-file defaults are additional controls. The entire disposable VM is the writable-storage boundary.
+
+Expected answers and hidden/public test metadata stay in the Next.js process. Only user source, test inputs, standard input, and the minimal Python harness enter the sandbox.
+
+## Application controls
+
+The authenticated Next.js route retains:
+
+- the user-session check;
+- a kill switch that is disabled when unset;
+- strict JSON shape, language allowlisting, and byte limits;
+- per-user rate and concurrency limits plus a global concurrency limit;
+- a production requirement for the shared Upstash limiter, which fails closed;
+- one overall request deadline and no application-level execution retry;
+- controlled error responses that do not include provider or credential details.
+
+The technical-interview UI disables only the Run action when execution is unavailable. Questions, editing, hints, and solutions remain usable, and loading state resets in `finally` after failures.
 
 ## Environment variables
 
 ### Next.js / Vercel
 
-| Name                            | Required to enable | Default / purpose                                                                 |
-| ------------------------------- | ------------------ | --------------------------------------------------------------------------------- |
-| `CODE_EXECUTION_ENABLED`        | Yes                | Unset is disabled; only `true` enables requests.                                  |
-| `CODE_RUNNER_URL`               | Yes                | Server-only broker URL. No browser exposure.                                      |
-| `CODE_RUNNER_TOKEN`             | Yes                | Server-only bearer secret, at least 32 characters.                                |
-| `JUDGE_LIMITER_MODE`            | Yes in production  | Must be `upstash` in production; `memory` is only suitable for one local process. |
-| `UPSTASH_REDIS_REST_URL`        | Yes in production  | HTTPS endpoint for shared rate and concurrency state.                             |
-| `UPSTASH_REDIS_REST_TOKEN`      | Yes in production  | Server-only Redis REST token.                                                     |
-| `JUDGE_LIMITER_NAMESPACE`       | No                 | `skillsift:judge`.                                                                |
-| `JUDGE_MAX_BODY_BYTES`          | No                 | `81920`.                                                                          |
-| `JUDGE_MAX_CODE_BYTES`          | No                 | `65536`.                                                                          |
-| `JUDGE_MAX_STDIN_BYTES`         | No                 | `8192`.                                                                           |
-| `JUDGE_RATE_LIMIT_MAX`          | No                 | `5` requests per user per window.                                                 |
-| `JUDGE_RATE_LIMIT_WINDOW_MS`    | No                 | `60000`.                                                                          |
-| `JUDGE_MAX_CONCURRENT_PER_USER` | No                 | `1`.                                                                              |
-| `JUDGE_MAX_CONCURRENT_GLOBAL`   | No                 | `4`.                                                                              |
-| `JUDGE_UPSTREAM_TIMEOUT_MS`     | No                 | `8000`, capped in code at 30 seconds.                                             |
+| Name                            | Required to enable | Default / purpose                                |
+| ------------------------------- | ------------------ | ------------------------------------------------ |
+| `CODE_EXECUTION_ENABLED`        | Yes                | Unset is disabled; only `true` enables requests. |
+| `CODE_EXECUTION_BACKEND`        | Yes                | Unset is `disabled`; must be `vercel-sandbox`.   |
+| `JUDGE_LIMITER_MODE`            | Yes in production  | Must be `upstash`; `memory` is local/test only.  |
+| `UPSTASH_REDIS_REST_URL`        | Yes in production  | Server-only HTTPS endpoint for shared limits.    |
+| `UPSTASH_REDIS_REST_TOKEN`      | Yes in production  | Server-only Redis REST token.                    |
+| `JUDGE_LIMITER_NAMESPACE`       | No                 | `skillsift:judge`.                               |
+| `JUDGE_MAX_BODY_BYTES`          | No                 | `81920`.                                         |
+| `JUDGE_MAX_CODE_BYTES`          | No                 | `65536`.                                         |
+| `JUDGE_MAX_STDIN_BYTES`         | No                 | `8192`.                                          |
+| `JUDGE_RATE_LIMIT_MAX`          | No                 | `5` requests per user per window.                |
+| `JUDGE_RATE_LIMIT_WINDOW_MS`    | No                 | `60000`.                                         |
+| `JUDGE_MAX_CONCURRENT_PER_USER` | No                 | `1`.                                             |
+| `JUDGE_MAX_CONCURRENT_GLOBAL`   | No                 | `4`.                                             |
+| `JUDGE_REQUEST_TIMEOUT_MS`      | No                 | `15000`, capped at 30 seconds.                   |
+| `JUDGE_SANDBOX_TIMEOUT_MS`      | No                 | `12000`, capped at 30 seconds.                   |
+| `JUDGE_EXECUTION_TIMEOUT_MS`    | No                 | `5000`, capped at 10 seconds.                    |
+| `JUDGE_MAX_OUTPUT_BYTES`        | No                 | `65536` combined bytes.                          |
+| `JUDGE_SANDBOX_MEMORY_BYTES`    | No                 | `536870912` (512 MiB address space).             |
+| `JUDGE_SANDBOX_MAX_PROCESSES`   | No                 | `64`.                                            |
+| `JUDGE_SANDBOX_MAX_FILE_BYTES`  | No                 | `1048576` per file.                              |
 
-The shared limiter uses one atomic Redis script to take a fixed-window rate slot and a per-user/global concurrency lease. Redis failure rejects the request; it does not fail open. The upstream call has one deadline and is never automatically retried.
+Vercel injects `VERCEL_OIDC_TOKEN` automatically into Vercel deployments for Sandbox authentication. Do not expose it, copy it into browser configuration, or pass it to the sandbox. Local live verification requires a short-lived development OIDC token obtained through the normal Vercel link/environment workflow; it must never be committed or printed.
 
-### Railway code-runner broker
+### Retired Railway broker
 
-| Name                         | Required            | Default / purpose                                                                                 |
-| ---------------------------- | ------------------- | ------------------------------------------------------------------------------------------------- |
-| `CODE_EXECUTION_ENABLED`     | Yes to accept jobs  | Unset is disabled. Keep `false` until isolation is verified.                                      |
-| `RUNNER_SHARED_SECRET`       | Always              | Must match `CODE_RUNNER_TOKEN` and be at least 32 characters. Missing configuration fails closed. |
-| `RUNNER_ALLOWED_LANGUAGES`   | No                  | `python`.                                                                                         |
-| `RUNNER_MAX_REQUEST_BYTES`   | No                  | `307200`.                                                                                         |
-| `RUNNER_MAX_SOURCE_BYTES`    | No                  | `262144`, allowing the server-generated harness.                                                  |
-| `RUNNER_MAX_STDIN_BYTES`     | No                  | `8192`.                                                                                           |
-| `RUNNER_MAX_OUTPUT_BYTES`    | No                  | `65536` combined bytes; the future backend must also enforce this while streaming.                |
-| `RUNNER_MAX_CONCURRENT_JOBS` | No                  | `2`.                                                                                              |
-| `PORT`                       | Railway supplies it | `5000` locally.                                                                                   |
+The checked-in broker remains fail-closed for containment of any old deployment. Its variables are:
 
-The Docker image runs the broker as UID/GID `10001`, but that hardens the broker only; it is not presented as an untrusted-code sandbox.
+- `CODE_EXECUTION_ENABLED` — keep `false`;
+- `RUNNER_SHARED_SECRET` — at least 32 characters while the service remains reachable;
+- `RUNNER_ALLOWED_LANGUAGES`, `RUNNER_MAX_REQUEST_BYTES`, `RUNNER_MAX_SOURCE_BYTES`, `RUNNER_MAX_STDIN_BYTES`, `RUNNER_MAX_OUTPUT_BYTES`, `RUNNER_MAX_CONCURRENT_JOBS`, and `PORT` — legacy broker limits.
 
-## Language contract
+The Next.js sandbox backend does not use `CODE_RUNNER_URL`, `CODE_RUNNER_TOKEN`, or any Railway credential.
 
-The question harness is Python-only. The app API and UI now allow only `python`; C++ is rejected with `422 UNSUPPORTED_LANGUAGE` instead of being wrapped in a Python harness. Reintroducing another language requires a language-specific harness plus the same isolation controls for both compilation and execution.
+## Immediate containment for an existing deployment
 
-## Isolation migration plan
+These are operator actions; this branch did not perform them.
 
-Railway's documented resource limits cap a whole replica. They do not create a fresh security boundary, filesystem, network namespace, secret set, or cgroup for each submission. Therefore the current Railway service is suitable as an authenticated broker, not as the execution sandbox.
+1. Set `CODE_EXECUTION_ENABLED=false` in all Vercel environments and redeploy. Confirm an authenticated `POST /api/judge` returns `503 EXECUTION_DISABLED`.
+2. Set `CODE_EXECUTION_ENABLED=false` on the Railway code-runner service and restart it.
+3. Stop the Railway runner or remove its public domain. It is not needed by the Vercel Sandbox design.
+4. Until the old service is removed, keep its bearer authentication and never place `RUNNER_SHARED_SECRET` in a `NEXT_PUBLIC_` variable.
 
-After approval of a provider or dedicated host:
+Railway service-level CPU/memory limits are not a per-submission boundary. Do not reintroduce local subprocess execution there. The legacy `railway.toml` can be removed with the service after an approved infrastructure change; no Railway configuration is required for the new backend.
 
-1. Implement an `ExecutionBackend` adapter that creates one disposable sandbox per submission. Keep provider credentials only in the broker; send only language, generated source, stdin, and opaque job metadata.
-2. Use a microVM or hardened container runtime designed for hostile workloads (for example Firecracker, Kata Containers, or gVisor on a dedicated worker cluster). Do not mount a Docker socket into the public broker and do not use privileged containers.
-3. Start each compile/run job with no application environment, secrets, volumes, or service-account credentials; a read-only runtime image; a size-limited disposable writable directory; a non-root UID; dropped capabilities; `no-new-privileges`; and a restrictive seccomp/AppArmor profile.
-4. Apply default-deny egress and ingress, including loopback/internal metadata and private service ranges. Allow no network for SkillSift question execution.
-5. Enforce sandbox-level cgroup CPU, aggregate memory, PID count, filesystem quota, wall time, and streaming stdout/stderr limits. Use the same limits for compilation. On timeout, cancellation, broker disconnect, or output overflow, destroy the entire sandbox rather than killing only its leading process.
-6. Return a small typed result to the broker, destroy the sandbox, and verify deletion before releasing the concurrency lease.
-7. Run the isolation acceptance suite in a disposable staging environment: descendant-process timeout cleanup; fork/memory/output bombs; access attempts against a dummy secret, protected host file, metadata/private network targets, and a local canary service; and concurrent jobs with unique file markers.
-8. Capture provider/runtime configuration and test evidence in the PR. Only then set `CODE_EXECUTION_ENABLED=true` on both services.
+## Verification
 
-A self-hosted implementation requires a dedicated worker cluster and a sandbox runtime class with default-deny network policy; it must not share the SkillSift application or database trust boundary. A managed sandbox provider is operationally simpler, but selecting or purchasing one requires approval.
+Run application and broker tests without creating cloud resources:
 
-## Verification boundaries
+```text
+npm run test:code-execution
+```
 
-Application-level tests cover authentication, both kill switches, strict request validation, byte limits, language allowlisting, per-user/global limits, shared-limiter production requirements, upstream deadline/no retry, bounded response collection, controlled errors, and preservation of valid test results through a fake backend.
+The unit suite verifies both kill switches, runner authentication, validation and size limits, shared/in-memory limit behavior, sandbox configuration, non-root execution parameters, environment allowlisting, streamed output bounds, request cancellation cleanup, fresh sandboxes for concurrent jobs, no non-idempotent retry, hidden expected-answer exclusion, valid grading, and controlled failures.
 
-Runner tests cover fail-closed configuration, authentication, validation, size limits, concurrency rejection, disabled behavior, and the absence of a local subprocess/compiler fallback. Because this workstation has no running Docker/Linux sandbox and no external isolation backend was authorized, host-enforced process, memory, filesystem, and network isolation are **not verified** here. Those acceptance tests are a release gate in the migration plan, not a claimed protection.
+After linking a non-production Vercel preview and explicitly accepting use of the free Sandbox allowance, run the disposable live acceptance suite:
+
+```text
+CODE_SANDBOX_LIVE_TEST=true npm run test:sandbox:live
+```
+
+On PowerShell:
+
+```text
+$env:CODE_SANDBOX_LIVE_TEST="true"
+npm run test:sandbox:live
+Remove-Item Env:CODE_SANDBOX_LIVE_TEST
+```
+
+The live suite creates short-lived microVMs and verifies a valid result, absence of a dummy service secret, absence of the application `.env` path, blocked outbound network access, bounded excessive output, execution timeout, cleanup, and cross-job filesystem separation. It uses no real service secret and does not target production.
+
+## No-cost preview rollout steps
+
+These steps require explicit operator approval and have not been applied:
+
+1. Merge and deploy the branch with `CODE_EXECUTION_ENABLED=false` and `CODE_EXECUTION_BACKEND=disabled`.
+2. Create or attach an Upstash **Free** Redis database. Do not add a payment method or select pay-as-you-go.
+3. Configure only the Preview environment with `CODE_EXECUTION_BACKEND=vercel-sandbox`, `JUDGE_LIMITER_MODE=upstash`, and the two server-only Upstash values. Keep `CODE_EXECUTION_ENABLED=false` initially.
+4. Run the live acceptance suite using the preview project's development OIDC credentials.
+5. Temporarily enable execution in Preview only, verify authenticated UI success/failure/disabled states, then turn it off again while reviewing evidence.
+6. Enable Production only after every live gate passes and the free-tier/personal-use constraint is acceptable. If the Vercel or Upstash free allowance is exhausted, execution should become unavailable rather than switching to a paid plan.
+
+## Release decision
+
+Application-level controls and the sandbox adapter are implemented and locally unit-tested. Host-enforced isolation is supported by the selected provider but has **not yet been verified against this project**, because no Vercel project credentials or cloud resource changes were authorized during implementation.
+
+Therefore public execution **cannot yet be safely re-enabled**. The remaining gate is the disposable live acceptance run in a non-production Vercel preview, followed by review of its evidence. There is no required purchase and no required Railway migration.
 
 ## Interview summary
 
-“I treated user code as hostile. I first added a two-layer kill switch and removed the unsafe in-container execution fallback. Then I authenticated service-to-service calls, validated and bounded every request, added per-user and global limits, enforced one upstream deadline without retries, and kept credentials server-only. I fixed the Python/C++ harness mismatch and made the UI degrade gracefully. Most importantly, I separated application controls from real sandbox controls: Railway's service container is not a fresh boundary per submission, so public execution stays off until a disposable microVM or hardened-container backend passes network, secret, filesystem, process, memory, timeout, output, cleanup, and cross-job isolation tests.”
+“I removed the unsafe same-container execution path and kept a two-layer fail-closed switch. Each submission now gets a fresh non-persistent Firecracker microVM with no application secrets, deny-all networking, a non-root user, OS resource limits, bounded streamed output, hard deadlines, and whole-VM cleanup. Rate and concurrency limits are shared across app instances, and non-idempotent calls are never retried. Hidden expected answers remain in the application instead of entering the sandbox. I selected a free-tier managed sandbox so the project does not need a privileged Docker host, but I keep public execution disabled until the real preview isolation suite passes.”

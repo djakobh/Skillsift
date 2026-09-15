@@ -6,10 +6,15 @@ import {
   UpstashJudgeLimiter,
   getExecutionConfigError,
   getJudgeConfig,
+  isExecutionAvailable,
   parseJudgeRequest,
   type JudgeConfig,
   type JudgeLimiter,
 } from "../src/lib/judgeSecurity";
+import type {
+  ExecutionBackend,
+  ExecutionResult,
+} from "../src/lib/vercelSandboxBackend";
 
 process.env.SKIP_ENV_VALIDATION = "1";
 
@@ -28,15 +33,20 @@ const limits = {
   rateLimitWindowMs: 60_000,
   maxConcurrentPerUser: 1,
   maxConcurrentGlobal: 2,
-  upstreamTimeoutMs: 100,
+  requestTimeoutMs: 100,
+  sandboxTimeoutMs: 80,
+  executionTimeoutMs: 50,
+  maxOutputBytes: 64 * 1024,
+  memoryBytes: 512 * 1024 * 1024,
+  maxProcesses: 64,
+  maxFileBytes: 1024 * 1024,
 };
 
 function config(overrides: Partial<JudgeConfig> = {}): JudgeConfig {
   return {
     enabled: true,
     nodeEnv: "test",
-    runnerUrl: "http://runner.test:5000",
-    runnerToken: "a".repeat(32),
+    executionBackend: "vercel-sandbox",
     limiterMode: "memory",
     limiterNamespace: "test:judge",
     limits: { ...limits },
@@ -70,7 +80,7 @@ const allowOnce: JudgeLimiter = {
 };
 
 test("the authenticated app endpoint fails closed when execution is disabled", async () => {
-  let fetchCalls = 0;
+  let executionCalls = 0;
   const response = await handleAuthenticatedJudgeRequest(
     request({
       source_code: "class Solution: pass",
@@ -80,20 +90,42 @@ test("the authenticated app endpoint fails closed when execution is disabled", a
     "user-1",
     {
       config: config({ enabled: false }),
-      fetchImpl: async () => {
-        fetchCalls += 1;
-        throw new Error("must not run");
+      executionBackend: {
+        async execute() {
+          executionCalls += 1;
+          throw new Error("must not run");
+        },
       },
     },
   );
 
   assert.equal(response.status, 503);
   assert.equal((await response.json()).code, "EXECUTION_DISABLED");
-  assert.equal(fetchCalls, 0);
+  assert.equal(executionCalls, 0);
 });
 
 test("execution defaults to disabled when the switch is unset", () => {
   assert.equal(getJudgeConfig({ NODE_ENV: "production" }).enabled, false);
+});
+
+test("the UI only advertises execution when the full server configuration is valid", () => {
+  assert.equal(
+    isExecutionAvailable({
+      NODE_ENV: "development",
+      CODE_EXECUTION_ENABLED: "true",
+      CODE_EXECUTION_BACKEND: "vercel-sandbox",
+    }),
+    true,
+  );
+  assert.equal(
+    isExecutionAvailable({
+      NODE_ENV: "production",
+      CODE_EXECUTION_ENABLED: "true",
+      CODE_EXECUTION_BACKEND: "vercel-sandbox",
+      JUDGE_LIMITER_MODE: "memory",
+    }),
+    false,
+  );
 });
 
 test("request parsing rejects unknown fields, unsupported languages, and byte oversize", async () => {
@@ -175,8 +207,15 @@ test("production refuses an instance-local limiter", () => {
   );
 });
 
-test("rate-limited requests never reach the runner", async () => {
-  let fetchCalls = 0;
+test("enabled execution fails closed unless the sandbox backend is explicitly selected", () => {
+  assert.equal(
+    getExecutionConfigError(config({ executionBackend: "disabled" })),
+    "The isolated execution backend is not configured.",
+  );
+});
+
+test("rate-limited requests never reach the sandbox", async () => {
+  let executionCalls = 0;
   const response = await handleAuthenticatedJudgeRequest(
     request({
       source_code: "class Solution: pass",
@@ -196,16 +235,18 @@ test("rate-limited requests never reach the runner", async () => {
         },
       },
       loadQuestion: () => question,
-      fetchImpl: async () => {
-        fetchCalls += 1;
-        throw new Error("must not run");
+      executionBackend: {
+        async execute() {
+          executionCalls += 1;
+          throw new Error("must not run");
+        },
       },
     },
   );
 
   assert.equal(response.status, 429);
   assert.equal(response.headers.get("retry-after"), "12");
-  assert.equal(fetchCalls, 0);
+  assert.equal(executionCalls, 0);
 });
 
 test("the shared limiter uses an atomic script and hashes user identifiers", async () => {
@@ -230,9 +271,21 @@ test("the shared limiter uses an atomic script and hashes user identifiers", asy
   assert.equal(commands.length, 2);
 });
 
-test("valid runner results retain per-test grading and send the server credential only upstream", async () => {
-  let authorization = "";
-  let upstreamBody = "";
+test("valid sandbox results retain grading without exposing expected answers", async () => {
+  let sandboxSource = "";
+  const backend: ExecutionBackend = {
+    async execute(request): Promise<ExecutionResult> {
+      sandboxSource = request.sourceCode;
+      return {
+        stdout: "test_case_output:3\n",
+        stderr: "",
+        compile_output: "",
+        status: { id: 3, description: "Accepted" },
+        time: null,
+        memory: null,
+      };
+    },
+  };
   const response = await handleAuthenticatedJudgeRequest(
     request({
       source_code: "class Solution:\n    def add(self, a, b): return a + b",
@@ -244,18 +297,7 @@ test("valid runner results retain per-test grading and send the server credentia
       config: config(),
       limiter: allowOnce,
       loadQuestion: () => question,
-      fetchImpl: async (_input, init) => {
-        authorization = new Headers(init?.headers).get("authorization") ?? "";
-        upstreamBody = String(init?.body);
-        return Response.json({
-          stdout: "test_case_output:3\n",
-          stderr: "",
-          compile_output: "",
-          status: { id: 3, description: "Accepted" },
-          time: null,
-          memory: null,
-        });
-      },
+      executionBackend: backend,
     },
   );
 
@@ -263,15 +305,13 @@ test("valid runner results retain per-test grading and send the server credentia
   assert.equal(response.status, 200);
   assert.equal(body.allPassed, true);
   assert.equal(body.testResults[0].passed, true);
-  assert.equal(authorization, `Bearer ${"a".repeat(32)}`);
-  assert.doesNotMatch(JSON.stringify(body), /aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/);
-  assert.doesNotMatch(upstreamBody, /CODE_RUNNER_TOKEN|RUNNER_SHARED_SECRET/);
+  assert.doesNotMatch(sandboxSource, /expectedOutput|isHidden/);
 });
 
-test("an upstream deadline aborts one attempt without retrying", async () => {
+test("the sandbox deadline aborts one execution attempt", async () => {
   let calls = 0;
   const timeoutConfig = config();
-  timeoutConfig.limits = { ...timeoutConfig.limits, upstreamTimeoutMs: 20 };
+  timeoutConfig.limits = { ...timeoutConfig.limits, requestTimeoutMs: 20 };
   const response = await handleAuthenticatedJudgeRequest(
     request({
       source_code: "class Solution: pass",
@@ -283,23 +323,25 @@ test("an upstream deadline aborts one attempt without retrying", async () => {
       config: timeoutConfig,
       limiter: allowOnce,
       loadQuestion: () => question,
-      fetchImpl: async (_input, init) => {
-        calls += 1;
-        return await new Promise<Response>((_resolve, reject) => {
-          init?.signal?.addEventListener("abort", () =>
-            reject(new DOMException("aborted", "AbortError")),
-          );
-        });
+      executionBackend: {
+        async execute(_request, signal) {
+          calls += 1;
+          return await new Promise<ExecutionResult>((_resolve, reject) => {
+            signal.addEventListener("abort", () =>
+              reject(new DOMException("aborted", "AbortError")),
+            );
+          });
+        },
       },
     },
   );
 
   assert.equal(response.status, 504);
-  assert.equal((await response.json()).code, "RUNNER_TIMEOUT");
+  assert.equal((await response.json()).code, "SANDBOX_TIMEOUT");
   assert.equal(calls, 1);
 });
 
-test("runner output is bounded while it is read", async () => {
+test("sandbox output is bounded before it reaches the response", async () => {
   const oversized = "x".repeat(81 * 1024);
   const response = await handleAuthenticatedJudgeRequest(
     request({
@@ -312,15 +354,26 @@ test("runner output is bounded while it is read", async () => {
       config: config(),
       limiter: allowOnce,
       loadQuestion: () => question,
-      fetchImpl: async () => new Response(oversized, { status: 200 }),
+      executionBackend: {
+        async execute() {
+          return {
+            stdout: oversized,
+            stderr: "",
+            compile_output: "",
+            status: { id: 3, description: "Accepted" },
+            time: null,
+            memory: null,
+          };
+        },
+      },
     },
   );
 
   assert.equal(response.status, 502);
-  assert.equal((await response.json()).code, "RUNNER_UNREACHABLE");
+  assert.equal((await response.json()).code, "INVALID_SANDBOX_RESPONSE");
 });
 
-test("a disabled runner response is preserved as a controlled 503", async () => {
+test("a sandbox provider failure becomes a controlled error", async () => {
   const response = await handleAuthenticatedJudgeRequest(
     request({
       source_code: "class Solution: pass",
@@ -332,18 +385,16 @@ test("a disabled runner response is preserved as a controlled 503", async () => 
       config: config(),
       limiter: allowOnce,
       loadQuestion: () => question,
-      fetchImpl: async () =>
-        Response.json(
-          {
-            error:
-              "Code execution is temporarily unavailable. You can still edit code and use hints.",
-            code: "EXECUTION_DISABLED",
-          },
-          { status: 503 },
-        ),
+      executionBackend: {
+        async execute() {
+          throw new Error("provider failure with sensitive details");
+        },
+      },
     },
   );
 
-  assert.equal(response.status, 503);
-  assert.equal((await response.json()).code, "EXECUTION_DISABLED");
+  assert.equal(response.status, 502);
+  const body = await response.json();
+  assert.equal(body.code, "SANDBOX_UNAVAILABLE");
+  assert.doesNotMatch(JSON.stringify(body), /sensitive details/);
 });

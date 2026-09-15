@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
@@ -20,9 +19,12 @@ import {
   type QuestionMeta,
   type TestCase,
 } from "~/lib/testHarness";
+import {
+  VercelSandboxBackend,
+  type ExecutionBackend,
+} from "~/lib/vercelSandboxBackend";
 
-const MAX_RUNNER_SOURCE_BYTES = 256 * 1024;
-const MAX_RUNNER_RESPONSE_BYTES = 80 * 1024;
+const MAX_SANDBOX_SOURCE_BYTES = 256 * 1024;
 const expectedOutputSchema = z.union([
   z.string(),
   z.number(),
@@ -52,11 +54,11 @@ const questionSchema = z
 
 type Question = z.infer<typeof questionSchema>;
 
-const runnerResultSchema = z
+const executionResultSchema = z
   .object({
-    stdout: z.string().max(MAX_RUNNER_RESPONSE_BYTES),
-    stderr: z.string().max(MAX_RUNNER_RESPONSE_BYTES),
-    compile_output: z.string().max(MAX_RUNNER_RESPONSE_BYTES),
+    stdout: z.string(),
+    stderr: z.string(),
+    compile_output: z.string(),
     status: z.object({
       id: z.number().int(),
       description: z.string().max(100),
@@ -69,12 +71,13 @@ const runnerResultSchema = z
 interface JudgeHandlerDependencies {
   config?: JudgeConfig;
   limiter?: JudgeLimiter;
-  fetchImpl?: typeof fetch;
+  executionBackend?: ExecutionBackend;
   loadQuestion?: (questionId: string) => Question | null;
 }
 
 let questionCache: Question[] | null = null;
 let limiterCache: { key: string; limiter: JudgeLimiter } | null = null;
+let backendCache: { key: string; backend: ExecutionBackend } | null = null;
 
 function json(
   body: unknown,
@@ -112,44 +115,15 @@ function getLimiter(config: JudgeConfig): JudgeLimiter {
   return limiterCache.limiter;
 }
 
-async function readBoundedResponse(
-  response: Response,
-  maxBytes: number,
-): Promise<string> {
-  if (!response.body) return "";
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let total = 0;
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      total += value.byteLength;
-      if (total > maxBytes) {
-        await reader.cancel();
-        throw new Error("Runner response exceeded the output limit.");
-      }
-      chunks.push(value);
-    }
-  } finally {
-    reader.releaseLock();
+function getExecutionBackend(config: JudgeConfig): ExecutionBackend {
+  const key = JSON.stringify(config.limits);
+  if (backendCache?.key !== key) {
+    backendCache = {
+      key,
+      backend: new VercelSandboxBackend(config.limits),
+    };
   }
-
-  const bytes = new Uint8Array(total);
-  let offset = 0;
-  for (const chunk of chunks) {
-    bytes.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return new TextDecoder().decode(bytes);
-}
-
-function safeRunnerUrl(baseUrl: string): string {
-  const url = new URL(baseUrl);
-  url.pathname = `${url.pathname.replace(/\/$/, "")}/submissions`;
-  url.search = "";
-  url.hash = "";
-  return url.toString();
+  return backendCache.backend;
 }
 
 export async function handleAuthenticatedJudgeRequest(
@@ -207,7 +181,7 @@ export async function handleAuthenticatedJudgeRequest(
   const testCases: TestCase[] = question.testCases;
   const codeToRun = buildPythonHarness(submission.source_code, meta, testCases);
   if (
-    new TextEncoder().encode(codeToRun).byteLength > MAX_RUNNER_SOURCE_BYTES
+    new TextEncoder().encode(codeToRun).byteLength > MAX_SANDBOX_SOURCE_BYTES
   ) {
     return json(
       {
@@ -234,82 +208,47 @@ export async function handleAuthenticatedJudgeRequest(
     );
   }
 
-  const fetchImpl = dependencies.fetchImpl ?? fetch;
+  const executionBackend =
+    dependencies.executionBackend ?? getExecutionBackend(config);
   const controller = new AbortController();
   const timeout = setTimeout(
     () => controller.abort(),
-    config.limits.upstreamTimeoutMs,
+    config.limits.requestTimeoutMs,
   );
 
   try {
-    const response = await fetchImpl(safeRunnerUrl(config.runnerUrl!), {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${config.runnerToken!}`,
-        "Content-Type": "application/json",
-        "X-Request-ID": randomUUID(),
-      },
-      body: JSON.stringify({
+    const executionResult = await executionBackend.execute(
+      {
         language: submission.language,
-        source_code: codeToRun,
+        sourceCode: codeToRun,
         stdin: submission.stdin,
-      }),
-      signal: controller.signal,
-      cache: "no-store",
-    });
-
-    const responseText = await readBoundedResponse(
-      response,
-      MAX_RUNNER_RESPONSE_BYTES,
+      },
+      controller.signal,
     );
-    let responseBody: unknown = null;
-    try {
-      responseBody = responseText ? JSON.parse(responseText) : null;
-    } catch {
-      // A malformed runner response is handled below without returning its contents.
-    }
-
-    if (!response.ok) {
-      const upstreamCode =
-        responseBody &&
-        typeof responseBody === "object" &&
-        "code" in responseBody
-          ? (responseBody as { code?: unknown }).code
-          : undefined;
-      if (response.status === 503 && upstreamCode === "EXECUTION_DISABLED") {
-        return json(EXECUTION_DISABLED_RESPONSE, 503);
-      }
-      if (response.status === 429) {
-        return json(
-          {
-            error: "The code runner is busy. Please try again shortly.",
-            code: "RUNNER_BUSY",
-          },
-          429,
-          { "Retry-After": response.headers.get("retry-after") ?? "1" },
-        );
-      }
-      return json(
-        {
-          error: "Code execution is temporarily unavailable.",
-          code: "RUNNER_ERROR",
-        },
-        502,
-      );
-    }
-
-    const parsedResult = runnerResultSchema.safeParse(responseBody);
+    const parsedResult = executionResultSchema.safeParse(executionResult);
     if (!parsedResult.success) {
       return json(
         {
-          error: "The code runner returned an invalid response.",
-          code: "INVALID_RUNNER_RESPONSE",
+          error: "The execution sandbox returned an invalid response.",
+          code: "INVALID_SANDBOX_RESPONSE",
         },
         502,
       );
     }
 
     const result = parsedResult.data;
+    const combinedOutputBytes = new TextEncoder().encode(
+      result.stdout + result.stderr + result.compile_output,
+    ).byteLength;
+    if (combinedOutputBytes > config.limits.maxOutputBytes) {
+      return json(
+        {
+          error: "The execution sandbox returned too much output.",
+          code: "INVALID_SANDBOX_RESPONSE",
+        },
+        502,
+      );
+    }
     const testResults = parseTestOutput(
       result.stdout,
       testCases,
@@ -326,12 +265,12 @@ export async function handleAuthenticatedJudgeRequest(
       stderr: result.stderr,
       allPassed,
     });
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
+  } catch {
+    if (controller.signal.aborted) {
       return json(
         {
-          error: "Code execution timed out before the runner responded.",
-          code: "RUNNER_TIMEOUT",
+          error: "Code execution timed out.",
+          code: "SANDBOX_TIMEOUT",
         },
         504,
       );
@@ -339,7 +278,7 @@ export async function handleAuthenticatedJudgeRequest(
     return json(
       {
         error: "Code execution is temporarily unavailable.",
-        code: "RUNNER_UNREACHABLE",
+        code: "SANDBOX_UNAVAILABLE",
       },
       502,
     );

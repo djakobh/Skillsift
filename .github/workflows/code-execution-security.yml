@@ -8,8 +8,12 @@ on:
       - "src/app/api/judge/**"
       - "src/app/technical/**"
       - "src/lib/judgeSecurity.ts"
+      - "src/lib/judgeHandler.ts"
       - "src/lib/testHarness.ts"
+      - "src/lib/vercelSandboxBackend.ts"
+      - "scripts/verify-code-sandbox.ts"
       - "tests/judge-security.test.ts"
+      - "tests/vercel-sandbox-backend.test.ts"
       - "package.json"
       - "package-lock.json"
   push:

@@ -6,6 +6,7 @@ import { auth } from "~/server/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const session = await auth();

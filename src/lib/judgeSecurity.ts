@@ -26,14 +26,19 @@ export interface JudgeLimits {
   rateLimitWindowMs: number;
   maxConcurrentPerUser: number;
   maxConcurrentGlobal: number;
-  upstreamTimeoutMs: number;
+  requestTimeoutMs: number;
+  sandboxTimeoutMs: number;
+  executionTimeoutMs: number;
+  maxOutputBytes: number;
+  memoryBytes: number;
+  maxProcesses: number;
+  maxFileBytes: number;
 }
 
 export interface JudgeConfig {
   enabled: boolean;
   nodeEnv: "development" | "test" | "production";
-  runnerUrl?: string;
-  runnerToken?: string;
+  executionBackend: "disabled" | "vercel-sandbox";
   limiterMode: "memory" | "upstash";
   upstashUrl?: string;
   upstashToken?: string;
@@ -94,8 +99,10 @@ export function getJudgeConfig(
   return {
     enabled: isTrue(env.CODE_EXECUTION_ENABLED),
     nodeEnv,
-    runnerUrl: env.CODE_RUNNER_URL,
-    runnerToken: env.CODE_RUNNER_TOKEN,
+    executionBackend:
+      env.CODE_EXECUTION_BACKEND === "vercel-sandbox"
+        ? "vercel-sandbox"
+        : "disabled",
     limiterMode,
     upstashUrl: env.UPSTASH_REDIS_REST_URL,
     upstashToken: env.UPSTASH_REDIS_REST_TOKEN,
@@ -141,11 +148,47 @@ export function getJudgeConfig(
         4,
         100,
       ),
-      upstreamTimeoutMs: readPositiveInt(
+      requestTimeoutMs: readPositiveInt(
         env,
-        "JUDGE_UPSTREAM_TIMEOUT_MS",
-        8_000,
+        "JUDGE_REQUEST_TIMEOUT_MS",
+        15_000,
         30_000,
+      ),
+      sandboxTimeoutMs: readPositiveInt(
+        env,
+        "JUDGE_SANDBOX_TIMEOUT_MS",
+        12_000,
+        30_000,
+      ),
+      executionTimeoutMs: readPositiveInt(
+        env,
+        "JUDGE_EXECUTION_TIMEOUT_MS",
+        5_000,
+        10_000,
+      ),
+      maxOutputBytes: readPositiveInt(
+        env,
+        "JUDGE_MAX_OUTPUT_BYTES",
+        64 * 1024,
+        512 * 1024,
+      ),
+      memoryBytes: readPositiveInt(
+        env,
+        "JUDGE_SANDBOX_MEMORY_BYTES",
+        512 * 1024 * 1024,
+        1024 * 1024 * 1024,
+      ),
+      maxProcesses: readPositiveInt(
+        env,
+        "JUDGE_SANDBOX_MAX_PROCESSES",
+        64,
+        256,
+      ),
+      maxFileBytes: readPositiveInt(
+        env,
+        "JUDGE_SANDBOX_MAX_FILE_BYTES",
+        1024 * 1024,
+        10 * 1024 * 1024,
       ),
     },
   };
@@ -154,21 +197,8 @@ export function getJudgeConfig(
 export function getExecutionConfigError(config: JudgeConfig): string | null {
   if (!config.enabled) return null;
 
-  if (
-    !config.runnerUrl ||
-    !config.runnerToken ||
-    config.runnerToken.length < 32
-  ) {
-    return "The code runner connection is not configured.";
-  }
-
-  try {
-    const url = new URL(config.runnerUrl);
-    if (url.protocol !== "http:" && url.protocol !== "https:") {
-      return "The code runner URL is invalid.";
-    }
-  } catch {
-    return "The code runner URL is invalid.";
+  if (config.executionBackend !== "vercel-sandbox") {
+    return "The isolated execution backend is not configured.";
   }
 
   if (config.nodeEnv === "production" && config.limiterMode !== "upstash") {
@@ -189,6 +219,13 @@ export function getExecutionConfigError(config: JudgeConfig): string | null {
   }
 
   return null;
+}
+
+export function isExecutionAvailable(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  const config = getJudgeConfig(env);
+  return config.enabled && getExecutionConfigError(config) === null;
 }
 
 async function readBoundedBody(
@@ -443,7 +480,7 @@ export class UpstashJudgeLimiter implements JudgeLimiter {
       | "rateLimitWindowMs"
       | "maxConcurrentPerUser"
       | "maxConcurrentGlobal"
-      | "upstreamTimeoutMs"
+      | "requestTimeoutMs"
     >,
     private readonly fetchImpl: typeof fetch = fetch,
   ) {}
@@ -452,7 +489,7 @@ export class UpstashJudgeLimiter implements JudgeLimiter {
     const controller = new AbortController();
     const timeout = setTimeout(
       () => controller.abort(),
-      Math.min(1_500, this.limits.upstreamTimeoutMs),
+      Math.min(1_500, this.limits.requestTimeoutMs),
     );
     try {
       const response = await this.fetchImpl(this.url, {
@@ -488,7 +525,7 @@ export class UpstashJudgeLimiter implements JudgeLimiter {
     const rateKey = `${this.namespace}:rate:${userKey}:${bucket}`;
     const activeKey = `${this.namespace}:active:user:${userKey}`;
     const globalKey = `${this.namespace}:active:global`;
-    const leaseTtlMs = this.limits.upstreamTimeoutMs + 10_000;
+    const leaseTtlMs = this.limits.requestTimeoutMs + 10_000;
 
     try {
       const result = await this.command([

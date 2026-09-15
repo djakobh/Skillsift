@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { isExecutionAvailable } from "~/lib/judgeSecurity";
 import { auth } from "~/server/auth";
 import TechnicalInterviewViewSwitcher from "./technicalInterview";
 
@@ -18,9 +19,7 @@ export default async function TechnicalInterviewPage({
   return (
     <TechnicalInterviewViewSwitcher
       resumeSessionId={params.sessionId}
-      executionEnabled={
-        process.env.CODE_EXECUTION_ENABLED?.trim().toLowerCase() === "true"
-      }
+      executionEnabled={isExecutionAvailable()}
     />
   );
 }
