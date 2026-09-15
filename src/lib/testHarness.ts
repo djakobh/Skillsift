@@ -32,7 +32,10 @@ export interface TestResult {
 
 // Converts the expected answer into a consistent string format so we can compare it to the user's output.
 // For 2D array problems like 3Sum, order doesn't matter so we sort everything first.
-export function normalizeExpected(expected: unknown, outputType: string): string {
+export function normalizeExpected(
+  expected: unknown,
+  outputType: string,
+): string {
   // If expected is a JSON string (e.g. "[[-1,0,1]]"), parse it into an actual value first
   let value: unknown;
   if (typeof expected === "string") {
@@ -72,12 +75,15 @@ export function normalizeExpected(expected: unknown, outputType: string): string
 export function parseTestOutput(
   stdout: string,
   testCases: TestCase[],
-  outputType: string
+  outputType: string,
 ): TestResult[] {
   // Only keep lines that our test runner printed — ignore any print() calls from the user's code
   const testResultLines = stdout
     .split("\n")
-    .filter((l) => l.startsWith("test_case_output:") || l.startsWith("test_case_error:"));
+    .filter(
+      (l) =>
+        l.startsWith("test_case_output:") || l.startsWith("test_case_error:"),
+    );
 
   // Match each line to its test case by position (line 1 = case 1, line 2 = case 2, etc.)
   return testCases.map((tc, i) => {
@@ -130,16 +136,23 @@ export function parseTestOutput(
 export function buildPythonHarness(
   userCode: string,
   meta: QuestionMeta,
-  testCases: TestCase[]
+  testCases: TestCase[],
 ): string {
-  // Embed the test cases from the JSON file directly into the Python script as a string
-  const testCasesJson = JSON.stringify(testCases).replace(/"""/g, '\\"\\"\\"');
+  // The sandbox needs inputs, but expected answers and hidden/public metadata
+  // stay in the application process. They are never written into the untrusted
+  // execution environment.
+  const sandboxCases = testCases.map(({ input }) => ({ input }));
+  const testCasesJson = JSON.stringify(sandboxCases).replace(
+    /"""/g,
+    '\\"\\"\\"',
+  );
 
   const hasTreeNodeParam = meta.params.some((p) => p.type === "tree_node");
   const hasTreeNodeOutput = meta.outputType === "tree_node";
-  const hasListNodeParam = meta.params.some((p) => p.type === "list_node" || p.type === "list_node_array");
+  const hasListNodeParam = meta.params.some(
+    (p) => p.type === "list_node" || p.type === "list_node_array",
+  );
   const hasListNodeOutput = meta.outputType === "list_node";
-
 
   // For 2D array problems, sort the output before comparing (same logic as normalizeExpected above)
   // For everything else, return the value as-is
@@ -151,12 +164,12 @@ def normalize_output(val):
         return sorted([sorted(x) if isinstance(x, list) else [x] for x in val])
     return val`
       : meta.outputType === "string_list"
-      ? `
+        ? `
 def normalize_output(val):
     if isinstance(val, list):
         return sorted(val)
     return val`
-      : `
+        : `
 def normalize_output(val):
     return val`;
 
@@ -253,7 +266,10 @@ def _serialize_list(head):
   // For each tree_node param, emit a line that converts the raw list to a TreeNode before calling
   const treeInputConversions = meta.params
     .filter((p) => p.type === "tree_node")
-    .map((p) => `        test_case["input"]["${p.name}"] = _build_tree(test_case["input"]["${p.name}"])`)
+    .map(
+      (p) =>
+        `        test_case["input"]["${p.name}"] = _build_tree(test_case["input"]["${p.name}"])`,
+    )
     .join("\n");
 
   // For list_node / list_node_array params, convert raw arrays to linked lists.
@@ -266,24 +282,29 @@ def _serialize_list(head):
     for (const p of meta.params) {
       if (p.type === "list_node") {
         const posArg = firstListNode ? ", _cycle_pos" : "";
-        lines.push(`        test_case["input"]["${p.name}"] = _build_list(test_case["input"]["${p.name}"]${posArg})`);
+        lines.push(
+          `        test_case["input"]["${p.name}"] = _build_list(test_case["input"]["${p.name}"]${posArg})`,
+        );
         firstListNode = false;
       } else if (p.type === "list_node_array") {
-        lines.push(`        test_case["input"]["${p.name}"] = [_build_list(l) for l in test_case["input"]["${p.name}"]]`);
+        lines.push(
+          `        test_case["input"]["${p.name}"] = [_build_list(l) for l in test_case["input"]["${p.name}"]]`,
+        );
       }
     }
     return lines.join("\n");
   })();
 
-  const inputConversions = [treeInputConversions, listInputConversions].filter(Boolean).join("\n");
+  const inputConversions = [treeInputConversions, listInputConversions]
+    .filter(Boolean)
+    .join("\n");
 
   // Serialize tree/list output back to an array so it can be compared to the expected JSON array
   const outputLine = hasTreeNodeOutput
     ? `        normalized_output = _serialize_tree(actual_output)`
     : hasListNodeOutput
-    ? `        normalized_output = _serialize_list(actual_output)`
-    : `        normalized_output = normalize_output(actual_output)`;
-
+      ? `        normalized_output = _serialize_list(actual_output)`
+      : `        normalized_output = normalize_output(actual_output)`;
 
   // Build the final Python script: user's code + test runner appended at the bottom
   return `${userCode}

@@ -70,6 +70,8 @@ tmp_uploads/
 #virtual environment
 venv/
 venv310/
+__pycache__/
+*.py[cod]
 
 #context of project
 usecases.md

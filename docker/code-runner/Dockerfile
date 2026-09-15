@@ -1,14 +1,24 @@
-# code execution container - runs python and c++ in isolation
+# This image is an authenticated broker only. It intentionally contains no
+# compiler or local untrusted-code execution path.
 FROM python:3.11-slim
 
-# install c++ compiler
-RUN apt-get update && apt-get install -y g++ && rm -rf /var/lib/apt/lists/*
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PORT=5000
 
-# install flask and gunicorn for the api server
-RUN pip install flask gunicorn
+RUN groupadd --gid 10001 runner \
+    && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin runner
 
 WORKDIR /app
-COPY server.py .
+
+COPY requirements.txt ./
+RUN pip install --no-cache-dir --requirement requirements.txt
+
+COPY --chown=runner:runner server.py ./
+
+USER 10001:10001
 
 EXPOSE 5000
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 2 server:app"]
+
+CMD ["sh", "-c", "exec gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 1 --threads 4 --timeout 30 --access-logfile - server:app"]

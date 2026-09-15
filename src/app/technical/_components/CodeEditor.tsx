@@ -2,7 +2,7 @@
 
 import Editor from "@monaco-editor/react";
 
-export type SupportedLanguage = "python" | "cpp";
+export type SupportedLanguage = "python";
 
 interface CodeEditorProps {
   language: SupportedLanguage;
@@ -12,24 +12,17 @@ interface CodeEditorProps {
   height?: string;
 }
 
-const LANGUAGE_CONFIG: Record<SupportedLanguage, { monacoId: string; label: string }> = {
+const LANGUAGE_CONFIG: Record<
+  SupportedLanguage,
+  { monacoId: string; label: string }
+> = {
   python: { monacoId: "python", label: "Python" },
-  cpp: { monacoId: "cpp", label: "C++" },
 };
 
 const STARTER_CODE: Record<SupportedLanguage, string> = {
   python: `def solution():
     # Write your code here
     pass
-`,
-  cpp: `#include <iostream>
-using namespace std;
-
-int main() {
-    // Write your code here
-
-    return 0;
-}
 `,
 };
 
@@ -45,13 +38,15 @@ export default function CodeEditor({
   height = "400px",
 }: CodeEditorProps) {
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col">
       {/* Toolbar */}
-      <div className="flex items-center justify-between bg-gray-800 px-3 py-2 rounded-t">
+      <div className="flex items-center justify-between rounded-t bg-gray-800 px-3 py-2">
         <select
           value={language}
-          onChange={(e) => onLanguageChange(e.target.value as SupportedLanguage)}
-          className="bg-gray-700 text-white px-3 py-1 rounded text-sm border border-gray-600 focus:outline-none focus:border-orange-500"
+          onChange={(e) =>
+            onLanguageChange(e.target.value as SupportedLanguage)
+          }
+          className="rounded border border-gray-600 bg-gray-700 px-3 py-1 text-sm text-white focus:border-orange-500 focus:outline-none"
         >
           {Object.entries(LANGUAGE_CONFIG).map(([key, config]) => (
             <option key={key} value={key}>
@@ -59,13 +54,13 @@ export default function CodeEditor({
             </option>
           ))}
         </select>
-        <span className="text-gray-400 text-xs">
+        <span className="text-xs text-gray-400">
           {LANGUAGE_CONFIG[language].label}
         </span>
       </div>
 
       {/* Editor */}
-      <div className="flex-1 border border-gray-700 border-t-0 rounded-b overflow-hidden">
+      <div className="flex-1 overflow-hidden rounded-b border border-t-0 border-gray-700">
         <Editor
           height={height}
           language={LANGUAGE_CONFIG[language].monacoId}

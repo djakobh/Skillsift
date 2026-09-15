@@ -18,10 +18,15 @@
     "lint:fix": "next lint --fix",
     "preview": "next build && next start",
     "start": "next start",
+    "test:code-execution": "npm run test:judge && npm run test:runner",
+    "test:judge": "tsx --test tests/judge-security.test.ts tests/postgres-judge-limiter.test.ts tests/vercel-sandbox-backend.test.ts",
+    "test:runner": "python -m unittest discover -s docker/code-runner/tests",
+    "test:judge:postgres:live": "tsx scripts/verify-postgres-judge-limiter.ts",
+    "test:sandbox:live": "tsx scripts/verify-code-sandbox.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@auth/prisma-adapter": "^2.7.2",
+    "@auth/prisma-adapter": "2.11.2",
     "@aws-sdk/client-s3": "^3.1013.0",
     "@aws-sdk/s3-request-presigner": "^3.1013.0",
     "@ffmpeg/core": "^0.12.10",
@@ -34,6 +39,7 @@
     "@trpc/client": "^11.0.0",
     "@trpc/react-query": "^11.0.0",
     "@trpc/server": "^11.0.0",
+    "@vercel/sandbox": "3.3.0",
     "audio-context": "^1.0.3",
     "audio-decode": "^3.8.1",
     "axios": "^1.13.4",
@@ -46,8 +52,8 @@
     "fs-extra": "^11.3.3",
     "lucide-react": "^0.561.0",
     "mammoth": "^1.11.0",
-    "next": "^15.2.3",
-    "next-auth": "5.0.0-beta.25",
+    "next": "15.5.24",
+    "next-auth": "5.0.0-beta.32",
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^5.4.624",
     "react": "^19.0.0",
@@ -74,6 +80,7 @@
     "prettier-plugin-tailwindcss": "^0.6.11",
     "prisma": "^6.19.0",
     "tailwindcss": "^4.0.15",
+    "tsx": "^4.20.0",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.27.0"
   },
@@ -84,5 +91,8 @@
   "optionalDependencies": {
     "@tailwindcss/oxide-win32-x64-msvc": "^4.1.18",
     "lightningcss-win32-x64-msvc": "^1.31.1"
+  },
+  "overrides": {
+    "@auth/core": "0.41.3"
   }
 }

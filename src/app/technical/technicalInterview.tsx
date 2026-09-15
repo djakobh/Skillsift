@@ -34,8 +34,10 @@ enum TIPageState {
 /* View Switcher */
 export default function TechnicalInterviewViewSwitcher({
   resumeSessionId,
+  executionEnabled,
 }: {
   resumeSessionId?: string;
+  executionEnabled: boolean;
 }) {
   const [pageState, setPageState] = useState<TIPageState>(TIPageState.START);
 
@@ -50,6 +52,8 @@ export default function TechnicalInterviewViewSwitcher({
   const [stderr, setStderr] = useState("");
 
   const [isRunning, setIsRunning] = useState(false);
+  const [executionUnavailable, setExecutionUnavailable] =
+    useState(!executionEnabled);
   const [questionStatus, setQuestionStatus] = useState<boolean[]>([]);
   const [showLeaveNotice, setShowLeaveNotice] = useState(false);
 
@@ -190,7 +194,7 @@ export default function TechnicalInterviewViewSwitcher({
   }
 
   async function runCode() {
-    if (!currentQuestion) return;
+    if (!currentQuestion || executionUnavailable) return;
     setIsRunning(true);
     setTestResults([]);
     setCompileOutput("");
@@ -207,9 +211,26 @@ export default function TechnicalInterviewViewSwitcher({
         }),
       });
 
-      const result = await response.json();
+      const responseText = await response.text();
+      let result: {
+        error?: string;
+        testResults?: TestResult[];
+        compile_output?: string;
+        stderr?: string;
+        allPassed?: boolean;
+      } = {};
+      try {
+        result = JSON.parse(responseText) as typeof result;
+      } catch {
+        result = {
+          error: "The execution service returned an invalid response.",
+        };
+      }
 
       if (!response.ok) {
+        if (response.status === 503) {
+          setExecutionUnavailable(true);
+        }
         setStderr(result.error ?? "Unknown error");
         return;
       }
@@ -322,6 +343,16 @@ export default function TechnicalInterviewViewSwitcher({
               </p>
             </div>
 
+            {executionUnavailable && (
+              <div
+                className="page-animate rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+                role="status"
+              >
+                Code execution is temporarily unavailable. You can still open questions, edit your
+                answers, review solutions, and use hints.
+              </div>
+            )}
+
             {/* Header container */}
             <div className="page-animate border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm" style={{ animationDelay: "0.15s" }}>
               <div className="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -429,6 +460,17 @@ export default function TechnicalInterviewViewSwitcher({
             </div>
           )}
 
+          {executionUnavailable && (
+            <div
+              id="execution-disabled-message"
+              className="shrink-0 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm text-amber-900"
+              role="status"
+            >
+              Code execution is temporarily unavailable. Editing, solutions,
+              and hints remain available.
+            </div>
+          )}
+
           {/* Question panel - top */}
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm shrink-0 overflow-y-auto" style={{ maxHeight: "32vh" }}>
             <div className="px-6 py-4">
@@ -455,11 +497,20 @@ export default function TechnicalInterviewViewSwitcher({
                 <h4 className="text-sm font-semibold text-gray-800 m-0">Code Editor</h4>
                 <button
                   onClick={() => void runCode()}
-                  disabled={isRunning}
-                  className={`btn-primary btn-sm ${isRunning ? "opacity-60 cursor-not-allowed" : ""}`}
+                  disabled={isRunning || executionUnavailable}
+                  aria-describedby={
+                    executionUnavailable
+                      ? "execution-disabled-message"
+                      : undefined
+                  }
+                  className={`btn-primary btn-sm ${isRunning || executionUnavailable ? "opacity-60 cursor-not-allowed" : ""}`}
                 >
                   <Play size={13} />
-                  {isRunning ? "Running..." : "Run Code"}
+                  {isRunning
+                    ? "Running..."
+                    : executionUnavailable
+                      ? "Execution Unavailable"
+                      : "Run Code"}
                 </button>
               </div>
               <div className="flex-1 min-h-0">
@@ -503,6 +554,12 @@ export default function TechnicalInterviewViewSwitcher({
               {/* Test Results */}
               {rightTab === "results" && (
                 <div className="flex-1 overflow-y-auto p-4">
+                  {executionUnavailable && (
+                    <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                      Running tests is temporarily disabled. Your code stays
+                      editable and hints are still available.
+                    </p>
+                  )}
                   {compileOutput && (
                     <pre className="bg-red-50 text-red-700 text-xs p-3 rounded-lg border border-red-200 mb-3 whitespace-pre-wrap">
                       Compile Error:{"\n"}{compileOutput}
@@ -513,7 +570,10 @@ export default function TechnicalInterviewViewSwitcher({
                       {stderr}
                     </pre>
                   )}
-                  {testResults.length === 0 && !compileOutput && !stderr && (
+                  {testResults.length === 0 &&
+                    !compileOutput &&
+                    !stderr &&
+                    !executionUnavailable && (
                     <p className="text-gray-400 text-sm text-center mt-8">Run your code to see test results.</p>
                   )}
                   <div className="flex flex-col gap-2">
