@@ -16,6 +16,11 @@ export default async function TechnicalInterviewPage({
   const params = await searchParams;
 
   return (
-    <TechnicalInterviewViewSwitcher resumeSessionId={params.sessionId} />
+    <TechnicalInterviewViewSwitcher
+      resumeSessionId={params.sessionId}
+      executionEnabled={
+        process.env.CODE_EXECUTION_ENABLED?.trim().toLowerCase() === "true"
+      }
+    />
   );
 }
